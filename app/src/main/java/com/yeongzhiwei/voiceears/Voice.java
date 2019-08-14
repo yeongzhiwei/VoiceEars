@@ -1,13 +1,17 @@
 package com.yeongzhiwei.voiceears;
 
 class Voice {
-    public enum Gender {
+    enum Gender {
         Male, Female
     }
 
     final String lang;
     final String voiceName;
-    final Gender gender;
+    Gender gender;
+
+    Gender getGender() {
+        return this.gender;
+    }
 
     Voice() {
         this("en-US", "Microsoft Server Speech Text to Speech Voice (en-US, GuyNeural)", Gender.Male);
@@ -17,5 +21,14 @@ class Voice {
         this.lang = lang;
         this.voiceName = voiceName;
         this.gender = gender;
+    }
+
+    Gender toggleVoice() {
+        if (this.gender == Gender.Male) {
+            this.gender = Gender.Female;
+        } else {
+            this.gender = Gender.Male;
+        }
+        return this.gender;
     }
 }

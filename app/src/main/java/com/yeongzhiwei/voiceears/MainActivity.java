@@ -1,5 +1,6 @@
 package com.yeongzhiwei.voiceears;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -9,7 +10,8 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.View;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Button;
@@ -47,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         initializeViews();
         loadSavedInstanceState(savedInstanceState);
         configureTextToSpeech();
-        configureSpeechToText();
+//        configureSpeechToText();
     }
 
     private void initializeViews() {
@@ -108,6 +110,15 @@ public class MainActivity extends AppCompatActivity {
         });
 
         synthesizeButton.setEnabled(false);
+
+        synthesizeEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if ((event != null && (event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) || (actionId == EditorInfo.IME_ACTION_DONE)) {
+                    Log.i(TAG,"Enter pressed");
+                }
+                return false;
+            }
+        });
 
         synthesizeEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -207,5 +218,28 @@ public class MainActivity extends AppCompatActivity {
         }
 
         outState.putStringArray("messages", messages);
+    }
+
+    // https://stackoverflow.com/questions/38158953/how-to-create-button-in-action-bar-in-android
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.mymenu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.button_gender) {
+            if (synthesizer != null) {
+                Voice.Gender gender = synthesizer.getVoice().toggleVoice();
+
+                if (gender == Voice.Gender.Male) {
+                    item.setIcon(R.drawable.boy);
+                } else {
+                    item.setIcon(R.drawable.girl);
+                }
+            }
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

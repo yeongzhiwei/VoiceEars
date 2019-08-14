@@ -23,7 +23,11 @@ class Synthesizer {
         this.voice = voice;
     }
 
-    public void setVoice(Voice voice) {
+    Voice getVoice() {
+        return this.voice;
+    }
+
+    void setVoice(Voice voice) {
         this.voice = voice;
     }
 
