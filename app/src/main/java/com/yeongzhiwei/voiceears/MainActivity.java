@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     // Text-to-Speech
     private Synthesizer synthesizer = null;
     private Counter counter = new Counter();
+    PaintDrawable paintDrawable = null;
     // Speech-to-Text
     private Recognizer recognizer = null;
     private TextView recognizerTextView = null;
@@ -76,37 +77,17 @@ public class MainActivity extends AppCompatActivity {
             synthesizer = new Synthesizer(speechSubscriptionKey);
         }
 
-        PaintDrawable paintDrawable = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimary));
+        paintDrawable = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimary));
         paintDrawable.setCornerRadius(8);
 
         synthesizeButton.setOnClickListener(view -> {
             if (recognizer != null) {
                 recognizer.stopSpeechToText();
             }
+
             String message = synthesizeEditText.getText().toString().trim();
             synthesizeEditText.setText("");
-            TextView ttsTextView = appendTyperMessage(message);
-            Thread runBeforeAudio = new Thread(() -> {
-                counter.increment();
-            });
-            runBeforeAudio.start();
-            synthesizer.speakToAudio(message, () -> {
-                MainActivity.this.runOnUiThread(() -> {
-                    ttsTextView.setBackground(paintDrawable);
-                });
-            }, () -> {
-                MainActivity.this.runOnUiThread(() -> {
-                    ttsTextView.setBackground(null);
-                });
-                Thread runAfterAudio = new Thread(() -> {
-                    if (counter.decrement() == 0) {
-                        if (recognizer != null) {
-                            recognizer.startSpeechToText();
-                        }
-                    }
-                });
-                runAfterAudio.start();
-            });
+            synthesizeText(message);
         });
 
         synthesizeButton.setEnabled(false);
@@ -130,6 +111,31 @@ public class MainActivity extends AppCompatActivity {
             public void afterTextChanged(Editable editable) {
 
             }
+        });
+    }
+
+    private void synthesizeText(String message) {
+        TextView ttsTextView = appendTyperMessage(message);
+        Thread runBeforeAudio = new Thread(() -> {
+            counter.increment();
+        });
+        runBeforeAudio.start();
+        synthesizer.speakToAudio(message, () -> {
+            MainActivity.this.runOnUiThread(() -> {
+                ttsTextView.setBackground(paintDrawable);
+            });
+        }, () -> {
+            MainActivity.this.runOnUiThread(() -> {
+                ttsTextView.setBackground(null);
+            });
+            Thread runAfterAudio = new Thread(() -> {
+                if (counter.decrement() == 0) {
+                    if (recognizer != null) {
+                        recognizer.startSpeechToText();
+                    }
+                }
+            });
+            runAfterAudio.start();
         });
     }
 
