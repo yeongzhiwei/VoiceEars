@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">VoiceEars</string>
+    <string name="editText_synthesize_hint">Type a message</string>
+    <string name="button_synthesize_text">Speak</string>
+</resources>
