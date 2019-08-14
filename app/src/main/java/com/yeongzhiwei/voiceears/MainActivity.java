@@ -176,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
                 ViewGroup.LayoutParams.WRAP_CONTENT));
 
         MainActivity.this.runOnUiThread(() -> {
-            messageLinearLayout.addView(newTextView, messageLinearLayout.getChildCount() - 1);
+            messageLinearLayout.addView(newTextView);
             scrollToBottom();
         });
 
