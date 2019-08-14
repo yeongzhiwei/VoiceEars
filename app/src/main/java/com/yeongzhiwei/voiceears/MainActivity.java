@@ -17,6 +17,7 @@ import android.widget.EditText;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import static android.Manifest.permission.INTERNET;
@@ -30,6 +31,8 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout messageLinearLayout;
     private EditText synthesizeEditText;
     private ScrollView messageScrollView;
+    private SeekBar sizeSeekBar;
+    private Integer textViewSize = 24;
 
     // Cognitive Services
     private static String speechSubscriptionKey = "0c2815f15dd145c38b8d6e16f7d0c794";
@@ -50,7 +53,8 @@ public class MainActivity extends AppCompatActivity {
         initializeViews();
         loadSavedInstanceState(savedInstanceState);
         configureTextToSpeech();
-//        configureSpeechToText();
+        configureSpeechToText();
+        configureSeekBar();
     }
 
     private void initializeViews() {
@@ -58,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
         messageLinearLayout = (LinearLayout) findViewById(R.id.message_linearLayout);
         synthesizeEditText = (EditText) findViewById(R.id.editText_synthesize);
         messageScrollView = (ScrollView) findViewById(R.id.scroller_textView);
+        sizeSeekBar = (SeekBar) findViewById(R.id.seekBar_size);
     }
 
     private void loadSavedInstanceState(final Bundle savedInstanceState) {
@@ -67,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
                 createAndAddTextView(message);
             }
         } else {
-            String welcome = "Welcome to VoiceEars. Start speaking or type and click Voice button.";
+            String welcome = "Welcome to VoiceEars. Start speaking or type and click Speak button. Click the face icon at top-right to toggle the gender.";
             createAndAddTextView(welcome);
         }
     }
@@ -158,6 +163,26 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void configureSeekBar() {
+        sizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                textViewSize = i + 10;
+                adjustTextViewSize(textViewSize);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+    }
+
     private TextView appendTyperMessage(final String message) {
         return createAndAddTextView("⌨ " + message);
     }
@@ -177,7 +202,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView createAndAddTextView(final String message) {
         TextView newTextView = new TextView(this);
         newTextView.setText(message);
-        newTextView.setTextSize(24);
+        newTextView.setTextSize(textViewSize);
         newTextView.setTextIsSelectable(true);
         newTextView.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -189,6 +214,14 @@ public class MainActivity extends AppCompatActivity {
         });
 
         return newTextView;
+    }
+
+    private void adjustTextViewSize(Integer size) {
+        int childcount = messageLinearLayout.getChildCount();
+        for (int i=0; i < childcount; i++){
+            TextView textView = (TextView) messageLinearLayout.getChildAt(i);
+            textView.setTextSize(size);
+        }
     }
 
     private void scrollToBottom() {
