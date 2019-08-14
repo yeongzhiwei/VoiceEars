@@ -111,15 +111,6 @@ public class MainActivity extends AppCompatActivity {
 
         synthesizeButton.setEnabled(false);
 
-        synthesizeEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if ((event != null && (event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) || (actionId == EditorInfo.IME_ACTION_DONE)) {
-                    Log.i(TAG,"Enter pressed");
-                }
-                return false;
-            }
-        });
-
         synthesizeEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
