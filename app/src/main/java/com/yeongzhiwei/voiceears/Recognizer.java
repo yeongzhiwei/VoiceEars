@@ -20,7 +20,6 @@ class Recognizer {
             microphoneStream.close();
             microphoneStream = null;
         }
-
         microphoneStream = new MicrophoneStream();
         return microphoneStream;
     }
@@ -29,6 +28,7 @@ class Recognizer {
     private boolean continuousListeningStarted = false;
     private SpeechRecognizer speechRecognizer = null;
     private ArrayList<String> content = new ArrayList<>();
+    private Counter counter = new Counter();
 
     private static ExecutorService s_executorService;
     static {
@@ -36,27 +36,24 @@ class Recognizer {
     }
 
     private RecognizerUI recognizerUI;
-    private Runnable runOnStop;
 
-    Recognizer(String speechSubscriptionKey, String speechRegion, RecognizerUI recognizerUI, Runnable runOnStop) {
+    Recognizer(String speechSubscriptionKey, String speechRegion, RecognizerUI recognizerUI) {
         speechConfig = SpeechConfig.fromSubscription(speechSubscriptionKey, speechRegion);
 
         this.recognizerUI = recognizerUI;
-        this.runOnStop = runOnStop;
     }
 
 
     // Adapted from Sample code for the Microsoft Cognitive Services Speech SDK
     // https://github.com/Azure-Samples/cognitive-services-speech-sdk
     synchronized void startSpeechToText() {
-        Log.d(LOG_TAG, "started Speech to Text");
-
         if (continuousListeningStarted) {
             return;
         }
 
         try {
             content.clear();
+            Integer order = counter.increment();
 
             AudioConfig audioConfig = AudioConfig.fromStreamInput(createMicrophoneStream());
             speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
@@ -66,7 +63,7 @@ class Recognizer {
                 content.add(s);
                 String message = TextUtils.join(" ", content).trim();
                 if (message.length() != 0) {
-                    recognizerUI.update(message);
+                    recognizerUI.update(order, message);
                 }
                 content.remove(content.size() - 1);
             });
@@ -75,14 +72,15 @@ class Recognizer {
                 final String s = speechRecognitionResultEventArgs.getResult().getText();
                 content.add(s);
                 String message = TextUtils.join(" ", content).trim();
-                if (message.length() != 0) {
-                    recognizerUI.update(message);
+                if (message.length() != 0) { // && continuousListeningStarted
+                    recognizerUI.update(order, message);
                 }
             });
 
             final Future<Void> task = speechRecognizer.startContinuousRecognitionAsync();
             setOnTaskCompletedListener(task, result -> {
                 continuousListeningStarted = true;
+                Log.d(LOG_TAG, "Started Speech to Text");
             });
         } catch (Exception ex) {
             Log.e(LOG_TAG, ex.toString());
@@ -90,26 +88,20 @@ class Recognizer {
     }
 
     synchronized void stopSpeechToText() {
-        Log.d(LOG_TAG, "stopped Speech to Text");
-
         if (speechRecognizer != null) {
             final Future<Void> task = speechRecognizer.stopContinuousRecognitionAsync();
             setOnTaskCompletedListener(task, result -> {
                 continuousListeningStarted = false;
-                if (runOnStop != null) {
-                    runOnStop.run();
-                }
+                Log.d(LOG_TAG, "Stopped Speech to Text");
             });
         } else {
             continuousListeningStarted = false;
-            if (runOnStop != null) {
-                runOnStop.run();
-            }
+            Log.d(LOG_TAG, "Stopped Speech to Text");
         }
     }
 
     public interface RecognizerUI {
-        void update(String result);
+        void update(Integer order, String result);
     }
 
     private <T> void setOnTaskCompletedListener(Future<T> task, OnTaskCompletedListener<T> listener) {
