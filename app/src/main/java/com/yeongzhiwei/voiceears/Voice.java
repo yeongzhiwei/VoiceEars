@@ -6,7 +6,7 @@ class Voice {
     }
 
     final String lang;
-    final String voiceName;
+    String voiceName;
     Gender gender;
 
     Gender getGender() {
@@ -14,7 +14,7 @@ class Voice {
     }
 
     Voice() {
-        this("en-US", "Microsoft Server Speech Text to Speech Voice (en-US, GuyNeural)", Gender.Male);
+        this("en-US", "en-US-GuyNeural", Gender.Male);
     }
 
     Voice(String lang, String voiceName, Gender gender) {
@@ -25,8 +25,10 @@ class Voice {
 
     Gender toggleVoice() {
         if (this.gender == Gender.Male) {
+            this.voiceName = "en-US-JessaNeural";
             this.gender = Gender.Female;
         } else {
+            this.voiceName = "en-US-GuyNeural";
             this.gender = Gender.Male;
         }
         return this.gender;
