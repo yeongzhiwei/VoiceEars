@@ -20,6 +20,8 @@ import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import java.util.HashMap;
+
 import static android.Manifest.permission.INTERNET;
 import static android.Manifest.permission.RECORD_AUDIO;
 
@@ -43,7 +45,8 @@ public class MainActivity extends AppCompatActivity {
     PaintDrawable paintDrawable = null;
     // Speech-to-Text
     private Recognizer recognizer = null;
-    private TextView recognizerTextView = null;
+//    private TextView recognizerTextView = null;
+    private HashMap<Integer, TextView> recognizerTextViews = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,11 +123,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void synthesizeText(String message) {
-        TextView ttsTextView = appendTyperMessage(message);
         Thread runBeforeAudio = new Thread(() -> {
             counter.increment();
         });
         runBeforeAudio.start();
+
+        TextView ttsTextView = appendTyperMessage(message);
         synthesizer.speakToAudio(message, () -> {
             MainActivity.this.runOnUiThread(() -> {
                 ttsTextView.setBackground(paintDrawable);
@@ -133,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
             MainActivity.this.runOnUiThread(() -> {
                 ttsTextView.setBackground(null);
             });
+
             Thread runAfterAudio = new Thread(() -> {
                 if (counter.decrement() == 0) {
                     if (recognizer != null) {
@@ -150,50 +155,29 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO, INTERNET}, requestCode);
 
             if (recognizer == null) {
-                recognizer = new Recognizer(speechSubscriptionKey, speechRegion, result -> {
-                    appendSpeakerMessage(result);
-                }, () -> {
-                    recognizerTextView = null;
+                recognizer = new Recognizer(speechSubscriptionKey, speechRegion, (order, result) -> {
+                    appendSpeakerMessage(order, result);
                 });
                 recognizer.startSpeechToText();
             }
         } catch (Exception ex) {
             Log.e(LOG_TAG, "could not init sdk, " + ex.toString());
-            createAndAddTextView("Could not initialize: " + ex.toString());
         }
-    }
-
-    private void configureSeekBar() {
-        sizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                textViewSize = i + 10;
-                adjustTextViewSize(textViewSize);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
     }
 
     private TextView appendTyperMessage(final String message) {
         return createAndAddTextView("⌨ " + message);
     }
 
-    private void appendSpeakerMessage(final String message) {
-        if (recognizerTextView == null) {
-            recognizerTextView = createAndAddTextView("\uD83D\uDDE3 " + message);
+    private void appendSpeakerMessage(final Integer order, final String message) {
+        final TextView textView = recognizerTextViews.get(order);
+
+        if (textView == null) {
+            TextView newTextView = createAndAddTextView("\uD83D\uDDE3 " + message);
+            recognizerTextViews.put(order, newTextView);
         } else {
-            TextView recognizerTextViewCopy = recognizerTextView;
             MainActivity.this.runOnUiThread(() -> {
-                recognizerTextViewCopy.setText("\uD83D\uDDE3 " + message);
+                textView.setText("\uD83D\uDDE3 " + message);
                 scrollToBottom();
             });
         }
@@ -216,6 +200,33 @@ public class MainActivity extends AppCompatActivity {
         return newTextView;
     }
 
+    private void scrollToBottom() {
+//        int bottom = messageLinearLayout.getBottom() + messageScrollView.getBottom();
+//        int delta = bottom - (messageScrollView.getScrollY() + messageScrollView.getHeight());
+//        messageScrollView.smoothScrollBy(0, delta);
+        messageScrollView.smoothScrollBy(0, messageLinearLayout.getHeight());
+    }
+
+    private void configureSeekBar() {
+        sizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                textViewSize = i + 10;
+                adjustTextViewSize(textViewSize);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+    }
+
     private void adjustTextViewSize(Integer size) {
         int childcount = messageLinearLayout.getChildCount();
         for (int i=0; i < childcount; i++){
@@ -224,11 +235,27 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void scrollToBottom() {
-//        int bottom = messageLinearLayout.getBottom() + messageScrollView.getBottom();
-//        int delta = bottom - (messageScrollView.getScrollY() + messageScrollView.getHeight());
-//        messageScrollView.smoothScrollBy(0, delta);
-        messageScrollView.smoothScrollBy(0, messageLinearLayout.getHeight());
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // https://stackoverflow.com/questions/38158953/how-to-create-button-in-action-bar-in-android
+        getMenuInflater().inflate(R.menu.mymenu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.button_gender) {
+            if (synthesizer != null) {
+                Voice.Gender gender = synthesizer.getVoice().toggleVoice();
+
+                if (gender == Voice.Gender.Male) {
+                    item.setIcon(R.drawable.boy);
+                } else {
+                    item.setIcon(R.drawable.girl);
+                }
+            }
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -250,26 +277,4 @@ public class MainActivity extends AppCompatActivity {
         outState.putStringArray("messages", messages);
     }
 
-    // https://stackoverflow.com/questions/38158953/how-to-create-button-in-action-bar-in-android
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.mymenu, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.button_gender) {
-            if (synthesizer != null) {
-                Voice.Gender gender = synthesizer.getVoice().toggleVoice();
-
-                if (gender == Voice.Gender.Male) {
-                    item.setIcon(R.drawable.boy);
-                } else {
-                    item.setIcon(R.drawable.girl);
-                }
-            }
-        }
-        return super.onOptionsItemSelected(item);
-    }
 }
