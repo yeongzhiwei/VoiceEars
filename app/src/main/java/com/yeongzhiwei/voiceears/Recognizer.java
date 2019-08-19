@@ -53,7 +53,7 @@ class Recognizer {
 
         try {
             content.clear();
-            Integer order = counter.increment();
+            counter.increment();
 
             AudioConfig audioConfig = AudioConfig.fromStreamInput(createMicrophoneStream());
             speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
@@ -63,17 +63,22 @@ class Recognizer {
                 content.add(s);
                 String message = TextUtils.join(" ", content).trim();
                 if (message.length() != 0) {
-                    recognizerUI.update(order, message);
+                    recognizerUI.update(counter.get(), message);
                 }
                 content.remove(content.size() - 1);
             });
 
             speechRecognizer.recognized.addEventListener((o, speechRecognitionResultEventArgs) -> {
                 final String s = speechRecognitionResultEventArgs.getResult().getText();
+                Log.d(LOG_TAG, s);
+                if (s.trim().length() == 0) {
+                    counter.increment();
+                    content.clear();
+                }
                 content.add(s);
                 String message = TextUtils.join(" ", content).trim();
                 if (message.length() != 0) { // && continuousListeningStarted
-                    recognizerUI.update(order, message);
+                    recognizerUI.update(counter.get(), message);
                 }
             });
 

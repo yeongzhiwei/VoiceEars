@@ -12,4 +12,8 @@ class Counter {
         counter--;
         return counter;
     }
+
+    synchronized  int get() {
+        return counter;
+    }
 }
