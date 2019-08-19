@@ -12,9 +12,11 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
@@ -32,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private ScrollView messageScrollView;
     private LinearLayout messageLinearLayout;
     private SeekBar sizeSeekBar;
+    private ImageView imageViewScrollDown;
     private EditText synthesizeEditText;
     private Button synthesizeButton;
 
@@ -66,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
         messageScrollView = (ScrollView) findViewById(R.id.scroller_textView);
         messageLinearLayout = (LinearLayout) findViewById(R.id.message_linearLayout);
         sizeSeekBar = (SeekBar) findViewById(R.id.seekBar_size);
+        imageViewScrollDown = (ImageView) findViewById(R.id.imageView_scrolldown);
         synthesizeEditText = (EditText) findViewById(R.id.editText_synthesize);
         synthesizeButton = (Button) findViewById(R.id.button_synthesize);
     }
@@ -74,9 +78,15 @@ public class MainActivity extends AppCompatActivity {
         messageScrollView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
             if (messageLinearLayout.getHeight() - messageScrollView.getHeight() > scrollY) {
                 enableAutoScrollDown = false;
+                imageViewScrollDown.setVisibility(View.VISIBLE);
             } else {
                 enableAutoScrollDown = true;
+                imageViewScrollDown.setVisibility(View.GONE);
             }
+        });
+
+        imageViewScrollDown.setOnClickListener(view -> {
+            scrollDown();
         });
     }
 
@@ -217,11 +227,15 @@ public class MainActivity extends AppCompatActivity {
         // https://stackoverflow.com/questions/28105945/add-view-to-scrollview-and-then-scroll-to-bottom-which-callback-is-needed
         messageScrollView.postDelayed(() -> {
             if (enableAutoScrollDown) {
-                messageScrollView.smoothScrollBy(0, messageScrollView.getHeight() + messageLinearLayout.getHeight() - messageScrollView.getScrollY());
+                scrollDown();
             }
         }, 200);
 //        Log.d(LOG_TAG, "scrollView2 getBottom(): " + messageScrollView.getBottom() + ". getHeight(): " + messageScrollView.getHeight() + ". getScrollY(): " + messageScrollView.getScrollY());
 //        Log.d(LOG_TAG, "linearLayout2 getBottom(): " + messageLinearLayout.getBottom() + ". getHeight(): " + messageLinearLayout.getHeight() + ". getScrollY(): " + messageLinearLayout.getScrollY());
+    }
+
+    private void scrollDown() {
+        messageScrollView.smoothScrollBy(0, messageScrollView.getHeight() + messageLinearLayout.getHeight() - messageScrollView.getScrollY());
     }
 
 
