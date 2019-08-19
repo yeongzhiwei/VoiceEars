@@ -15,7 +15,7 @@ class Synthesizer {
     private AudioTrack audioTrack;
 
     Synthesizer(String apiKey) {
-        this(apiKey, new Voice());
+        this(apiKey, Voice.getDefaultVoice(Voice.Gender.Male));
     }
 
     Synthesizer(String apiKey, Voice voice) {
@@ -27,20 +27,15 @@ class Synthesizer {
         return this.voice;
     }
 
-    void setVoice(Voice voice) {
-        this.voice = voice;
-    }
-
-
     void speakToAudio(String text, Runnable callOnPlay, Runnable callOnStop) {
         playSound(speak(text), callOnPlay, callOnStop);
     }
 
     private byte[] speak(String text) {
-        String ssml = "<speak version='1.0' xml:lang='" + voice.lang
-                + "'><voice xml:lang='" + voice.lang
-                + "' xml:gender='" + voice.gender
-                + "' name='" + voice.voiceName + "'>"
+        String ssml = "<speak version='1.0' xml:lang='" + voice.getLang()
+                + "'><voice xml:lang='" + voice.getLang()
+                + "' xml:gender='" + voice.getGender()
+                + "' name='" + voice.getVoiceName() + "'>"
                 + text + "</voice></speak>";
         Log.d(LOG_TAG, "Sending ssml: " + ssml);
 

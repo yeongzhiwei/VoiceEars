@@ -3,4 +3,8 @@
     <string name="editText_synthesize_hint">Type a message</string>
     <string name="button_synthesize_text">Speak</string>
     <string name="imageView_scrolldown_contentDescription">scroll down</string>
+
+    <string name="saved_textView_size_key">savedTextViewSize</string>
+    <string name="saved_gender_key">savedGender</string>
+    <string name="default_gender">Male</string>
 </resources>

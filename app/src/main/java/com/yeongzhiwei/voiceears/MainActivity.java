@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.drawable.PaintDrawable;
 import android.os.Bundle;
 import android.text.Editable;
@@ -22,6 +24,7 @@ import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+
 import java.util.HashMap;
 
 import static android.Manifest.permission.INTERNET;
@@ -29,8 +32,10 @@ import static android.Manifest.permission.RECORD_AUDIO;
 
 public class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
+    private SharedPreferences sharedPref;
 
     // UI
+    private MenuItem genderMenuItem;
     private ScrollView messageScrollView;
     private LinearLayout messageLinearLayout;
     private SeekBar sizeSeekBar;
@@ -38,8 +43,9 @@ public class MainActivity extends AppCompatActivity {
     private EditText synthesizeEditText;
     private Button synthesizeButton;
 
-    private Integer textViewSize = 24;
+    private Integer textViewSize;
     private Boolean enableAutoScrollDown = true;
+    private final Integer seekBarMinValue = 10;
 
     // Cognitive Services
     private static String speechSubscriptionKey = "0c2815f15dd145c38b8d6e16f7d0c794";
@@ -48,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
     private Synthesizer synthesizer = null;
     private Counter counter = new Counter();
     PaintDrawable paintDrawable = null;
+    private Voice.Gender gender;
     // Speech-to-Text
     private Recognizer recognizer = null;
     private HashMap<Integer, TextView> recognizerTextViews = new HashMap<>();
@@ -57,12 +64,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        sharedPref = getPreferences(Context.MODE_PRIVATE);
+        textViewSize = loadTextViewSize();
+
         initializeViews();
         configureViews();
         loadSavedInstanceState(savedInstanceState);
         configureTextToSpeech();
         configureSpeechToText();
-        configureSeekBar();
     }
 
     private void initializeViews() {
@@ -88,37 +97,25 @@ public class MainActivity extends AppCompatActivity {
         imageViewScrollDown.setOnClickListener(view -> {
             scrollDown();
         });
-    }
 
-    private void loadSavedInstanceState(final Bundle savedInstanceState) {
-        if (savedInstanceState != null) {
-            String[] messages = savedInstanceState.getStringArray("messages");
-            for (String message : messages) {
-                createAndAddTextView(message);
-            }
-        } else {
-            String welcome = "Welcome to VoiceEars. Start speaking or type and click Speak button. Click the face icon at top-right to toggle the gender.";
-            welcome = welcome + "Welcome to VoiceEars. Start speaking or type and click Speak button. Click the face icon at top-right to toggle the gender.Welcome to VoiceEars. Start speaking or type and click Speak button. Click the face icon at top-right to toggle the gender.Welcome to VoiceEars. Start speaking or type and click Speak button. Click the face icon at top-right to toggle the gender.";
-            createAndAddTextView(welcome);
-        }
-    }
+        sizeSeekBar.setProgress(textViewSize - seekBarMinValue);
 
-    private void configureTextToSpeech() {
-        if (synthesizer == null) {
-            synthesizer = new Synthesizer(speechSubscriptionKey);
-        }
-
-        paintDrawable = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimary));
-        paintDrawable.setCornerRadius(8);
-
-        synthesizeButton.setOnClickListener(view -> {
-            if (recognizer != null) {
-                recognizer.stopSpeechToText();
+        sizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                textViewSize = i + seekBarMinValue;
+                adjustTextViewSize(textViewSize);
             }
 
-            String message = synthesizeEditText.getText().toString().trim();
-            synthesizeEditText.setText("");
-            synthesizeText(message);
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                saveTextViewSize(textViewSize);
+            }
         });
 
         synthesizeButton.setEnabled(false);
@@ -142,6 +139,40 @@ public class MainActivity extends AppCompatActivity {
             public void afterTextChanged(Editable editable) {
 
             }
+        });
+    }
+
+    private void loadSavedInstanceState(final Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            String[] messages = savedInstanceState.getStringArray("messages");
+            for (String message : messages) {
+                createAndAddTextView(message);
+            }
+        } else {
+            String welcome = "Welcome to VoiceEars. Start speaking or type and click Speak button. Click the face icon at top-right to toggle the gender.";
+            createAndAddTextView(welcome);
+        }
+    }
+
+    private void configureTextToSpeech() {
+        if (synthesizer == null) {
+            gender = Voice.Gender.valueOf(loadGender());
+            refreshGenderIcon();
+
+            synthesizer = new Synthesizer(speechSubscriptionKey, Voice.getDefaultVoice(gender));
+        }
+
+        paintDrawable = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimary));
+        paintDrawable.setCornerRadius(8);
+
+        synthesizeButton.setOnClickListener(view -> {
+            if (recognizer != null) {
+                recognizer.stopSpeechToText();
+            }
+
+            String message = synthesizeEditText.getText().toString().trim();
+            synthesizeEditText.setText("");
+            synthesizeText(message);
         });
     }
 
@@ -238,28 +269,6 @@ public class MainActivity extends AppCompatActivity {
         messageScrollView.smoothScrollBy(0, messageScrollView.getHeight() + messageLinearLayout.getHeight() - messageScrollView.getScrollY());
     }
 
-
-
-    private void configureSeekBar() {
-        sizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                textViewSize = i + 10;
-                adjustTextViewSize(textViewSize);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-    }
-
     private void adjustTextViewSize(Integer size) {
         int childcount = messageLinearLayout.getChildCount();
         for (int i=0; i < childcount; i++){
@@ -272,6 +281,10 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // https://stackoverflow.com/questions/38158953/how-to-create-button-in-action-bar-in-android
         getMenuInflater().inflate(R.menu.mymenu, menu);
+
+        genderMenuItem = menu.findItem(R.id.button_gender);
+        refreshGenderIcon();
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -279,13 +292,9 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.button_gender) {
             if (synthesizer != null) {
-                Voice.Gender gender = synthesizer.getVoice().toggleVoice();
-
-                if (gender == Voice.Gender.Male) {
-                    item.setIcon(R.drawable.boy);
-                } else {
-                    item.setIcon(R.drawable.girl);
-                }
+                gender = synthesizer.getVoice().toggleVoice();
+                refreshGenderIcon();
+                saveGender(gender.name());
             }
         }
         return super.onOptionsItemSelected(item);
@@ -310,4 +319,40 @@ public class MainActivity extends AppCompatActivity {
         outState.putStringArray("messages", messages);
     }
 
+    private void refreshGenderIcon() {
+        if (genderMenuItem == null) {
+            return;
+        }
+
+        if (gender == Voice.Gender.Male) {
+            genderMenuItem.setIcon(R.drawable.boy);
+        } else {
+            genderMenuItem.setIcon(R.drawable.girl);
+        }
+    }
+
+
+    /*  KEY-VALUE PERSISTENT STORAGE */
+
+    private int loadTextViewSize() {
+        int defaultTextViewSize = getResources().getInteger(R.integer.default_textView_size);
+        return sharedPref.getInt(getString(R.string.saved_textView_size_key), defaultTextViewSize);
+    }
+
+    private void saveTextViewSize(int newSize) {
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt(getString(R.string.saved_textView_size_key), newSize);
+        editor.commit();
+    }
+
+    private String loadGender() {
+        String defaultGender = getResources().getString(R.string.default_gender);
+        return sharedPref.getString(getString(R.string.saved_gender_key), defaultGender);
+    }
+
+    private void saveGender(String newGender) {
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(getString(R.string.saved_gender_key), newGender);
+        editor.commit();
+    }
 }
