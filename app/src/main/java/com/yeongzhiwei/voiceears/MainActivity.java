@@ -29,12 +29,14 @@ public class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     // UI
-    private Button synthesizeButton;
-    private LinearLayout messageLinearLayout;
-    private EditText synthesizeEditText;
     private ScrollView messageScrollView;
+    private LinearLayout messageLinearLayout;
     private SeekBar sizeSeekBar;
+    private EditText synthesizeEditText;
+    private Button synthesizeButton;
+
     private Integer textViewSize = 24;
+    private Boolean enableAutoScrollDown = true;
 
     // Cognitive Services
     private static String speechSubscriptionKey = "0c2815f15dd145c38b8d6e16f7d0c794";
@@ -45,7 +47,6 @@ public class MainActivity extends AppCompatActivity {
     PaintDrawable paintDrawable = null;
     // Speech-to-Text
     private Recognizer recognizer = null;
-//    private TextView recognizerTextView = null;
     private HashMap<Integer, TextView> recognizerTextViews = new HashMap<>();
 
     @Override
@@ -54,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         initializeViews();
+        configureViews();
         loadSavedInstanceState(savedInstanceState);
         configureTextToSpeech();
         configureSpeechToText();
@@ -61,11 +63,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeViews() {
-        synthesizeButton = (Button) findViewById(R.id.button_synthesize);
-        messageLinearLayout = (LinearLayout) findViewById(R.id.message_linearLayout);
-        synthesizeEditText = (EditText) findViewById(R.id.editText_synthesize);
         messageScrollView = (ScrollView) findViewById(R.id.scroller_textView);
+        messageLinearLayout = (LinearLayout) findViewById(R.id.message_linearLayout);
         sizeSeekBar = (SeekBar) findViewById(R.id.seekBar_size);
+        synthesizeEditText = (EditText) findViewById(R.id.editText_synthesize);
+        synthesizeButton = (Button) findViewById(R.id.button_synthesize);
+    }
+
+    private void configureViews() {
+        messageScrollView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+            if (messageLinearLayout.getHeight() - messageScrollView.getHeight() > scrollY) {
+                enableAutoScrollDown = false;
+            } else {
+                enableAutoScrollDown = true;
+            }
+        });
     }
 
     private void loadSavedInstanceState(final Bundle savedInstanceState) {
@@ -76,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             String welcome = "Welcome to VoiceEars. Start speaking or type and click Speak button. Click the face icon at top-right to toggle the gender.";
+            welcome = welcome + "Welcome to VoiceEars. Start speaking or type and click Speak button. Click the face icon at top-right to toggle the gender.Welcome to VoiceEars. Start speaking or type and click Speak button. Click the face icon at top-right to toggle the gender.Welcome to VoiceEars. Start speaking or type and click Speak button. Click the face icon at top-right to toggle the gender.";
             createAndAddTextView(welcome);
         }
     }
@@ -201,11 +214,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void scrollToBottom() {
-//        int bottom = messageLinearLayout.getBottom() + messageScrollView.getBottom();
-//        int delta = bottom - (messageScrollView.getScrollY() + messageScrollView.getHeight());
-//        messageScrollView.smoothScrollBy(0, delta);
-        messageScrollView.smoothScrollBy(0, messageLinearLayout.getHeight());
+        // https://stackoverflow.com/questions/28105945/add-view-to-scrollview-and-then-scroll-to-bottom-which-callback-is-needed
+        messageScrollView.postDelayed(() -> {
+            if (enableAutoScrollDown) {
+                messageScrollView.smoothScrollBy(0, messageScrollView.getHeight() + messageLinearLayout.getHeight() - messageScrollView.getScrollY());
+            }
+        }, 200);
+//        Log.d(LOG_TAG, "scrollView2 getBottom(): " + messageScrollView.getBottom() + ". getHeight(): " + messageScrollView.getHeight() + ". getScrollY(): " + messageScrollView.getScrollY());
+//        Log.d(LOG_TAG, "linearLayout2 getBottom(): " + messageLinearLayout.getBottom() + ". getHeight(): " + messageLinearLayout.getHeight() + ". getScrollY(): " + messageLinearLayout.getScrollY());
     }
+
+
 
     private void configureSeekBar() {
         sizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
