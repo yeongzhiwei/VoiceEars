@@ -12,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.PaintDrawable;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.Layout;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
@@ -299,6 +300,7 @@ public class MainActivity extends AppCompatActivity {
         newTextView.setText(message);
         newTextView.setTextSize(textViewSize);
         newTextView.setTextIsSelectable(true);
+        newTextView.setBreakStrategy(Layout.BREAK_STRATEGY_SIMPLE); // prevents text "dancing" while speech is being recognized and added
         newTextView.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
