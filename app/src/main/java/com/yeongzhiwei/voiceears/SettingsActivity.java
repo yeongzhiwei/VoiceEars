@@ -9,8 +9,10 @@ import android.view.View;
 import android.widget.EditText;
 
 public class SettingsActivity extends AppCompatActivity {
-    private String api_key;
-    private String region;
+    private SharedPreferences sharedPreferences;
+
+    private String cognitiveServicesApiKey;
+    private String cognitiveServicesRegion;
 
     // UI
     private EditText apikeyEditText;
@@ -21,9 +23,11 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
+        sharedPreferences = getSharedPreferences(getString(R.string.shared_preferences_key), MODE_PRIVATE);
+
         initializeViews();
-        retrieveIntentData();
-        refreshLayout();
+        loadSavedPreferences();
+        setEditTextHint();
     }
 
     private void initializeViews() {
@@ -31,23 +35,61 @@ public class SettingsActivity extends AppCompatActivity {
         regionEditText = (EditText) findViewById(R.id.editText_region);
     }
 
-    private void retrieveIntentData() {
-        Intent intent = getIntent();
-        api_key = intent.getStringExtra(MainActivity.EXTRA_API_KEY);
-        region = intent.getStringExtra(MainActivity.EXTRA_REGION);
+    private void loadSavedPreferences() {
+        cognitiveServicesApiKey = loadSavedCognitiveServicesApiKey();
+        cognitiveServicesRegion = loadSavedCognitiveServicesRegion();
     }
 
-    private void refreshLayout() {
-        if (api_key != null) {
-            apikeyEditText.setText(api_key);
+    private void setEditTextHint() {
+        if (cognitiveServicesApiKey != null) {
+            apikeyEditText.setHint("***" + cognitiveServicesApiKey.substring(Math.max(0, cognitiveServicesApiKey.length() - 5)));
         }
 
-        if (region != null) {
-            regionEditText.setText(region);
+        if (cognitiveServicesRegion != null) {
+            regionEditText.setHint(cognitiveServicesRegion);
         }
     }
 
-//    public void closeActivity (View view) {
-//        finish();
-//    }
+    public void onSave(View view) {
+        String newCognitiveServicesApiKey = apikeyEditText.getText().toString();
+        if (newCognitiveServicesApiKey.trim().length() != 0) {
+            saveCognitiveServicesApiKey(newCognitiveServicesApiKey);
+        }
+
+        String newCognitiveServicesRegion = regionEditText.getText().toString();
+        if (newCognitiveServicesRegion.trim().length() != 0) {
+            saveCognitiveServicesRegion(newCognitiveServicesRegion);
+        }
+
+        Intent returnIntent = new Intent();
+        setResult(RESULT_OK, returnIntent);
+        finish();
+    }
+
+    public void onCancel(View view) {
+        Intent returnIntent = new Intent();
+        setResult(RESULT_CANCELED, returnIntent);
+        finish();
+    }
+
+    private String loadSavedCognitiveServicesApiKey() {
+        return sharedPreferences.getString(getString(R.string.saved_cognitive_services_api_key), null);
+    }
+
+    private void saveCognitiveServicesApiKey(String newKey) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(getString(R.string.saved_cognitive_services_api_key), newKey);
+        editor.commit();
+    }
+
+
+    private String loadSavedCognitiveServicesRegion() {
+        return sharedPreferences.getString(getString(R.string.saved_cognitive_services_region), null);
+    }
+
+    private void saveCognitiveServicesRegion(String newRegion) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(getString(R.string.saved_cognitive_services_region), newRegion);
+        editor.commit();
+    }
 }

@@ -6,7 +6,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -35,9 +34,7 @@ import static android.Manifest.permission.INTERNET;
 import static android.Manifest.permission.RECORD_AUDIO;
 
 public class MainActivity extends AppCompatActivity {
-    public final static String EXTRA_API_KEY = "com.yeongzhiwei.voiceears.COGNITIVE_SERVICES_KEY";
-    public final static String EXTRA_REGION = "com.yeongzhiwei.voiceears.COGNITIVE_SERVICES_REGION";
-
+    public static Integer settingsRequestCode = 6; // arbitrary number
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private SharedPreferences sharedPreferences;
     int requestCode = 5; // unique code for the permission request
@@ -56,8 +53,8 @@ public class MainActivity extends AppCompatActivity {
     private final Integer seekBarMinValue = 10;
 
     // Cognitive Services
-    private static String speechSubscriptionKey = "0c2815f15dd145c38b8d6e16f7d0c794";
-    private static String speechRegion = "southeastasia";
+    private static String cognitiveServicesApiKey;
+    private static String cognitiveServicesRegion;
     // Text-to-Speech
     private Synthesizer synthesizer = null;
     private Counter counter = new Counter();
@@ -72,14 +69,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        sharedPreferences = getPreferences(Context.MODE_PRIVATE);
-        textViewSize = loadTextViewSize();
+        sharedPreferences = getSharedPreferences(getString(R.string.shared_preferences_key), MODE_PRIVATE);
+        loadSavedPreferences();
 
         initializeViews();
         configureViews();
         loadSavedInstanceState(savedInstanceState);
-        configureTextToSpeech();
-        configureSpeechToText();
+        configureCognitiveServices();
     }
 
     @Override
@@ -119,6 +115,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void configureViews() {
+        refreshGenderIcon();
+
         messageScrollView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
             if (messageLinearLayout.getHeight() - messageScrollView.getHeight() > scrollY) {
                 enableAutoScrollDown = false;
@@ -177,6 +175,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void loadSavedPreferences() {
+        cognitiveServicesApiKey = loadSavedCognitiveServicesApiKey();
+        cognitiveServicesRegion = loadSavedCognitiveServicesRegion();
+        textViewSize = loadSavedTextViewSize();
+        gender = Voice.Gender.valueOf(loadSavedGender());
+    }
+
     private void loadSavedInstanceState(final Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             String[] messages = savedInstanceState.getStringArray("messages");
@@ -189,13 +194,31 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void configureTextToSpeech() {
-        if (synthesizer == null) {
-            gender = Voice.Gender.valueOf(loadGender());
-            refreshGenderIcon();
-
-            synthesizer = new Synthesizer(speechSubscriptionKey, Voice.getDefaultVoice(gender));
+    private void configureCognitiveServices() {
+        if (cognitiveServicesApiKey.length() == 0 || cognitiveServicesRegion.length() == 0) {
+            startSettingsActivity();
+            Toast.makeText(MainActivity.this, R.string.toast_blank_key_or_region, Toast.LENGTH_LONG).show();
+            return;
         }
+
+        if (! authenticateApiKey()) {
+            startSettingsActivity();
+            Toast.makeText(MainActivity.this, R.string.toast_invalid_key_or_region, Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        configureTextToSpeech();
+        configureSpeechToText();
+    }
+
+    private Boolean authenticateApiKey() {
+        final Authentication authentication = new Authentication(cognitiveServicesApiKey, cognitiveServicesRegion);
+        Log.d(LOG_TAG, cognitiveServicesApiKey + cognitiveServicesRegion);
+        return authentication.getAccessToken() != null;
+    }
+
+    private void configureTextToSpeech() {
+        synthesizer = new Synthesizer(cognitiveServicesApiKey, cognitiveServicesRegion, Voice.getDefaultVoice(gender));
 
         paintDrawable = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimary));
         paintDrawable.setCornerRadius(8);
@@ -242,13 +265,13 @@ public class MainActivity extends AppCompatActivity {
         try {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO, INTERNET}, requestCode);
 
-            if (recognizer == null) {
-                recognizer = new Recognizer(speechSubscriptionKey, speechRegion, (order, result) -> {
-                    appendSpeakerMessage(order, result);
-                });
-            }
+            recognizer = new Recognizer(cognitiveServicesApiKey, cognitiveServicesRegion, (order, result) -> {
+                appendSpeakerMessage(order, result);
+            });
         } catch (Exception ex) {
-            Log.e(LOG_TAG, "could not init sdk, " + ex.toString());
+            String message = "Error: Could not configure Speech to text SDK, " + ex.toString();
+            createAndAddTextView(message);
+            Log.e(LOG_TAG, message);
         }
     }
 
@@ -310,7 +333,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void adjustTextViewSize(Integer size) {
         int childcount = messageLinearLayout.getChildCount();
-        for (int i=0; i < childcount; i++){
+        for (int i = 0; i < childcount; i++) {
             TextView textView = (TextView) messageLinearLayout.getChildAt(i);
             textView.setTextSize(size);
         }
@@ -331,20 +354,22 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        int itemId = item.getItemId();
-        if (itemId == R.id.action_gender) {
-            if (synthesizer != null) {
-                gender = synthesizer.getVoice().toggleVoice();
-                refreshGenderIcon();
-                saveGender(gender.name());
-            }
-        } else if (itemId == R.id.action_settings) {
-            Intent messageIntent = new Intent(this, SettingsActivity.class);
-            messageIntent.putExtra(EXTRA_API_KEY, "haha");
-            messageIntent.putExtra(EXTRA_REGION, "southeastasia");
-            startActivity(messageIntent);
+        if (item.getItemId() == R.id.action_gender) {
+            toggleGender();
+        } else if (item.getItemId() == R.id.action_settings) {
+            startSettingsActivity();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void toggleGender() {
+        if (synthesizer == null) {
+            return;
+        }
+
+        gender = synthesizer.getVoice().toggleVoice();
+        refreshGenderIcon();
+        saveGender(gender.name());
     }
 
     private void refreshGenderIcon() {
@@ -356,6 +381,27 @@ public class MainActivity extends AppCompatActivity {
             genderMenuItem.setIcon(R.drawable.boy);
         } else {
             genderMenuItem.setIcon(R.drawable.girl);
+        }
+    }
+
+    private void startSettingsActivity() {
+        Intent messageIntent = new Intent(this, SettingsActivity.class);
+        startActivityForResult(messageIntent, settingsRequestCode);
+    }
+
+    public void onActivityResult(int requestCode, int resultCode,  Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == settingsRequestCode) {
+            if (resultCode == RESULT_CANCELED) {
+                if (! authenticateApiKey()) {
+                    finish();
+                }
+            } else if (resultCode == RESULT_OK) {
+                cognitiveServicesApiKey = loadSavedCognitiveServicesApiKey();
+                cognitiveServicesRegion = loadSavedCognitiveServicesRegion();
+                configureCognitiveServices();
+            }
         }
     }
 
@@ -381,7 +427,15 @@ public class MainActivity extends AppCompatActivity {
 
     /*  KEY-VALUE PERSISTENT STORAGE */
 
-    private int loadTextViewSize() {
+    private String loadSavedCognitiveServicesApiKey() {
+        return sharedPreferences.getString(getString(R.string.saved_cognitive_services_api_key), "");
+    }
+
+    private String loadSavedCognitiveServicesRegion() {
+        return sharedPreferences.getString(getString(R.string.saved_cognitive_services_region), "");
+    }
+
+    private int loadSavedTextViewSize() {
         int defaultTextViewSize = getResources().getInteger(R.integer.default_textView_size);
         return sharedPreferences.getInt(getString(R.string.saved_textView_size_key), defaultTextViewSize);
     }
@@ -392,7 +446,7 @@ public class MainActivity extends AppCompatActivity {
         editor.commit();
     }
 
-    private String loadGender() {
+    private String loadSavedGender() {
         String defaultGender = getResources().getString(R.string.default_gender);
         return sharedPreferences.getString(getString(R.string.saved_gender_key), defaultGender);
     }
@@ -416,7 +470,7 @@ public class MainActivity extends AppCompatActivity {
                 if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
                     boolean shouldShowRationale = shouldShowRequestPermissionRationale(permission);
                     if (! shouldShowRationale) {
-                        Toast.makeText(MainActivity.this, getString(R.string.permission_microphone_denied_warning), Toast.LENGTH_LONG).show();
+                        Toast.makeText(MainActivity.this, getString(R.string.toast_permission_microphone_denied), Toast.LENGTH_LONG).show();
                     } else if (RECORD_AUDIO.equals(permission)) {
                         new AlertDialog.Builder(MainActivity.this)
                             .setMessage(getString(R.string.permission_microphone_request_message))
@@ -424,7 +478,7 @@ public class MainActivity extends AppCompatActivity {
                                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO}, requestCode);
                             })
                             .setNegativeButton("Cancel", (dialog, which) -> {
-                                Toast.makeText(MainActivity.this, getString(R.string.permission_microphone_denied_warning), Toast.LENGTH_LONG).show();
+                                Toast.makeText(MainActivity.this, getString(R.string.toast_permission_microphone_denied), Toast.LENGTH_LONG).show();
                             })
                             .create()
                             .show();

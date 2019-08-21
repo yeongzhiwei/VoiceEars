@@ -37,8 +37,8 @@ class Recognizer {
 
     private RecognizerUI recognizerUI;
 
-    Recognizer(String speechSubscriptionKey, String speechRegion, RecognizerUI recognizerUI) {
-        speechConfig = SpeechConfig.fromSubscription(speechSubscriptionKey, speechRegion);
+    Recognizer(String cognitiveServicesApiKey, String cognitiveServicesRegion, RecognizerUI recognizerUI) {
+        speechConfig = SpeechConfig.fromSubscription(cognitiveServicesApiKey, cognitiveServicesRegion);
 
         this.recognizerUI = recognizerUI;
     }

@@ -14,12 +14,12 @@ class Synthesizer {
     private Voice voice;
     private AudioTrack audioTrack;
 
-    Synthesizer(String apiKey) {
-        this(apiKey, Voice.getDefaultVoice(Voice.Gender.Male));
+    Synthesizer(String apiKey, String region) {
+        this(apiKey, region, Voice.getDefaultVoice(Voice.Gender.Male));
     }
 
-    Synthesizer(String apiKey, Voice voice) {
-        this.ttsServiceClient = new TtsServiceClient(apiKey);
+    Synthesizer(String apiKey, String region, Voice voice) {
+        this.ttsServiceClient = new TtsServiceClient(apiKey, region);
         this.voice = voice;
     }
 

@@ -14,9 +14,9 @@ import javax.net.ssl.HttpsURLConnection;
 
 class Authentication {
     private static final String LOG_TAG = Authentication.class.getName();
-    private static final String AccessTokenUri = "https://southeastasia.api.cognitive.microsoft.com/sts/v1.0/issueToken";
 
     private String apiKey;
+    private String accessTokenUri;
     private String accessToken;
     private Timer accessTokenRenewer;
 
@@ -24,8 +24,9 @@ class Authentication {
     private TimerTask nineMinitesTask = null;
     private final int RefreshTokenDuration = 9 * 60 * 1000;
 
-    Authentication(String apiKey) {
+    Authentication(String apiKey, String region) {
         this.apiKey = apiKey;
+        this.accessTokenUri = "https://" + region + ".api.cognitive.microsoft.com/sts/v1.0/issueToken";
 
         Thread thread = new Thread(() -> {
             RenewAccessToken();
@@ -49,13 +50,13 @@ class Authentication {
         accessTokenRenewer.schedule(nineMinitesTask, RefreshTokenDuration, RefreshTokenDuration);
     }
 
-    String GetAccessToken() {
+    String getAccessToken() {
         return this.accessToken;
     }
 
     private void RenewAccessToken() {
         synchronized(this) {
-            HttpPost(AccessTokenUri, this.apiKey);
+            HttpPost(accessTokenUri, this.apiKey);
 
             if (this.accessToken != null) {
                 Log.d(LOG_TAG, "new Access Token: " + this.accessToken);
@@ -63,14 +64,14 @@ class Authentication {
         }
     }
 
-    private void HttpPost(String AccessTokenUri, String apiKey) {
+    private void HttpPost(String accessTokenUri, String apiKey) {
         InputStream inSt = null;
         HttpsURLConnection webRequest = null;
 
         this.accessToken = null;
         //Prepare OAuth request
         try{
-            URL url = new URL(AccessTokenUri);
+            URL url = new URL(accessTokenUri);
             webRequest = (HttpsURLConnection) url.openConnection();
             webRequest.setDoInput(true);
             webRequest.setDoOutput(true);

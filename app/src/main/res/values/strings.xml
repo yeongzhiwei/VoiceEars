@@ -5,10 +5,25 @@
     <string name="imageView_scrolldown_contentDescription">scroll down</string>
     <string name="action_settings_title">Settings</string>
 
+    <string name="shared_preferences_key">sharedPreferencesKey</string>
+    <string name="saved_cognitive_services_api_key">savedCognitiveServicesApiKey</string>
+    <string name="saved_cognitive_services_region">savedCognitiveServicesRegion</string>
     <string name="saved_textView_size_key">savedTextViewSize</string>
     <string name="saved_gender_key">savedGender</string>
     <string name="default_gender">Male</string>
 
-    <string name="permission_microphone_denied_warning">WARNING: Speech-to-text is disabled. To enable it, go to Settings and allow this app to access your microphone.</string>
+    <string name="toast_blank_key_or_region">Enter the subscription key and region to start using this app.</string>
+    <string name="toast_invalid_key_or_region">Failed to authenticate. Check the API key and region.</string>
+
+    <string name="toast_permission_microphone_denied">WARNING: Speech-to-text is disabled. To enable it, go to Settings and allow this app to access your microphone.</string>
     <string name="permission_microphone_request_message">Allow this app to record your audio to enable Speech-to-text.</string>
+
+    <string name="settings_textView_title">Azure Cognitive Services</string>
+    <string name="settings_textView_key_text">API Key:</string>
+    <string name="settings_editText_key_hint">api key</string>
+    <string name="settings_textView_region_text">Region:</string>
+    <string name="settings_editText_region_hint">region</string>
+    <string name="settings_textView_message"><![CDATA[Create a Cognitive Services service in Azure Portal and go to Resource Management > Keys to get your subscription key.]]></string>
+    <string name="settings_button_save">SAVE</string>
+
 </resources>

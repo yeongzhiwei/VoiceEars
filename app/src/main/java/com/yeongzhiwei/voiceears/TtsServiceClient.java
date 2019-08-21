@@ -11,13 +11,14 @@ import javax.net.ssl.*;
 class TtsServiceClient {
     private static final String LOG_TAG = TtsServiceClient.class.getName();
     private static String contentType = "application/ssml+xml";
-    private final String serviceUri = "https://southeastasia.tts.speech.microsoft.com/cognitiveservices/v1";
+    private final String serviceUri;
     private String audioOutputFormat = "raw-16khz-16bit-mono-pcm";
     private final Authentication authentication;
     private byte[] result;
 
-    TtsServiceClient(String apiKey) {
-        authentication = new Authentication(apiKey);
+    TtsServiceClient(String apiKey, String region) {
+        authentication = new Authentication(apiKey, region);
+        serviceUri = "https://" + region + ".tts.speech.microsoft.com/cognitiveservices/v1";
     }
 
     byte[] speakSSML(final String ssml) {
@@ -38,7 +39,7 @@ class TtsServiceClient {
     private void doWork(String ssml) {
         int code;
         synchronized(authentication) {
-            String accessToken = authentication.GetAccessToken();
+            String accessToken = authentication.getAccessToken();
             try {
                 URL url = new URL(serviceUri);
                 HttpsURLConnection urlConnection = (HttpsURLConnection)url.openConnection();
