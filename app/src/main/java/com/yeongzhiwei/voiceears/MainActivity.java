@@ -213,7 +213,6 @@ public class MainActivity extends AppCompatActivity {
 
     private Boolean authenticateApiKey() {
         final Authentication authentication = new Authentication(cognitiveServicesApiKey, cognitiveServicesRegion);
-        Log.d(LOG_TAG, cognitiveServicesApiKey + cognitiveServicesRegion);
         return authentication.getAccessToken() != null;
     }
 

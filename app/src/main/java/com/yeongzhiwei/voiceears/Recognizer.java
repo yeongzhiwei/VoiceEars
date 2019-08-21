@@ -1,5 +1,6 @@
 package com.yeongzhiwei.voiceears;
 
+import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -30,6 +31,9 @@ class Recognizer {
     private ArrayList<String> content = new ArrayList<>();
     private Counter counter = new Counter();
 
+    private Handler handler = new Handler();
+    private int handlerDelay = 3000; // 1 second
+
     private static ExecutorService s_executorService;
     static {
         s_executorService = Executors.newCachedThreadPool();
@@ -42,7 +46,6 @@ class Recognizer {
 
         this.recognizerUI = recognizerUI;
     }
-
 
     // Adapted from Sample code for the Microsoft Cognitive Services Speech SDK
     // https://github.com/Azure-Samples/cognitive-services-speech-sdk
@@ -63,6 +66,7 @@ class Recognizer {
                 content.add(s);
                 String message = TextUtils.join(" ", content).trim();
                 if (message.length() != 0) {
+                    resetRepeatingTask();
                     recognizerUI.update(counter.get(), message);
                 }
                 content.remove(content.size() - 1);
@@ -71,13 +75,10 @@ class Recognizer {
             speechRecognizer.recognized.addEventListener((o, speechRecognitionResultEventArgs) -> {
                 final String s = speechRecognitionResultEventArgs.getResult().getText();
                 Log.d(LOG_TAG, s);
-                if (s.trim().length() == 0) {
-                    counter.increment();
-                    content.clear();
-                }
                 content.add(s);
                 String message = TextUtils.join(" ", content).trim();
                 if (message.length() != 0) { // && continuousListeningStarted
+                    resetRepeatingTask();
                     recognizerUI.update(counter.get(), message);
                 }
             });
@@ -93,6 +94,7 @@ class Recognizer {
     }
 
     synchronized void stopSpeechToText() {
+        stopRepeatingTask();
         if (speechRecognizer != null) {
             final Future<Void> task = speechRecognizer.stopContinuousRecognitionAsync();
             setOnTaskCompletedListener(task, result -> {
@@ -127,5 +129,29 @@ class Recognizer {
 
     private interface OnTaskCompletedListener<T> {
         void onCompleted(T taskResult);
+    }
+
+    private Runnable resetContent = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                content.clear();
+                counter.increment();
+            } finally {
+                handler.postDelayed(resetContent, handlerDelay);
+            }
+        }
+    };
+
+    private void startRepeatingTask() {
+        resetContent.run();
+    }
+    private void resetRepeatingTask() {
+        handler.removeCallbacks(resetContent);
+        handler.postDelayed(resetContent, handlerDelay);
+    }
+
+    private void stopRepeatingTask() {
+        handler.removeCallbacks(resetContent);
     }
 }
