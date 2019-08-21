@@ -105,6 +105,14 @@ class Recognizer {
         }
     }
 
+    void stopSpeechToTextAndReleaseMicrophone() {
+        stopSpeechToText();
+        if (microphoneStream != null) {
+            microphoneStream.close();
+            microphoneStream = null;
+        }
+    }
+
     public interface RecognizerUI {
         void update(Integer order, String result);
     }

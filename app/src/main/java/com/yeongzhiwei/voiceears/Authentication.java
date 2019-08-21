@@ -21,8 +21,8 @@ class Authentication {
     private Timer accessTokenRenewer;
 
     // Access Token expires every 10 minutes. Renew it every 9 minutes only.
-    private final int RefreshTokenDuration = 9 * 60 * 1000;
     private TimerTask nineMinitesTask = null;
+    private final int RefreshTokenDuration = 9 * 60 * 1000;
 
     Authentication(String apiKey) {
         this.apiKey = apiKey;
@@ -57,7 +57,7 @@ class Authentication {
         synchronized(this) {
             HttpPost(AccessTokenUri, this.apiKey);
 
-            if(this.accessToken != null){
+            if (this.accessToken != null) {
                 Log.d(LOG_TAG, "new Access Token: " + this.accessToken);
             }
         }

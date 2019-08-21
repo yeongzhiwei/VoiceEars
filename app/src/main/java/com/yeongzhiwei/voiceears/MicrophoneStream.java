@@ -6,7 +6,6 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 
-import com.microsoft.cognitiveservices.speech.audio.PullAudioInputStreamCallback;
 import com.microsoft.cognitiveservices.speech.audio.AudioStreamFormat;
 
 /**
@@ -15,29 +14,26 @@ import com.microsoft.cognitiveservices.speech.audio.AudioStreamFormat;
  * It configures the microphone with 16 kHz sample rate, 16 bit samples, mono (single-channel).
  */
 class MicrophoneStream extends PullAudioInputStreamCallback {
+
     private final static int SAMPLE_RATE = 16000;
-    private final AudioStreamFormat format;
-    private AudioRecord recorder;
+    private final AudioStreamFormat audioStreamFormat;
+    private AudioRecord audioRecord;
 
     MicrophoneStream() {
-        this.format = AudioStreamFormat.getWaveFormatPCM(SAMPLE_RATE, (short)16, (short)1);
+        this.audioStreamFormat = AudioStreamFormat.getWaveFormatPCM(SAMPLE_RATE, (short)16, (short)1);
         this.initMic();
-    }
-
-    public AudioStreamFormat getFormat() {
-        return this.format;
     }
 
     @Override
     public int read(byte[] bytes) {
-        long ret = this.recorder.read(bytes, 0, bytes.length);
+        long ret = this.audioRecord.read(bytes, 0, bytes.length);
         return (int)ret;
     }
 
     @Override
     public void close() {
-        this.recorder.release();
-        this.recorder = null;
+        this.audioRecord.release();
+        this.audioRecord = null;
     }
 
     private void initMic() {
@@ -47,11 +43,11 @@ class MicrophoneStream extends PullAudioInputStreamCallback {
                 .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
                 .setChannelMask(AudioFormat.CHANNEL_IN_MONO)
                 .build();
-        this.recorder = new AudioRecord.Builder()
+        this.audioRecord = new AudioRecord.Builder()
                 .setAudioSource(MediaRecorder.AudioSource.VOICE_RECOGNITION)
                 .setAudioFormat(af)
                 .build();
 
-        this.recorder.startRecording();
+        this.audioRecord.startRecording();
     }
 }

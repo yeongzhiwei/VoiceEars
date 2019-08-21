@@ -1,12 +1,15 @@
 package com.yeongzhiwei.voiceears;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.PaintDrawable;
 import android.os.Bundle;
 import android.text.Editable;
@@ -23,6 +26,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import java.util.HashMap;
@@ -31,8 +35,12 @@ import static android.Manifest.permission.INTERNET;
 import static android.Manifest.permission.RECORD_AUDIO;
 
 public class MainActivity extends AppCompatActivity {
+    public final static String EXTRA_API_KEY = "com.yeongzhiwei.voiceears.COGNITIVE_SERVICES_KEY";
+    public final static String EXTRA_REGION = "com.yeongzhiwei.voiceears.COGNITIVE_SERVICES_REGION";
+
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
-    private SharedPreferences sharedPref;
+    private SharedPreferences sharedPreferences;
+    int requestCode = 5; // unique code for the permission request
 
     // UI
     private MenuItem genderMenuItem;
@@ -64,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        sharedPref = getPreferences(Context.MODE_PRIVATE);
+        sharedPreferences = getPreferences(Context.MODE_PRIVATE);
         textViewSize = loadTextViewSize();
 
         initializeViews();
@@ -72,6 +80,33 @@ public class MainActivity extends AppCompatActivity {
         loadSavedInstanceState(savedInstanceState);
         configureTextToSpeech();
         configureSpeechToText();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        if (recognizer != null) {
+            recognizer.startSpeechToText();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        if (recognizer != null) {
+            recognizer.stopSpeechToText();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (recognizer != null) {
+            recognizer.stopSpeechToTextAndReleaseMicrophone();
+        }
     }
 
     private void initializeViews() {
@@ -205,19 +240,19 @@ public class MainActivity extends AppCompatActivity {
 
     private void configureSpeechToText() {
         try {
-            int requestCode = 5; // unique code for the permission request
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO, INTERNET}, requestCode);
 
             if (recognizer == null) {
                 recognizer = new Recognizer(speechSubscriptionKey, speechRegion, (order, result) -> {
                     appendSpeakerMessage(order, result);
                 });
-                recognizer.startSpeechToText();
             }
         } catch (Exception ex) {
             Log.e(LOG_TAG, "could not init sdk, " + ex.toString());
         }
     }
+
+    /* ADD TEXTVIEW TO LINEARLAYOUT IN SCROLLVIEW */
 
     private TextView appendTyperMessage(final String message) {
         return createAndAddTextView("⌨ " + message);
@@ -254,6 +289,8 @@ public class MainActivity extends AppCompatActivity {
         return newTextView;
     }
 
+    /* SCROLLING IN SCROLLVIEW */
+
     private void scrollToBottom() {
         // https://stackoverflow.com/questions/28105945/add-view-to-scrollview-and-then-scroll-to-bottom-which-callback-is-needed
         messageScrollView.postDelayed(() -> {
@@ -269,6 +306,8 @@ public class MainActivity extends AppCompatActivity {
         messageScrollView.smoothScrollBy(0, messageScrollView.getHeight() + messageLinearLayout.getHeight() - messageScrollView.getScrollY());
     }
 
+    /* TEXT SIZE SEEKBAR */
+
     private void adjustTextViewSize(Integer size) {
         int childcount = messageLinearLayout.getChildCount();
         for (int i=0; i < childcount; i++){
@@ -277,12 +316,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /* ACTIONBAR OPTIONS */
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // https://stackoverflow.com/questions/38158953/how-to-create-button-in-action-bar-in-android
         getMenuInflater().inflate(R.menu.mymenu, menu);
 
-        genderMenuItem = menu.findItem(R.id.button_gender);
+        genderMenuItem = menu.findItem(R.id.action_gender);
         refreshGenderIcon();
 
         return super.onCreateOptionsMenu(menu);
@@ -290,19 +331,38 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.button_gender) {
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_gender) {
             if (synthesizer != null) {
                 gender = synthesizer.getVoice().toggleVoice();
                 refreshGenderIcon();
                 saveGender(gender.name());
             }
+        } else if (itemId == R.id.action_settings) {
+            Intent messageIntent = new Intent(this, SettingsActivity.class);
+            messageIntent.putExtra(EXTRA_API_KEY, "haha");
+            messageIntent.putExtra(EXTRA_REGION, "southeastasia");
+            startActivity(messageIntent);
         }
         return super.onOptionsItemSelected(item);
     }
 
+    private void refreshGenderIcon() {
+        if (genderMenuItem == null) {
+            return;
+        }
+
+        if (gender == Voice.Gender.Male) {
+            genderMenuItem.setIcon(R.drawable.boy);
+        } else {
+            genderMenuItem.setIcon(R.drawable.girl);
+        }
+    }
+
+    /* LAYOUT PERSISTENCE ON ROTATION */
+
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        // Save the data when rotating the orientation
         super.onSaveInstanceState(outState);
 
         final int childCount = messageLinearLayout.getChildCount();
@@ -319,40 +379,58 @@ public class MainActivity extends AppCompatActivity {
         outState.putStringArray("messages", messages);
     }
 
-    private void refreshGenderIcon() {
-        if (genderMenuItem == null) {
-            return;
-        }
-
-        if (gender == Voice.Gender.Male) {
-            genderMenuItem.setIcon(R.drawable.boy);
-        } else {
-            genderMenuItem.setIcon(R.drawable.girl);
-        }
-    }
-
-
     /*  KEY-VALUE PERSISTENT STORAGE */
 
     private int loadTextViewSize() {
         int defaultTextViewSize = getResources().getInteger(R.integer.default_textView_size);
-        return sharedPref.getInt(getString(R.string.saved_textView_size_key), defaultTextViewSize);
+        return sharedPreferences.getInt(getString(R.string.saved_textView_size_key), defaultTextViewSize);
     }
 
     private void saveTextViewSize(int newSize) {
-        SharedPreferences.Editor editor = sharedPref.edit();
+        SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt(getString(R.string.saved_textView_size_key), newSize);
         editor.commit();
     }
 
     private String loadGender() {
         String defaultGender = getResources().getString(R.string.default_gender);
-        return sharedPref.getString(getString(R.string.saved_gender_key), defaultGender);
+        return sharedPreferences.getString(getString(R.string.saved_gender_key), defaultGender);
     }
 
     private void saveGender(String newGender) {
-        SharedPreferences.Editor editor = sharedPref.edit();
+        SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(getString(R.string.saved_gender_key), newGender);
         editor.commit();
+    }
+
+    /* PERMISSION */
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        // https://stackoverflow.com/questions/30719047/android-m-check-runtime-permission-how-to-determine-if-the-user-checked-nev
+        if (requestCode == this.requestCode) {
+            for (int i = 0, len = permissions.length; i < len; i++) {
+                String permission = permissions[i];
+                if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
+                    boolean shouldShowRationale = shouldShowRequestPermissionRationale(permission);
+                    if (! shouldShowRationale) {
+                        Toast.makeText(MainActivity.this, getString(R.string.permission_microphone_denied_warning), Toast.LENGTH_LONG).show();
+                    } else if (RECORD_AUDIO.equals(permission)) {
+                        new AlertDialog.Builder(MainActivity.this)
+                            .setMessage(getString(R.string.permission_microphone_request_message))
+                            .setPositiveButton("OK", (dialog, which) -> {
+                                ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO}, requestCode);
+                            })
+                            .setNegativeButton("Cancel", (dialog, which) -> {
+                                Toast.makeText(MainActivity.this, getString(R.string.permission_microphone_denied_warning), Toast.LENGTH_LONG).show();
+                            })
+                            .create()
+                            .show();
+                    }
+                }
+            }
+        }
     }
 }
