@@ -118,19 +118,19 @@ public class MainActivity extends AppCompatActivity {
     private void configureViews() {
         refreshGenderIcon();
 
-        messageScrollView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-            if (messageLinearLayout.getHeight() - messageScrollView.getHeight() > scrollY) {
-                enableAutoScrollDown = false;
-                imageViewScrollDown.setVisibility(View.VISIBLE);
-            } else {
-                enableAutoScrollDown = true;
-                imageViewScrollDown.setVisibility(View.GONE);
-            }
-        });
-
-        imageViewScrollDown.setOnClickListener(view -> {
-            scrollDown();
-        });
+//        messageScrollView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+//            if (messageLinearLayout.getHeight() - messageScrollView.getHeight() > scrollY) {
+//                enableAutoScrollDown = false;
+//                imageViewScrollDown.setVisibility(View.VISIBLE);
+//            } else {
+//                enableAutoScrollDown = true;
+//                imageViewScrollDown.setVisibility(View.GONE);
+//            }
+//        });
+//
+//        imageViewScrollDown.setOnClickListener(view -> {
+//            scrollDown();
+//        });
 
         sizeSeekBar.setProgress(textViewSize - seekBarMinValue);
 
@@ -268,6 +268,7 @@ public class MainActivity extends AppCompatActivity {
             recognizer = new Recognizer(cognitiveServicesApiKey, cognitiveServicesRegion, (order, result) -> {
                 appendSpeakerMessage(order, result);
             });
+            recognizer.startSpeechToText();
         } catch (Exception ex) {
             String message = "Error: Could not configure Speech to text SDK, " + ex.toString();
             createAndAddTextView(message);
@@ -318,9 +319,9 @@ public class MainActivity extends AppCompatActivity {
     private void scrollToBottom() {
         // https://stackoverflow.com/questions/28105945/add-view-to-scrollview-and-then-scroll-to-bottom-which-callback-is-needed
         messageScrollView.postDelayed(() -> {
-            if (enableAutoScrollDown) {
+//            if (enableAutoScrollDown) {
                 scrollDown();
-            }
+//            }
         }, 200);
 //        Log.d(LOG_TAG, "scrollView2 getBottom(): " + messageScrollView.getBottom() + ". getHeight(): " + messageScrollView.getHeight() + ". getScrollY(): " + messageScrollView.getScrollY());
 //        Log.d(LOG_TAG, "linearLayout2 getBottom(): " + messageLinearLayout.getBottom() + ". getHeight(): " + messageLinearLayout.getHeight() + ". getScrollY(): " + messageLinearLayout.getScrollY());
@@ -404,6 +405,7 @@ public class MainActivity extends AppCompatActivity {
                 configureCognitiveServices();
             }
         }
+
     }
 
     /* LAYOUT PERSISTENCE ON ROTATION */
@@ -483,6 +485,10 @@ public class MainActivity extends AppCompatActivity {
                             })
                             .create()
                             .show();
+                    }
+                } else if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    if (RECORD_AUDIO.equals(permission)) {
+                        configureSpeechToText();
                     }
                 }
             }
