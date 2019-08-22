@@ -32,7 +32,7 @@ class Recognizer {
     private Counter counter = new Counter();
 
     private Handler handler = new Handler();
-    private int handlerDelay = 3000; // 1 second
+    private int handlerDelay = 3000; // 3 sec
 
     private static ExecutorService s_executorService;
     static {

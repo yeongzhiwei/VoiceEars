@@ -118,19 +118,23 @@ public class MainActivity extends AppCompatActivity {
     private void configureViews() {
         refreshGenderIcon();
 
-//        messageScrollView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-//            if (messageLinearLayout.getHeight() - messageScrollView.getHeight() > scrollY) {
-//                enableAutoScrollDown = false;
-//                imageViewScrollDown.setVisibility(View.VISIBLE);
-//            } else {
-//                enableAutoScrollDown = true;
-//                imageViewScrollDown.setVisibility(View.GONE);
-//            }
-//        });
+        messageScrollView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+            Log.d(LOG_TAG, "scrollView2 getBottom(): " + messageScrollView.getBottom() + ". getHeight(): " + messageScrollView.getHeight() + ". getScrollY(): " + messageScrollView.getScrollY());
+            Log.d(LOG_TAG, "linearLayout2 getBottom(): " + messageLinearLayout.getBottom() + ". getHeight(): " + messageLinearLayout.getHeight() + ". getScrollY(): " + messageLinearLayout.getScrollY());
+
+            if (messageLinearLayout.getHeight() > messageScrollView.getHeight() + scrollY && scrollY < oldScrollY && enableAutoScrollDown) {
+                enableAutoScrollDown = false;
+                imageViewScrollDown.setVisibility(View.VISIBLE);
+            } else if (messageLinearLayout.getHeight() == messageScrollView.getHeight() + scrollY) {
+                Log.d(LOG_TAG, "ENABLED");
+                enableAutoScrollDown = true;
+                imageViewScrollDown.setVisibility(View.GONE);
+            }
+        });
 //
-//        imageViewScrollDown.setOnClickListener(view -> {
-//            scrollDown();
-//        });
+        imageViewScrollDown.setOnClickListener(view -> {
+            scrollDown();
+        });
 
         sizeSeekBar.setProgress(textViewSize - seekBarMinValue);
 
@@ -139,6 +143,7 @@ public class MainActivity extends AppCompatActivity {
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 textViewSize = i + seekBarMinValue;
                 adjustTextViewSize(textViewSize);
+                scrollToBottom();
             }
 
             @Override
@@ -319,12 +324,10 @@ public class MainActivity extends AppCompatActivity {
     private void scrollToBottom() {
         // https://stackoverflow.com/questions/28105945/add-view-to-scrollview-and-then-scroll-to-bottom-which-callback-is-needed
         messageScrollView.postDelayed(() -> {
-//            if (enableAutoScrollDown) {
+            if (enableAutoScrollDown) {
                 scrollDown();
-//            }
+            }
         }, 200);
-//        Log.d(LOG_TAG, "scrollView2 getBottom(): " + messageScrollView.getBottom() + ". getHeight(): " + messageScrollView.getHeight() + ". getScrollY(): " + messageScrollView.getScrollY());
-//        Log.d(LOG_TAG, "linearLayout2 getBottom(): " + messageLinearLayout.getBottom() + ". getHeight(): " + messageLinearLayout.getHeight() + ". getScrollY(): " + messageLinearLayout.getScrollY());
     }
 
     private void scrollDown() {
@@ -487,8 +490,8 @@ public class MainActivity extends AppCompatActivity {
                             .show();
                     }
                 } else if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                    if (RECORD_AUDIO.equals(permission)) {
-                        configureSpeechToText();
+                    if (recognizer != null) {
+                        recognizer.startSpeechToText();
                     }
                 }
             }
