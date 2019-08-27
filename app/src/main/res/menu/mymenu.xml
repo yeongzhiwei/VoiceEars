@@ -1,6 +1,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/action_mirror"
+        android:icon="@drawable/mirror"
+        android:title=""
+        app:showAsAction="always" />
+    <item
         android:id="@+id/action_gender"
         android:icon="@drawable/boy"
         android:title=""

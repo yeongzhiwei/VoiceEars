@@ -25,5 +25,7 @@
     <string name="settings_editText_region_hint">region</string>
     <string name="settings_textView_message"><![CDATA[Create a Cognitive Services service in Azure Portal and go to Resource Management > Keys to get your subscription key.]]></string>
     <string name="settings_button_save">SAVE</string>
+    <string name="editText_original_hint">Type something</string>
+    <string name="imageButton_clear_contentDescription">Clear the text.</string>
 
 </resources>

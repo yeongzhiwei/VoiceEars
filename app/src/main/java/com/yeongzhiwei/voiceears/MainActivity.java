@@ -359,7 +359,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_gender) {
+        if (item.getItemId() == R.id.action_mirror) {
+            startMirrorActivity();
+        } else if (item.getItemId() == R.id.action_gender) {
             toggleGender();
         } else if (item.getItemId() == R.id.action_settings) {
             startSettingsActivity();
@@ -392,6 +394,11 @@ public class MainActivity extends AppCompatActivity {
     private void startSettingsActivity() {
         Intent messageIntent = new Intent(this, SettingsActivity.class);
         startActivityForResult(messageIntent, settingsRequestCode);
+    }
+
+    private void startMirrorActivity() {
+        Intent intent = new Intent(this, MirrorActivity.class);
+        startActivity(intent);
     }
 
     public void onActivityResult(int requestCode, int resultCode,  Intent data) {

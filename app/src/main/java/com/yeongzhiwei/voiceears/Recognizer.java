@@ -63,6 +63,7 @@ class Recognizer {
 
             speechRecognizer.recognizing.addEventListener((o, speechRecognitionResultEventArgs) -> {
                 final String s = speechRecognitionResultEventArgs.getResult().getText();
+                Log.d(LOG_TAG, "recognizing: " + s);
                 content.add(s);
                 String message = TextUtils.join(" ", content).trim();
                 if (message.length() != 0) {
@@ -74,7 +75,7 @@ class Recognizer {
 
             speechRecognizer.recognized.addEventListener((o, speechRecognitionResultEventArgs) -> {
                 final String s = speechRecognitionResultEventArgs.getResult().getText();
-                Log.d(LOG_TAG, s);
+                Log.d(LOG_TAG, "recognized: " + s);
                 content.add(s);
                 String message = TextUtils.join(" ", content).trim();
                 if (message.length() != 0) { // && continuousListeningStarted
