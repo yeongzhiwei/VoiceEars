@@ -28,19 +28,25 @@ class Synthesizer {
     }
 
     void speakToAudio(String text, Runnable callOnPlay, Runnable callOnStop) {
-        playSound(speak(text), callOnPlay, callOnStop);
+        playSound(speak(text, 1), callOnPlay, callOnStop);
     }
 
-    private byte[] speak(String text) {
+    void speakToAudio(String text, double speed, Runnable callOnPlay, Runnable callOnStop) {
+        playSound(speak(text, speed), callOnPlay, callOnStop);
+    }
+
+    private byte[] speak(String text, double speed) {
         String ssml = "<speak version='1.0' xml:lang='" + voice.getLang()
                 + "'><voice xml:lang='" + voice.getLang()
                 + "' xml:gender='" + voice.getGender()
-                + "' name='" + voice.getVoiceName() + "'>"
-                + text + "</voice></speak>";
+                + "' name='" + voice.getVoiceName()
+                + "'><prosody rate='" + speed + "'>"
+                + text + "</prosody></voice></speak>";
         Log.d(LOG_TAG, "Sending ssml: " + ssml);
 
         return speakSSML(ssml);
     }
+
 
     void speakSSMLToAudio(String ssml, Runnable callOnPlay, Runnable callOnStop) {
         playSound(speakSSML(ssml), callOnPlay, callOnStop);

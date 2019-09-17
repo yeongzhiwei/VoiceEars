@@ -4,13 +4,15 @@ class PreferencesHelper {
     static final String sharedPreferencesName = "hmLwWy669t";
 
     enum Key {
+        // WARNING: DO NOT CHANGE THE ORDER. ADD NEW KEY TO THE BOTTOM
         cognitiveServicesApiKeyKey,
         cognitiveServicesRegionKey,
         textViewSizeKey,
         genderKey,
         mirroredTextKey,
         mirroredTextViewSizeKey,
-        mirroredMirrorMode;
+        mirroredMirrorMode,
+        audioSpeedKey;
     }
 
     static void save(Key key, String newValue) {
