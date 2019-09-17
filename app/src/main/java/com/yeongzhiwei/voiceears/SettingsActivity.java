@@ -3,18 +3,14 @@ package com.yeongzhiwei.voiceears;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 
 public class SettingsActivity extends AppCompatActivity {
-    private SharedPreferences sharedPreferences;
-
     private String cognitiveServicesApiKey;
     private String cognitiveServicesRegion;
 
-    // UI
     private EditText apikeyEditText;
     private EditText regionEditText;
 
@@ -23,21 +19,19 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        sharedPreferences = getSharedPreferences(getString(R.string.shared_preferences_key), MODE_PRIVATE);
-
         initializeViews();
         loadSavedPreferences();
         setEditTextHint();
     }
 
     private void initializeViews() {
-        apikeyEditText = (EditText) findViewById(R.id.editText_key);
-        regionEditText = (EditText) findViewById(R.id.editText_region);
+        apikeyEditText = findViewById(R.id.editText_key);
+        regionEditText = findViewById(R.id.editText_region);
     }
 
     private void loadSavedPreferences() {
-        cognitiveServicesApiKey = loadSavedCognitiveServicesApiKey();
-        cognitiveServicesRegion = loadSavedCognitiveServicesRegion();
+        cognitiveServicesApiKey = PreferencesHelper.loadString(PreferencesHelper.Key.cognitiveServicesApiKeyKey);
+        cognitiveServicesRegion = PreferencesHelper.loadString(PreferencesHelper.Key.cognitiveServicesRegionKey);
     }
 
     private void setEditTextHint() {
@@ -53,12 +47,12 @@ public class SettingsActivity extends AppCompatActivity {
     public void onSave(View view) {
         String newCognitiveServicesApiKey = apikeyEditText.getText().toString();
         if (newCognitiveServicesApiKey.trim().length() != 0) {
-            saveCognitiveServicesApiKey(newCognitiveServicesApiKey);
+            PreferencesHelper.save(PreferencesHelper.Key.cognitiveServicesApiKeyKey, newCognitiveServicesApiKey);
         }
 
         String newCognitiveServicesRegion = regionEditText.getText().toString();
         if (newCognitiveServicesRegion.trim().length() != 0) {
-            saveCognitiveServicesRegion(newCognitiveServicesRegion);
+            PreferencesHelper.save(PreferencesHelper.Key.cognitiveServicesRegionKey, newCognitiveServicesRegion);
         }
 
         Intent returnIntent = new Intent();
@@ -70,26 +64,5 @@ public class SettingsActivity extends AppCompatActivity {
         Intent returnIntent = new Intent();
         setResult(RESULT_CANCELED, returnIntent);
         finish();
-    }
-
-    private String loadSavedCognitiveServicesApiKey() {
-        return sharedPreferences.getString(getString(R.string.saved_cognitive_services_api_key), null);
-    }
-
-    private void saveCognitiveServicesApiKey(String newKey) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(getString(R.string.saved_cognitive_services_api_key), newKey);
-        editor.commit();
-    }
-
-
-    private String loadSavedCognitiveServicesRegion() {
-        return sharedPreferences.getString(getString(R.string.saved_cognitive_services_region), null);
-    }
-
-    private void saveCognitiveServicesRegion(String newRegion) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(getString(R.string.saved_cognitive_services_region), newRegion);
-        editor.commit();
     }
 }

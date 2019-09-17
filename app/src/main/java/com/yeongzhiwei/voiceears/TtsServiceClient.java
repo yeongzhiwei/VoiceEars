@@ -4,9 +4,9 @@ import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.net.*;
+import java.net.URL;
 
-import javax.net.ssl.*;
+import javax.net.ssl.HttpsURLConnection;
 
 class TtsServiceClient {
     private static final String LOG_TAG = TtsServiceClient.class.getName();

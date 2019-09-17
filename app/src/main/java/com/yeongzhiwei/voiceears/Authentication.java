@@ -25,6 +25,10 @@ class Authentication {
     private final int RefreshTokenDuration = 9 * 60 * 1000;
 
     Authentication(String apiKey, String region) {
+        this(apiKey, region, true);
+    }
+
+    Authentication(String apiKey, String region, Boolean renew) {
         this.apiKey = apiKey;
         this.accessTokenUri = "https://" + region + ".api.cognitive.microsoft.com/sts/v1.0/issueToken";
 
@@ -39,15 +43,17 @@ class Authentication {
             e.printStackTrace();
         }
 
-        // renew the accessToken every specified minutes
-        accessTokenRenewer = new Timer();
-        nineMinitesTask = new TimerTask() {
-            public void run() {
-                RenewAccessToken();
-            }
-        };
+        if (renew) {
+            // renew the accessToken every specified minutes
+            accessTokenRenewer = new Timer();
+            nineMinitesTask = new TimerTask() {
+                public void run() {
+                    RenewAccessToken();
+                }
+            };
 
-        accessTokenRenewer.schedule(nineMinitesTask, RefreshTokenDuration, RefreshTokenDuration);
+            accessTokenRenewer.schedule(nineMinitesTask, RefreshTokenDuration, RefreshTokenDuration);
+        }
     }
 
     String getAccessToken() {

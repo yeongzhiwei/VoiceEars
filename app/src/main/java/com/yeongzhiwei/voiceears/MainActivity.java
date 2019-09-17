@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -19,8 +20,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -35,23 +37,24 @@ import static android.Manifest.permission.INTERNET;
 import static android.Manifest.permission.RECORD_AUDIO;
 
 public class MainActivity extends AppCompatActivity {
-    public static Integer settingsRequestCode = 6; // arbitrary number
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
-    private SharedPreferences sharedPreferences;
-    int requestCode = 5; // unique code for the permission request
 
-    // UI
+    static SharedPreferences sharedPreferences;
+    public static int permissionRequestCode = 10;
+    public static int settingsRequestCode = 20;
+    public static int mirrorRequestCode = 30;
+
     private MenuItem genderMenuItem;
     private ScrollView messageScrollView;
     private LinearLayout messageLinearLayout;
-    private SeekBar sizeSeekBar;
+    private SeekBar textSizeSeekBar;
     private ImageView imageViewScrollDown;
     private EditText synthesizeEditText;
     private Button synthesizeButton;
 
-    private Integer textViewSize;
-    private Boolean enableAutoScrollDown = true;
     private final Integer seekBarMinValue = 10;
+    private Integer textViewSize = 12; // default
+    private Boolean enableAutoScrollDown = true;
 
     // Cognitive Services
     private static String cognitiveServicesApiKey;
@@ -60,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
     private Synthesizer synthesizer = null;
     private Counter counter = new Counter();
     PaintDrawable paintDrawable = null;
-    private Voice.Gender gender;
+    private Voice.Gender gender = Voice.Gender.Male; // default
     // Speech-to-Text
     private Recognizer recognizer = null;
     private HashMap<Integer, TextView> recognizerTextViews = new HashMap<>();
@@ -70,9 +73,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        sharedPreferences = getSharedPreferences(getString(R.string.shared_preferences_key), MODE_PRIVATE);
-        loadSavedPreferences();
+        sharedPreferences = getSharedPreferences(PreferencesHelper.sharedPreferencesName, MODE_PRIVATE);
 
+        loadSavedPreferences();
         initializeViews();
         configureViews();
         loadSavedInstanceState(savedInstanceState);
@@ -104,15 +107,29 @@ public class MainActivity extends AppCompatActivity {
         if (recognizer != null) {
             recognizer.stopSpeechToTextAndReleaseMicrophone();
         }
+
+        savePreferences();
+    }
+
+    private void savePreferences() {
+        PreferencesHelper.save(PreferencesHelper.Key.textViewSizeKey, textViewSize);
+        PreferencesHelper.save(PreferencesHelper.Key.genderKey, gender.name());
+    }
+
+    private void loadSavedPreferences() {
+        cognitiveServicesApiKey = PreferencesHelper.loadString(PreferencesHelper.Key.cognitiveServicesApiKeyKey);
+        cognitiveServicesRegion = PreferencesHelper.loadString(PreferencesHelper.Key.cognitiveServicesRegionKey);
+        textViewSize = PreferencesHelper.loadInt(PreferencesHelper.Key.textViewSizeKey, textViewSize);
+        gender = Voice.Gender.valueOf(PreferencesHelper.loadString(PreferencesHelper.Key.genderKey, gender.name()));
     }
 
     private void initializeViews() {
-        messageScrollView = (ScrollView) findViewById(R.id.scroller_textView);
-        messageLinearLayout = (LinearLayout) findViewById(R.id.message_linearLayout);
-        sizeSeekBar = (SeekBar) findViewById(R.id.seekBar_size);
-        imageViewScrollDown = (ImageView) findViewById(R.id.imageView_scrolldown);
-        synthesizeEditText = (EditText) findViewById(R.id.editText_synthesize);
-        synthesizeButton = (Button) findViewById(R.id.button_synthesize);
+        messageScrollView = findViewById(R.id.scrollView_textView);
+        messageLinearLayout = findViewById(R.id.message_linearLayout);
+        textSizeSeekBar = findViewById(R.id.seekBar_textSize);
+        imageViewScrollDown = findViewById(R.id.imageView_scrolldown);
+        synthesizeEditText = findViewById(R.id.editText_synthesize);
+        synthesizeButton = findViewById(R.id.button_synthesize);
     }
 
     private void configureViews() {
@@ -131,18 +148,18 @@ public class MainActivity extends AppCompatActivity {
                 imageViewScrollDown.setVisibility(View.GONE);
             }
         });
-//
+
         imageViewScrollDown.setOnClickListener(view -> {
             scrollDown();
         });
 
-        sizeSeekBar.setProgress(textViewSize - seekBarMinValue);
+        textSizeSeekBar.setProgress(textViewSize - seekBarMinValue);
 
-        sizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        textSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 textViewSize = i + seekBarMinValue;
-                adjustTextViewSize(textViewSize);
+                setTextViewSize();
                 scrollToBottom();
             }
 
@@ -153,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                saveTextViewSize(textViewSize);
+
             }
         });
 
@@ -181,13 +198,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void loadSavedPreferences() {
-        cognitiveServicesApiKey = loadSavedCognitiveServicesApiKey();
-        cognitiveServicesRegion = loadSavedCognitiveServicesRegion();
-        textViewSize = loadSavedTextViewSize();
-        gender = Voice.Gender.valueOf(loadSavedGender());
-    }
-
     private void loadSavedInstanceState(final Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             String[] messages = savedInstanceState.getStringArray("messages");
@@ -195,31 +205,29 @@ public class MainActivity extends AppCompatActivity {
                 createAndAddTextView(message);
             }
         } else {
-            String welcome = "Welcome to VoiceEars. Start speaking or type and click Speak button. Click the face icon at top-right to toggle the gender.";
+            String welcome = getString(R.string.welcome);
             createAndAddTextView(welcome);
         }
     }
 
     private void configureCognitiveServices() {
-        if (cognitiveServicesApiKey.length() == 0 || cognitiveServicesRegion.length() == 0) {
+        if (cognitiveServicesApiKey == null || cognitiveServicesRegion == null) {
             startSettingsActivity();
             Toast.makeText(MainActivity.this, R.string.toast_blank_key_or_region, Toast.LENGTH_LONG).show();
             return;
         }
 
-        if (! authenticateApiKey()) {
+        if (! Helper.authenticateApiKey()) {
             startSettingsActivity();
             Toast.makeText(MainActivity.this, R.string.toast_invalid_key_or_region, Toast.LENGTH_LONG).show();
             return;
         }
 
+        ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO, INTERNET}, permissionRequestCode);
+
+
         configureTextToSpeech();
         configureSpeechToText();
-    }
-
-    private Boolean authenticateApiKey() {
-        final Authentication authentication = new Authentication(cognitiveServicesApiKey, cognitiveServicesRegion);
-        return authentication.getAccessToken() != null;
     }
 
     private void configureTextToSpeech() {
@@ -268,8 +276,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void configureSpeechToText() {
         try {
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO, INTERNET}, requestCode);
-
             recognizer = new Recognizer(cognitiveServicesApiKey, cognitiveServicesRegion, (order, result) -> {
                 appendSpeakerMessage(order, result);
             });
@@ -336,11 +342,11 @@ public class MainActivity extends AppCompatActivity {
 
     /* TEXT SIZE SEEKBAR */
 
-    private void adjustTextViewSize(Integer size) {
+    private void setTextViewSize() {
         int childcount = messageLinearLayout.getChildCount();
         for (int i = 0; i < childcount; i++) {
             TextView textView = (TextView) messageLinearLayout.getChildAt(i);
-            textView.setTextSize(size);
+            textView.setTextSize(textViewSize);
         }
     }
 
@@ -349,7 +355,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // https://stackoverflow.com/questions/38158953/how-to-create-button-in-action-bar-in-android
-        getMenuInflater().inflate(R.menu.mymenu, menu);
+        getMenuInflater().inflate(R.menu.main_menu, menu);
 
         genderMenuItem = menu.findItem(R.id.action_gender);
         refreshGenderIcon();
@@ -376,7 +382,6 @@ public class MainActivity extends AppCompatActivity {
 
         gender = synthesizer.getVoice().toggleVoice();
         refreshGenderIcon();
-        saveGender(gender.name());
     }
 
     private void refreshGenderIcon() {
@@ -391,31 +396,39 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /* ACTIVITY INTENT */
+
     private void startSettingsActivity() {
-        Intent messageIntent = new Intent(this, SettingsActivity.class);
-        startActivityForResult(messageIntent, settingsRequestCode);
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivityForResult(intent, settingsRequestCode);
     }
 
     private void startMirrorActivity() {
+        String message = synthesizeEditText.getText().toString();
+        PreferencesHelper.save(PreferencesHelper.Key.mirroredTextKey, message);
         Intent intent = new Intent(this, MirrorActivity.class);
-        startActivity(intent);
+        startActivityForResult(intent, mirrorRequestCode);
     }
 
     public void onActivityResult(int requestCode, int resultCode,  Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        loadSavedPreferences();
+
         if (requestCode == settingsRequestCode) {
             if (resultCode == RESULT_CANCELED) {
-                if (! authenticateApiKey()) {
+                if (!Helper.authenticateApiKey()) {
                     finish();
                 }
             } else if (resultCode == RESULT_OK) {
-                cognitiveServicesApiKey = loadSavedCognitiveServicesApiKey();
-                cognitiveServicesRegion = loadSavedCognitiveServicesRegion();
                 configureCognitiveServices();
             }
+        } else if (requestCode == mirrorRequestCode) {
+
         }
 
+        InputMethodManager imm = (InputMethodManager)   getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
     }
 
     /* LAYOUT PERSISTENCE ON ROTATION */
@@ -438,38 +451,6 @@ public class MainActivity extends AppCompatActivity {
         outState.putStringArray("messages", messages);
     }
 
-    /*  KEY-VALUE PERSISTENT STORAGE */
-
-    private String loadSavedCognitiveServicesApiKey() {
-        return sharedPreferences.getString(getString(R.string.saved_cognitive_services_api_key), "");
-    }
-
-    private String loadSavedCognitiveServicesRegion() {
-        return sharedPreferences.getString(getString(R.string.saved_cognitive_services_region), "");
-    }
-
-    private int loadSavedTextViewSize() {
-        int defaultTextViewSize = getResources().getInteger(R.integer.default_textView_size);
-        return sharedPreferences.getInt(getString(R.string.saved_textView_size_key), defaultTextViewSize);
-    }
-
-    private void saveTextViewSize(int newSize) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt(getString(R.string.saved_textView_size_key), newSize);
-        editor.commit();
-    }
-
-    private String loadSavedGender() {
-        String defaultGender = getResources().getString(R.string.default_gender);
-        return sharedPreferences.getString(getString(R.string.saved_gender_key), defaultGender);
-    }
-
-    private void saveGender(String newGender) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(getString(R.string.saved_gender_key), newGender);
-        editor.commit();
-    }
-
     /* PERMISSION */
 
     @Override
@@ -477,7 +458,7 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         // https://stackoverflow.com/questions/30719047/android-m-check-runtime-permission-how-to-determine-if-the-user-checked-nev
-        if (requestCode == this.requestCode) {
+        if (requestCode == this.permissionRequestCode) {
             for (int i = 0, len = permissions.length; i < len; i++) {
                 String permission = permissions[i];
                 if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
@@ -486,7 +467,7 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, getString(R.string.toast_permission_microphone_denied), Toast.LENGTH_LONG).show();
                     } else if (RECORD_AUDIO.equals(permission)) {
                         new AlertDialog.Builder(MainActivity.this)
-                            .setMessage(getString(R.string.permission_microphone_request_message))
+                            .setMessage(getString(R.string.alert_permission_microphone_request_message))
                             .setPositiveButton("OK", (dialog, which) -> {
                                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO}, requestCode);
                             })

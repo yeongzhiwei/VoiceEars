@@ -2,26 +2,27 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/parent_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MirrorActivity">
 
     <ScrollView
         android:id="@+id/scrollView_mirrored"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        android:background="@color/colorPrimary"
         android:fillViewport="true"
-        app:layout_constraintBottom_toTopOf="@+id/seekBar_mirroredTextSize"
+        app:layout_constraintBottom_toTopOf="@+id/relativeLayout_setting"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
+            android:id="@+id/linearLayout_mirrored"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
@@ -31,59 +32,68 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:breakStrategy="simple"
+                android:textColor="@color/colorBlack"
                 android:rotation="180" />
         </LinearLayout>
     </ScrollView>
 
-    <SeekBar
-        android:id="@+id/seekBar_mirroredTextSize"
-        android:layout_width="0dp"
+    <RelativeLayout
+        android:id="@+id/relativeLayout_setting"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:max="50"
-        android:progress="14"
-        app:layout_constraintBottom_toTopOf="@+id/scrollView_original"
-        app:layout_constraintEnd_toStartOf="@+id/imageButton_clear"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/scrollView_mirrored" />
-
-    <ImageButton
-        android:id="@+id/imageButton_clear"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="@string/imageButton_clear_contentDescription"
-        app:layout_constraintBottom_toTopOf="@+id/scrollView_original"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/seekBar_mirroredTextSize"
-        app:layout_constraintTop_toBottomOf="@id/scrollView_mirrored"
-        app:srcCompat="@drawable/clear" />
-
-    <ScrollView
-        android:id="@+id/scrollView_original"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:fillViewport="true"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:orientation="horizontal"
+        android:background="@color/colorPrimaryDark"
+        app:layout_constraintBottom_toTopOf="@+id/editText_original"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/seekBar_mirroredTextSize">
+        app:layout_constraintTop_toBottomOf="@id/scrollView_mirrored" >
+
+        <ImageButton
+            android:id="@+id/imageButton_mode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:contentDescription="@string/mirror_imageButton_mode_contentDescription"
+            app:srcCompat="@drawable/text_borderless" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_centerVertical="true"
+            android:layout_toEndOf="@+id/imageButton_mode"
+            android:layout_toStartOf="@+id/imageButton_clear"
+            android:orientation="horizontal" >
 
-            <EditText
-                android:id="@+id/editText_original"
+            <SeekBar
+                android:id="@+id/seekBar_mirroredTextSize"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/editText_original_hint"
-                android:inputType="textMultiLine"
-                android:scrollHorizontally="false" />
+                android:max="100"/>
         </LinearLayout>
-    </ScrollView>
 
+        <ImageButton
+            android:id="@+id/imageButton_clear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:contentDescription="@string/mirror_imageButton_clear_contentDescription"
+            app:srcCompat="@drawable/clear" />
+    </RelativeLayout>
+
+    <EditText
+        android:id="@+id/editText_original"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="top"
+        android:maxLines="3"
+        android:hint="@string/mirror_editText_original_hint"
+        android:inputType="textMultiLine"
+        android:scrollHorizontally="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/relativeLayout_setting"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
