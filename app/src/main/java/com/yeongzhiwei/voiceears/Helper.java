@@ -1,9 +1,11 @@
 package com.yeongzhiwei.voiceears;
 
+import android.content.SharedPreferences;
+
 class Helper {
-    static Boolean authenticateApiKey() {
-        final String cognitiveServicesApiKey = PreferencesHelper.loadString(PreferencesHelper.Key.cognitiveServicesApiKeyKey);
-        final String cognitiveServicesRegion = PreferencesHelper.loadString(PreferencesHelper.Key.cognitiveServicesRegionKey);
+    static Boolean authenticateApiKey(SharedPreferences sharedPreferences) {
+        final String cognitiveServicesApiKey = PreferencesHelper.loadString(sharedPreferences, PreferencesHelper.Key.cognitiveServicesApiKeyKey);
+        final String cognitiveServicesRegion = PreferencesHelper.loadString(sharedPreferences, PreferencesHelper.Key.cognitiveServicesRegionKey);
 
         if (cognitiveServicesApiKey == null || cognitiveServicesRegion == null) {
             return false;

@@ -112,15 +112,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void savePreferences() {
-        PreferencesHelper.save(PreferencesHelper.Key.textViewSizeKey, textViewSize);
-        PreferencesHelper.save(PreferencesHelper.Key.genderKey, gender.name());
+        PreferencesHelper.save(sharedPreferences, PreferencesHelper.Key.textViewSizeKey, textViewSize);
+        PreferencesHelper.save(sharedPreferences, PreferencesHelper.Key.genderKey, gender.name());
     }
 
     private void loadSavedPreferences() {
-        cognitiveServicesApiKey = PreferencesHelper.loadString(PreferencesHelper.Key.cognitiveServicesApiKeyKey);
-        cognitiveServicesRegion = PreferencesHelper.loadString(PreferencesHelper.Key.cognitiveServicesRegionKey);
-        textViewSize = PreferencesHelper.loadInt(PreferencesHelper.Key.textViewSizeKey, textViewSize);
-        gender = Voice.Gender.valueOf(PreferencesHelper.loadString(PreferencesHelper.Key.genderKey, gender.name()));
+        cognitiveServicesApiKey = PreferencesHelper.loadString(sharedPreferences, PreferencesHelper.Key.cognitiveServicesApiKeyKey);
+        cognitiveServicesRegion = PreferencesHelper.loadString(sharedPreferences, PreferencesHelper.Key.cognitiveServicesRegionKey);
+        textViewSize = PreferencesHelper.loadInt(sharedPreferences, PreferencesHelper.Key.textViewSizeKey, textViewSize);
+        gender = Voice.Gender.valueOf(PreferencesHelper.loadString(sharedPreferences, PreferencesHelper.Key.genderKey, gender.name()));
     }
 
     private void initializeViews() {
@@ -217,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        if (! Helper.authenticateApiKey()) {
+        if (! Helper.authenticateApiKey(sharedPreferences)) {
             startSettingsActivity();
             Toast.makeText(MainActivity.this, R.string.toast_invalid_key_or_region, Toast.LENGTH_LONG).show();
             return;
@@ -405,7 +405,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void startMirrorActivity() {
         String message = synthesizeEditText.getText().toString();
-        PreferencesHelper.save(PreferencesHelper.Key.mirroredTextKey, message);
+        PreferencesHelper.save(sharedPreferences, PreferencesHelper.Key.mirroredTextKey, message);
         Intent intent = new Intent(this, MirrorActivity.class);
         startActivityForResult(intent, mirrorRequestCode);
     }
@@ -417,7 +417,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == settingsRequestCode) {
             if (resultCode == RESULT_CANCELED) {
-                if (!Helper.authenticateApiKey()) {
+                if (!Helper.authenticateApiKey(sharedPreferences)) {
                     finish();
                 }
             } else if (resultCode == RESULT_OK) {

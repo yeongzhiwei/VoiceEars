@@ -5,11 +5,13 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +24,8 @@ import android.widget.TextView;
 
 public class MirrorActivity extends AppCompatActivity {
     private final static String LOG_TAG = MirrorActivity.class.getSimpleName();
+
+    static SharedPreferences sharedPreferences;
 
     private ConstraintLayout constraintLayout;
     private ScrollView scrollView_mirrored;
@@ -46,6 +50,8 @@ public class MirrorActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mirror);
 
+        sharedPreferences = getSharedPreferences(PreferencesHelper.sharedPreferencesName, MODE_PRIVATE);
+
         loadSavedPreferences();
         initializeViews();
         configureViews();
@@ -60,15 +66,15 @@ public class MirrorActivity extends AppCompatActivity {
 
     private void savePreferences() {
         mirroredText = editText_original.getText().toString();
-        PreferencesHelper.save(PreferencesHelper.Key.mirroredTextKey, mirroredText);
-        PreferencesHelper.save(PreferencesHelper.Key.mirroredTextViewSizeKey, mirroredTextViewSize);
-        PreferencesHelper.save(PreferencesHelper.Key.mirroredMirrorMode, isMirrorMode ? 1 : 0);
+        PreferencesHelper.save(sharedPreferences, PreferencesHelper.Key.mirroredTextKey, mirroredText);
+        PreferencesHelper.save(sharedPreferences, PreferencesHelper.Key.mirroredTextViewSizeKey, mirroredTextViewSize);
+        PreferencesHelper.save(sharedPreferences, PreferencesHelper.Key.mirroredMirrorMode, isMirrorMode ? 1 : 0);
     }
 
     private void loadSavedPreferences() {
-        mirroredText = PreferencesHelper.loadString(PreferencesHelper.Key.mirroredTextKey, "");
-        mirroredTextViewSize = PreferencesHelper.loadInt(PreferencesHelper.Key.mirroredTextViewSizeKey, mirroredTextViewSize);
-        isMirrorMode = PreferencesHelper.loadInt(PreferencesHelper.Key.mirroredMirrorMode, 1) != 0;
+        mirroredText = PreferencesHelper.loadString(sharedPreferences, PreferencesHelper.Key.mirroredTextKey, "");
+        mirroredTextViewSize = PreferencesHelper.loadInt(sharedPreferences, PreferencesHelper.Key.mirroredTextViewSizeKey, mirroredTextViewSize);
+        isMirrorMode = PreferencesHelper.loadInt(sharedPreferences, PreferencesHelper.Key.mirroredMirrorMode, 1) != 0;
     }
 
     private void initializeViews() {
