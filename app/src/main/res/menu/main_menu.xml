@@ -1,18 +1,26 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item
-        android:id="@+id/action_mirror"
-        android:icon="@drawable/mirror"
-        android:title=""
-        app:showAsAction="always" />
-    <item
-        android:id="@+id/action_gender"
-        android:icon="@drawable/boy"
-        android:title=""
-        app:showAsAction="always" />
-    <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings_title"
-        app:showAsAction="never" />
+
+        <item
+            android:id="@+id/action_mirror"
+            android:orderInCategory="10"
+            android:icon="@drawable/mirror"
+            android:title="MirrorText"
+            app:showAsAction="always" />
+        <item
+            android:id="@+id/action_gender"
+            android:orderInCategory="20"
+            android:icon="@drawable/boy"
+            android:title="Gender: Male"
+            app:showAsAction="always" />
+        <item
+            android:id="@+id/action_audio_speed"
+            android:orderInCategory="30"
+            android:title="Speed: 1.0x"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_settings"
+            android:orderInCategory="100"
+            android:title="@string/action_settings_title"
+            app:showAsAction="never" />
 </menu>

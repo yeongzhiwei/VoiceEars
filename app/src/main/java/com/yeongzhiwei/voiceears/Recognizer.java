@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class Recognizer {
     private static final String LOG_TAG = Recognizer.class.getSimpleName();
@@ -29,7 +30,7 @@ class Recognizer {
     private boolean continuousListeningStarted = false;
     private SpeechRecognizer speechRecognizer = null;
     private ArrayList<String> content = new ArrayList<>();
-    private Counter counter = new Counter();
+    private AtomicInteger counter = new AtomicInteger();
 
     private Handler handler = new Handler();
     private int handlerDelay = 3000; // 3 sec
@@ -56,7 +57,7 @@ class Recognizer {
 
         try {
             content.clear();
-            counter.increment();
+            counter.incrementAndGet();
 
             AudioConfig audioConfig = AudioConfig.fromStreamInput(createMicrophoneStream());
             speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
@@ -137,7 +138,7 @@ class Recognizer {
         public void run() {
             try {
                 content.clear();
-                counter.increment();
+                counter.incrementAndGet();
             } finally {
                 handler.postDelayed(resetContent, handlerDelay);
             }
