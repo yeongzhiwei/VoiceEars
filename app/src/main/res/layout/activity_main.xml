@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        android:text="Speak"
+        android:text="@string/main_button_synthesize_text"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -24,7 +24,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:ems="10"
-        android:hint="Type a message"
+        android:hint="@string/main_editText_synthesize_hint"
         android:inputType="textShortMessage|textAutoCorrect|text"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/button_synthesize"
@@ -71,7 +71,7 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginEnd="8dp"
-        android:contentDescription="scroll down"
+        android:contentDescription="@string/main_imageView_scrolldown_contentDescription"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/scrollView_textView"
         app:layout_constraintEnd_toEndOf="parent"

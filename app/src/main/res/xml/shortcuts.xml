@@ -1,0 +1,12 @@
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="mirror"
+        android:enabled="true"
+        android:icon="@drawable/mirror"
+        android:shortcutShortLabel="@string/mirror_shortcut_short_label">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.yeongzhiwei.voiceears"
+            android:targetClass="com.yeongzhiwei.voiceears.MirrorActivity" />\
+    </shortcut>
+</shortcuts>

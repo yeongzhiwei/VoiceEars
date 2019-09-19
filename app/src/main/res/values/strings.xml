@@ -30,4 +30,6 @@
     <string name="mirror_imageButton_clear_contentDescription">Clear the text</string>
     <string name="mirror_editText_original_hint">Type something</string>
 
+    /* shortcuts */
+    <string name="mirror_shortcut_short_label">MirrorText</string>
 </resources>
