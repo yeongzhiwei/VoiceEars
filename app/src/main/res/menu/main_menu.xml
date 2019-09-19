@@ -19,6 +19,11 @@
             android:title="Speed: 1.0x"
             app:showAsAction="never" />
         <item
+            android:id="@+id/action_presentation"
+            android:orderInCategory="40"
+            android:title="Presentation Mode"
+            app:showAsAction="never" />
+        <item
             android:id="@+id/action_settings"
             android:orderInCategory="100"
             android:title="@string/action_settings_title"

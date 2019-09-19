@@ -54,11 +54,14 @@ public class MainActivity extends AppCompatActivity {
     private EditText synthesizeEditText;
     private Button synthesizeButton;
 
+    PaintDrawable paintDrawable = null;
+
     private final Integer seekBarMinValue = 10;
     private Integer textViewSize = 12; // default
     private Boolean enableAutoScrollDown = true;
     private Voice.Gender gender = Voice.Gender.Male; // default
     private double audioSpeed = 1.0; // default
+
 
     // Cognitive Services
     private static String cognitiveServicesApiKey;
@@ -67,7 +70,6 @@ public class MainActivity extends AppCompatActivity {
     // Text-to-Speech
     private Synthesizer synthesizer = null;
     private AtomicInteger counter = new AtomicInteger();
-    PaintDrawable paintDrawable = null;
 
     // Speech-to-Text
     private Recognizer recognizer = null;
@@ -140,6 +142,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void configureViews() {
+        paintDrawable = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimary));
+        paintDrawable.setCornerRadius(8);
+
         refreshGenderIcon();
         refreshAudioSpeedIcon();
 
@@ -240,9 +245,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void configureTextToSpeech() {
         synthesizer = new Synthesizer(cognitiveServicesApiKey, cognitiveServicesRegion, Voice.getDefaultVoice(gender));
-
-        paintDrawable = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimary));
-        paintDrawable.setCornerRadius(8);
 
         synthesizeButton.setOnClickListener(view -> {
             if (recognizer != null) {
@@ -385,6 +387,8 @@ public class MainActivity extends AppCompatActivity {
             startSettingsActivity();
         } else if (item.getItemId() == R.id.action_audio_speed) {
             toggleAudioSpeed();
+        } else if (item.getItemId() == R.id.action_presentation) {
+            startPresentationActivity();
         }
 
         return super.onOptionsItemSelected(item);
@@ -443,6 +447,11 @@ public class MainActivity extends AppCompatActivity {
         PreferencesHelper.save(sharedPreferences, PreferencesHelper.Key.mirroredTextKey, message);
         Intent intent = new Intent(this, MirrorActivity.class);
         startActivityForResult(intent, mirrorRequestCode);
+    }
+
+    private void startPresentationActivity() {
+        Intent intent = new Intent(this, PresentationActivity.class);
+        startActivity(intent);
     }
 
     public void onActivityResult(int requestCode, int resultCode,  Intent data) {

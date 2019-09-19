@@ -30,6 +30,14 @@
     <string name="mirror_imageButton_clear_contentDescription">Clear the text</string>
     <string name="mirror_editText_original_hint">Type something</string>
 
+    /* PresentationActivity */
+    <string name="presentation_imageButton_delete_contentDescription">Delete</string>
+    <string name="presentation_imageButton_edit_contentDescription">Edit the text</string>
+    <string name="presentation_imageButton_up_contentDescription">Move up</string>
+    <string name="presentation_imageButton_down_contentDescription">Move down</string>
+    <string name="presentation_imageButton_add_contentDescription">Add new text</string>
+    <string name="presentation_button_play_text">PLAY AUDIO</string>
+
     /* shortcuts */
     <string name="mirror_shortcut_short_label">MirrorText</string>
 </resources>
