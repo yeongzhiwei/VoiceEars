@@ -13,6 +13,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:name=".PresentationMessageActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity
             android:name=".PresentationActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity

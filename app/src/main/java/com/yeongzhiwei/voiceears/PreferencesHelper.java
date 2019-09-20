@@ -21,7 +21,8 @@ class PreferencesHelper {
         mirroredTextViewSizeKey,
         mirroredMirrorMode,
         audioSpeedKey,
-        presentationMessagesKey;
+        presentationMessagesKey,
+        presentationSelectedMessageIndexKey;
     }
 
     private static SharedPreferences getSharedPreferences(Context context) {
@@ -87,7 +88,7 @@ class PreferencesHelper {
         sharedPreferences.edit().putInt(key.toString(), newValue).commit();
     }
 
-    static Integer loadInt(Context context, Key key, Integer defaultValue) {
+    static int loadInt(Context context, Key key, Integer defaultValue) {
         SharedPreferences sharedPreferences = getSharedPreferences(context);
 
         return sharedPreferences.getInt(key.toString(), defaultValue);

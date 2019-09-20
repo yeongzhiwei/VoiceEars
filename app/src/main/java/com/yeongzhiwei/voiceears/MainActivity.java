@@ -79,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         loadSavedPreferences();
+        initializeVariables();
         initializeViews();
         configureViews();
         loadSavedInstanceState(savedInstanceState);
@@ -104,14 +105,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+
+        savePreferences();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
 
         if (recognizer != null) {
             recognizer.stopSpeechToTextAndReleaseMicrophone();
         }
-
-        savePreferences();
     }
 
     private void savePreferences() {
@@ -137,10 +143,12 @@ public class MainActivity extends AppCompatActivity {
         synthesizeButton = findViewById(R.id.button_synthesize);
     }
 
-    private void configureViews() {
+    private void initializeVariables() {
         paintDrawable = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimary));
         paintDrawable.setCornerRadius(8);
+    }
 
+    private void configureViews() {
         refreshGenderIcon();
         refreshAudioSpeedIcon();
 
