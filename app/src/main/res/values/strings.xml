@@ -36,6 +36,10 @@
     <string name="presentation_imageButton_add_contentDescription">Add new text</string>
     <string name="presentation_button_play_text">PLAY AUDIO</string>
 
+    /* PresentationMessageActivity */
+    <string name="presentation_message_button_save">Save</string>
+    <string name="presentation_message_button_cancel">Cancel</string>
+
     /* shortcuts */
     <string name="mirror_shortcut_short_label">MirrorText</string>
 </resources>

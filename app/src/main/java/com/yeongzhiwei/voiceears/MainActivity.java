@@ -201,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                if (charSequence == null | charSequence.toString().trim().length() == 0) {
+                if (charSequence == null || charSequence.toString().trim().length() == 0) {
                     synthesizeButton.setEnabled(false);
                 } else {
                     synthesizeButton.setEnabled(true);

@@ -2,9 +2,12 @@ package com.yeongzhiwei.voiceears;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PaintDrawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,26 +21,20 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
-import static android.Manifest.permission.RECORD_AUDIO;
-
-/*
-TODO
-- Add second Activity to edit/create TextView
-- Implement button clicks
-- Change PaintDrawable to one with border and add paintDrawableDefault
- */
-
 public class PresentationActivity extends AppCompatActivity {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
+
+    public static String EXTRA_MESSAGE = "com.yeongzhiwei.voiceears.MESSAGE";
+    public static String EXTRA_REQUEST_CODE = "com.yeongzhiwei.voiceears.REQUESTCODE";
+    public static int addRequestCode = 100;
+    public static int editRequestCode = 200;
 
     private LinearLayout messageLinearLayout;
     private Button playButton;
     private SeekBar textSizeSeekBar;
-    private ImageButton deleteButton;
-    private ImageButton editButton;
-    private ImageButton upButton;
-    private ImageButton downButton;
-    private ImageButton addButton;
+    private ImageButton deleteImageButton;
+    private ImageButton editImageButton;
+    private ImageButton addImageButton;
 
     PaintDrawable paintDrawableSelect = null;
     PaintDrawable paintDrawablePlay = null;
@@ -61,25 +58,12 @@ public class PresentationActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_presentation);
-        loadSampleMessages();
+
         loadSavedPreferences();
         initializeVariables();
         initializeViews();
         configureViews();
         configureTextToSpeech();
-    }
-
-    private void loadSampleMessages() {
-        String[] samples = {
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum", "Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of \"de Finibus Bonorum et Malorum\" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance.", "c", "d", "e"
-        };
-
-        for (int i = 0; i < samples.length; i++) {
-            messages.add(samples[i]);
-        }
-
-        PreferencesHelper.save(this, PreferencesHelper.Key.presentationMessagesKey, messages);
-        Log.d(LOG_TAG, "Save success");
     }
 
     @Override
@@ -117,9 +101,9 @@ public class PresentationActivity extends AppCompatActivity {
         messageLinearLayout = findViewById(R.id.linearLayout_message);
         playButton = findViewById(R.id.button_play);
         textSizeSeekBar = findViewById(R.id.seekBar_textSize);
-        deleteButton = findViewById(R.id.imageButton_delete);
-        editButton = findViewById(R.id.imageButton_edit);
-        addButton = findViewById(R.id.imageButton_add);
+        deleteImageButton = findViewById(R.id.imageButton_delete);
+        editImageButton = findViewById(R.id.imageButton_edit);
+        addImageButton = findViewById(R.id.imageButton_add);
     }
 
     private void configureViews() {
@@ -153,7 +137,7 @@ public class PresentationActivity extends AppCompatActivity {
             synthesizeText();
         });
 
-        deleteButton.setOnClickListener(view -> {
+        deleteImageButton.setOnClickListener(view -> {
             String message = messages.get(selectedMessageIndex);
             String alertMessage = message.length() < 20 ? message : message.substring(0, 100) + "...";
 
@@ -171,13 +155,41 @@ public class PresentationActivity extends AppCompatActivity {
                 .show();
         });
 
-        editButton.setOnClickListener(view -> {
-            // TODO
+        editImageButton.setOnClickListener(view -> {
+            Intent intent = new Intent(this, PresentationMessageActivity.class);
+            intent.putExtra(EXTRA_MESSAGE, messages.get(selectedMessageIndex));
+            intent.putExtra(EXTRA_REQUEST_CODE, editRequestCode);
+            startActivityForResult(intent, editRequestCode);
         });
 
-        addButton.setOnClickListener(view -> {
-            // TODO
+        addImageButton.setOnClickListener(view -> {
+            Intent intent = new Intent(this, PresentationMessageActivity.class);
+            intent.putExtra(EXTRA_REQUEST_CODE, addRequestCode);
+            startActivityForResult(intent, addRequestCode);
         });
+    }
+
+    public void onActivityResult(int requestCode, int resultCode,  Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == RESULT_OK) {
+            String message = data.getStringExtra(EXTRA_MESSAGE);
+            if (requestCode == editRequestCode) {
+                messages.set(selectedMessageIndex, message);
+                Toast.makeText(PresentationActivity.this, "Edited a message.", Toast.LENGTH_SHORT).show();
+            } else if (requestCode == addRequestCode) {
+                if (selectedMessageIndex >= 0 && selectedMessageIndex < messages.size()) {
+                    selectedMessageIndex += 1;
+                } else {
+                    selectedMessageIndex = messages.size();
+                }
+                messages.add(selectedMessageIndex, message);
+                Toast.makeText(PresentationActivity.this, "Added a message.", Toast.LENGTH_SHORT).show();
+            }
+            refreshTextViews();
+        } else {
+            Toast.makeText(PresentationActivity.this, "Cancelled.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void configureTextToSpeech() {
@@ -238,11 +250,11 @@ public class PresentationActivity extends AppCompatActivity {
     }
 
     private void refreshButtons() {
-        playButton.setEnabled(!isPlaying && selectedMessageIndex >= 0 && selectedMessageIndex < messageLinearLayout.getChildCount());
-        editButton.setEnabled(!isPlaying);
-        upButton.setEnabled(!isPlaying);
-        downButton.setEnabled(!isPlaying);
-        addButton.setEnabled(!isPlaying);
+        boolean enable = !isPlaying && selectedMessageIndex >= 0 && selectedMessageIndex < messageLinearLayout.getChildCount();
+        playButton.setEnabled(enable);
+        setImageButtonEnabled(enable, deleteImageButton, getDrawable(R.drawable.trashbin));
+        setImageButtonEnabled(enable, editImageButton, getDrawable(R.drawable.edit));
+        setImageButtonEnabled(!isPlaying, addImageButton, getDrawable(R.drawable.add));
     }
 
     public void addTextViewToLinearLayout(String message) {
@@ -270,5 +282,18 @@ public class PresentationActivity extends AppCompatActivity {
             TextView textView = (TextView) messageLinearLayout.getChildAt(i);
             textView.setTextSize(textViewSize);
         }
+    }
+
+    // https://stackoverflow.com/questions/7228985/android-imagebutton-with-disabled-ui-feel
+    public void setImageButtonEnabled(boolean enabled, ImageButton item, Drawable originalIcon) {
+        item.setEnabled(enabled);
+
+        Drawable res = originalIcon.mutate();
+        if (enabled) {
+            res.setColorFilter(null);
+        } else {
+            res.setColorFilter(Color.GRAY, PorterDuff.Mode.SRC_IN);
+        }
+        item.setImageDrawable(res);
     }
 }

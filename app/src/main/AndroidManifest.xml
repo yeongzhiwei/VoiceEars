@@ -14,7 +14,8 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".PresentationMessageActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:windowSoftInputMode="adjustResize"  />
         <activity
             android:name=".PresentationActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
