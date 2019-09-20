@@ -8,7 +8,6 @@ import androidx.core.content.ContextCompat;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.PaintDrawable;
 import android.os.Bundle;
@@ -40,7 +39,6 @@ import static android.Manifest.permission.RECORD_AUDIO;
 public class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
-    static SharedPreferences sharedPreferences;
     public static int permissionRequestCode = 10;
     public static int settingsRequestCode = 20;
     public static int mirrorRequestCode = 30;
@@ -80,8 +78,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        sharedPreferences = getSharedPreferences(PreferencesHelper.sharedPreferencesName, MODE_PRIVATE);
-
         loadSavedPreferences();
         initializeViews();
         configureViews();
@@ -119,17 +115,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void savePreferences() {
-        PreferencesHelper.save(sharedPreferences, PreferencesHelper.Key.textViewSizeKey, textViewSize);
-        PreferencesHelper.save(sharedPreferences, PreferencesHelper.Key.genderKey, gender.name());
-        PreferencesHelper.save(sharedPreferences, PreferencesHelper.Key.audioSpeedKey, (int) (audioSpeed * 100));
+        PreferencesHelper.save(this, PreferencesHelper.Key.textViewSizeKey, textViewSize);
+        PreferencesHelper.save(this, PreferencesHelper.Key.genderKey, gender.name());
+        PreferencesHelper.save(this, PreferencesHelper.Key.audioSpeedKey, (int) (audioSpeed * 100));
     }
 
     private void loadSavedPreferences() {
-        cognitiveServicesApiKey = PreferencesHelper.loadString(sharedPreferences, PreferencesHelper.Key.cognitiveServicesApiKeyKey);
-        cognitiveServicesRegion = PreferencesHelper.loadString(sharedPreferences, PreferencesHelper.Key.cognitiveServicesRegionKey);
-        textViewSize = PreferencesHelper.loadInt(sharedPreferences, PreferencesHelper.Key.textViewSizeKey, textViewSize);
-        gender = Voice.Gender.valueOf(PreferencesHelper.loadString(sharedPreferences, PreferencesHelper.Key.genderKey, gender.name()));
-        audioSpeed = PreferencesHelper.loadInt(sharedPreferences, PreferencesHelper.Key.audioSpeedKey, 100) / 100.0;
+        cognitiveServicesApiKey = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesApiKeyKey);
+        cognitiveServicesRegion = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesRegionKey);
+        textViewSize = PreferencesHelper.loadInt(this, PreferencesHelper.Key.textViewSizeKey, textViewSize);
+        gender = Voice.Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, gender.name()));
+        audioSpeed = PreferencesHelper.loadInt(this, PreferencesHelper.Key.audioSpeedKey, 100) / 100.0;
     }
 
     private void initializeViews() {
@@ -230,7 +226,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        if (! Helper.authenticateApiKey(sharedPreferences)) {
+        if (! Helper.authenticateApiKey(this)) {
             startSettingsActivity();
             Toast.makeText(MainActivity.this, R.string.toast_invalid_key_or_region, Toast.LENGTH_LONG).show();
             return;
@@ -444,7 +440,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void startMirrorActivity() {
         String message = synthesizeEditText.getText().toString();
-        PreferencesHelper.save(sharedPreferences, PreferencesHelper.Key.mirroredTextKey, message);
+        PreferencesHelper.save(this, PreferencesHelper.Key.mirroredTextKey, message);
         Intent intent = new Intent(this, MirrorActivity.class);
         startActivityForResult(intent, mirrorRequestCode);
     }
@@ -461,7 +457,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == settingsRequestCode) {
             if (resultCode == RESULT_CANCELED) {
-                if (!Helper.authenticateApiKey(sharedPreferences)) {
+                if (!Helper.authenticateApiKey(this)) {
                     finish();
                 }
             } else if (resultCode == RESULT_OK) {

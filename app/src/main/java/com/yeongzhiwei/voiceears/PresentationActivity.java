@@ -3,16 +3,17 @@ package com.yeongzhiwei.voiceears;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
-import android.content.SharedPreferences;
 import android.graphics.drawable.PaintDrawable;
 import android.os.Bundle;
-import android.view.View;
+import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+
+import java.util.ArrayList;
 
 /*
 TODO
@@ -22,7 +23,7 @@ TODO
  */
 
 public class PresentationActivity extends AppCompatActivity {
-    static SharedPreferences sharedPreferences;
+    private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     private LinearLayout messageLinearLayout;
     private Button playButton;
@@ -42,7 +43,6 @@ public class PresentationActivity extends AppCompatActivity {
     private Voice.Gender gender = Voice.Gender.Male; // default
     private double audioSpeed = 1.0; // default
 
-
     // Cognitive Services
     private String cognitiveServicesApiKey;
     private String cognitiveServicesRegion;
@@ -50,95 +50,24 @@ public class PresentationActivity extends AppCompatActivity {
     // Text-to-Speech
     private Synthesizer synthesizer = null;
 
+    private ArrayList<String> messages = new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_presentation);
 
-        sharedPreferences = getSharedPreferences(PreferencesHelper.sharedPreferencesName, MODE_PRIVATE);
-
         loadSavedPreferences();
         initializeViews();
         configureViews();
         configureTextToSpeech();
-        loadMessages();
+        loadSampleMessages();
 
         refreshPlayButton();
     }
 
-    private void loadSavedPreferences() {
-        cognitiveServicesApiKey = PreferencesHelper.loadString(sharedPreferences, PreferencesHelper.Key.cognitiveServicesApiKeyKey, "");
-        cognitiveServicesRegion = PreferencesHelper.loadString(sharedPreferences, PreferencesHelper.Key.cognitiveServicesRegionKey, "");
-        textViewSize = PreferencesHelper.loadInt(sharedPreferences, PreferencesHelper.Key.textViewSizeKey, textViewSize);
-        gender = Voice.Gender.valueOf(PreferencesHelper.loadString(sharedPreferences, PreferencesHelper.Key.genderKey, gender.name()));
-        audioSpeed = PreferencesHelper.loadInt(sharedPreferences, PreferencesHelper.Key.audioSpeedKey, 100) / 100.0;
-    }
-
-    private void initializeViews() {
-        messageLinearLayout = findViewById(R.id.linearLayout_message);
-        playButton = findViewById(R.id.button_play);
-        textSizeSeekBar = findViewById(R.id.seekBar_textSize);
-        deleteButton = findViewById(R.id.imageButton_delete);
-        editButton = findViewById(R.id.imageButton_edit);
-        upButton = findViewById(R.id.imageButton_up);
-        downButton = findViewById(R.id.imageButton_down);
-        addButton = findViewById(R.id.imageButton_add);
-    }
-
-    private void configureViews() {
-        paintDrawableSelect = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimary));
-        paintDrawableSelect.setCornerRadius(8);
-
-        paintDrawablePlay = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimaryDark));
-        paintDrawablePlay.setCornerRadius(8);
-
-        textSizeSeekBar.setProgress(textViewSize - seekBarMinValue);
-
-        textSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                textViewSize = i + seekBarMinValue;
-                setTextViewSize();
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                PreferencesHelper.save(sharedPreferences, PreferencesHelper.Key.textViewSizeKey, textViewSize);
-            }
-        });
-
-        deleteButton.setOnClickListener(view -> {
-            // TODO
-        });
-
-        editButton.setOnClickListener(view -> {
-            // TODO
-        });
-
-        upButton.setOnClickListener(view -> {
-            // TODO
-        });
-
-        downButton.setOnClickListener(view -> {
-            // TODO
-        });
-
-        addButton.setOnClickListener(view -> {
-            // TODO
-        });
-    }
-
-    private void configureTextToSpeech() {
-        synthesizer = new Synthesizer(cognitiveServicesApiKey, cognitiveServicesRegion);
-    }
-
-    private void loadMessages() {
-        String[] messages = {
+    private void loadSampleMessages() {
+        String[] samples = {
                 "I was born deaf to deaf parents and was enrolled in Singapore School for the Deaf that used sign language as a medium of instruction.",
                 "At 12, I went to a mainstream school with sign language resource teacher as support.",
                 "Then I studied accountancy in polytechnic and worked in the related field.",
@@ -179,9 +108,90 @@ public class PresentationActivity extends AppCompatActivity {
                 "When you meet deaf or hard-of-hearing people, ask them their preferred modes of communication."
         };
 
-        for (int i = 0; i < messages.length; i++) {
-            addTextViewToLinearLayout(messages[i]);
+        for (int i = 0; i < samples.length; i++) {
+            messages.add(samples[i]);
         }
+
+        PreferencesHelper.save(this, PreferencesHelper.Key.presentationMessagesKey, messages);
+        Log.d(LOG_TAG, "Save success");
+
+        ArrayList<String> test = PreferencesHelper.loadStringArray(this, PreferencesHelper.Key.presentationMessagesKey, new ArrayList<String>());
+        Log.d(LOG_TAG, "Loaded " + String.format("%d", test.size()) + " messages");
+    }
+
+    private void loadSavedPreferences() {
+        cognitiveServicesApiKey = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesApiKeyKey, "");
+        cognitiveServicesRegion = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesRegionKey, "");
+        textViewSize = PreferencesHelper.loadInt(this, PreferencesHelper.Key.textViewSizeKey, textViewSize);
+        gender = Voice.Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, gender.name()));
+        audioSpeed = PreferencesHelper.loadInt(this, PreferencesHelper.Key.audioSpeedKey, 100) / 100.0;
+    }
+
+    private void initializeViews() {
+        messageLinearLayout = findViewById(R.id.linearLayout_message);
+        playButton = findViewById(R.id.button_play);
+        textSizeSeekBar = findViewById(R.id.seekBar_textSize);
+        deleteButton = findViewById(R.id.imageButton_delete);
+        editButton = findViewById(R.id.imageButton_edit);
+        upButton = findViewById(R.id.imageButton_up);
+        downButton = findViewById(R.id.imageButton_down);
+        addButton = findViewById(R.id.imageButton_add);
+    }
+
+    private void configureViews() {
+        paintDrawableSelect = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimary));
+        paintDrawableSelect.setCornerRadius(8);
+
+        paintDrawablePlay = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimaryDark));
+        paintDrawablePlay.setCornerRadius(8);
+
+        textSizeSeekBar.setProgress(textViewSize - seekBarMinValue);
+
+        textSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                textViewSize = i + seekBarMinValue;
+                setTextViewSize();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                PreferencesHelper.save(PresentationActivity.this, PreferencesHelper.Key.textViewSizeKey, textViewSize);
+            }
+        });
+
+        playButton.setOnClickListener(view -> {
+            synthesizeText();
+        });
+
+        deleteButton.setOnClickListener(view -> {
+            // TODO
+        });
+
+        editButton.setOnClickListener(view -> {
+            // TODO
+        });
+
+        upButton.setOnClickListener(view -> {
+            // TODO
+        });
+
+        downButton.setOnClickListener(view -> {
+            // TODO
+        });
+
+        addButton.setOnClickListener(view -> {
+            // TODO
+        });
+    }
+
+    private void configureTextToSpeech() {
+        synthesizer = new Synthesizer(cognitiveServicesApiKey, cognitiveServicesRegion);
     }
 
     /* UPDATE VIEWS */
@@ -249,11 +259,6 @@ public class PresentationActivity extends AppCompatActivity {
     }
 
     /* TEXT TO SPEECH */
-
-    public void playAudio(View view) {
-        synthesizeText();
-    }
-
     private void synthesizeText() {
         if (selectedTextView == null) {
             return;
@@ -261,17 +266,19 @@ public class PresentationActivity extends AppCompatActivity {
 
         String message = selectedTextView.getText().toString();
 
-        synthesizer.speakToAudio(message, () -> {
-            PresentationActivity.this.runOnUiThread(() -> {
-                playButton.setEnabled(false);
-                selectedTextView.setBackground(paintDrawablePlay);
+        new Thread(() -> {
+            synthesizer.speakToAudio(message, audioSpeed, () -> {
+                PresentationActivity.this.runOnUiThread(() -> {
+                    playButton.setEnabled(false);
+                    selectedTextView.setBackground(paintDrawablePlay);
+                });
+            }, () -> {
+                PresentationActivity.this.runOnUiThread(() -> {
+                    playButton.setEnabled(true);
+                    selectedTextView.setBackground(paintDrawableSelect);
+                    selectNextTextView();
+                });
             });
-        }, () -> {
-            PresentationActivity.this.runOnUiThread(() -> {
-                playButton.setEnabled(true);
-                selectedTextView.setBackground(paintDrawableSelect);
-                selectNextTextView();
-            });
-        });
+        }).start();
     }
 }
