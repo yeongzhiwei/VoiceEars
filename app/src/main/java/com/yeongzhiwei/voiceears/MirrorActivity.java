@@ -114,7 +114,12 @@ public class MirrorActivity extends AppCompatActivity {
         });
 
         imageButton_clear.setOnClickListener(view -> {
+            clearLastWordOriginalEditText();
+        });
+
+        imageButton_clear.setOnLongClickListener(view -> {
             clearOriginalEditText();
+            return true;
         });
 
         editText_original.addTextChangedListener(new TextWatcher() {
@@ -175,6 +180,24 @@ public class MirrorActivity extends AppCompatActivity {
 
             imageButton_mode.setImageResource(R.drawable.mirror_borderless);
         }
+    }
+
+    private void clearLastWordOriginalEditText() {
+        String originalText = editText_original.getText().toString().replaceFirst(" +$", "");
+        int lastIndexOfSpace = originalText.lastIndexOf(" ");
+        int lastIndexOfNewline = originalText.lastIndexOf("\n");
+
+        if (lastIndexOfSpace != -1 || lastIndexOfNewline != -1) {
+            int endIndex = Math.max(lastIndexOfSpace, lastIndexOfNewline);
+            if (endIndex + 1 != originalText.length()) {
+                endIndex += 1;
+            }
+            editText_original.setText(originalText.substring(0, endIndex));
+        } else {
+            editText_original.setText("");
+        }
+
+        editText_original.setSelection(editText_original.getText().length());
     }
 
     private void clearOriginalEditText() {
