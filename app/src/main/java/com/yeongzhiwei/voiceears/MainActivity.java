@@ -38,6 +38,7 @@ import static android.Manifest.permission.INTERNET;
 import static android.Manifest.permission.RECORD_AUDIO;
 
 public class MainActivity extends AppCompatActivity {
+    //region VARIABLES
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     public static int permissionRequestCode = 10;
@@ -47,35 +48,39 @@ public class MainActivity extends AppCompatActivity {
     private MenuItem genderMenuItem;
     private MenuItem speedMenuItem;
     private MenuItem autoModeMenuItem;
+
     private ScrollView messageScrollView;
     private LinearLayout messageLinearLayout;
+    private ImageView scrolldownImageView;
     private SeekBar textSizeSeekBar;
     private ImageButton clearImageButton;
-    private ImageView scrolldownImageView;
     private EditText synthesizeEditText;
     private Button synthesizeButton;
 
     PaintDrawable paintDrawable = null;
 
     private final Integer seekBarMinValue = 10;
-    private Integer textViewSize = 12; // default
+    private final Double minAudioSpeed = 0.75;
+    private final Double maxAudioSpeed = 1.50;
+    private final Double incrementAudioSpeed = 0.25;
+
     private Boolean enableAutoScrollDown = true;
-    private Voice.Gender gender = Voice.Gender.Male; // default
-    private double audioSpeed = 1.0; // default
+    private Integer messageTextSize = 12;
+    private Voice.Gender gender = Voice.Gender.Male;
+    private double audioSpeed = 1.0;
     private Boolean isAutoMode = false;
+    private HashMap<Integer, TextView> recognizerTextViews = new HashMap<>();
 
-
-    // Cognitive Services
+    // Azure Cognitive Services
     private static String cognitiveServicesApiKey;
     private static String cognitiveServicesRegion;
-
-    // Text-to-Speech
     private Synthesizer synthesizer = null;
+    private Recognizer recognizer = null;
     private AtomicInteger counter = new AtomicInteger();
 
-    // Speech-to-Text
-    private Recognizer recognizer = null;
-    private HashMap<Integer, TextView> recognizerTextViews = new HashMap<>();
+    //endregion
+
+    //region ACTIVITY LIFECYCLE
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,7 +90,8 @@ public class MainActivity extends AppCompatActivity {
         loadSavedPreferences();
         initializeVariables();
         initializeViews();
-        configureViews();
+        refreshAllViews();
+        addEventListeners();
         loadSavedInstanceState(savedInstanceState);
         configureCognitiveServices();
     }
@@ -124,8 +130,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //endregion
+
+    //region PREFERENCES
+
     private void savePreferences() {
-        PreferencesHelper.save(this, PreferencesHelper.Key.textViewSizeKey, textViewSize);
+        PreferencesHelper.save(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
         PreferencesHelper.save(this, PreferencesHelper.Key.genderKey, gender.name());
         PreferencesHelper.save(this, PreferencesHelper.Key.audioSpeedKey, (int) (audioSpeed * 100));
         PreferencesHelper.save(this, PreferencesHelper.Key.autoModeKey, (isAutoMode) ? 1 : 0);
@@ -134,126 +144,29 @@ public class MainActivity extends AppCompatActivity {
     private void loadSavedPreferences() {
         cognitiveServicesApiKey = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesApiKeyKey);
         cognitiveServicesRegion = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesRegionKey);
-        textViewSize = PreferencesHelper.loadInt(this, PreferencesHelper.Key.textViewSizeKey, textViewSize);
+        messageTextSize = PreferencesHelper.loadInt(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
         gender = Voice.Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, gender.name()));
         audioSpeed = PreferencesHelper.loadInt(this, PreferencesHelper.Key.audioSpeedKey, 100) / 100.0;
         isAutoMode = ((PreferencesHelper.loadInt(this, PreferencesHelper.Key.autoModeKey, 0)) > 0) ? true : false;
     }
 
-    private void initializeViews() {
-        messageScrollView = findViewById(R.id.scrollView_textView);
-        messageLinearLayout = findViewById(R.id.message_linearLayout);
-        textSizeSeekBar = findViewById(R.id.seekBar_textSize);
-        clearImageButton = findViewById(R.id.imageButton_clear);
-        scrolldownImageView = findViewById(R.id.imageView_scrolldown);
-        synthesizeEditText = findViewById(R.id.editText_synthesize);
-        synthesizeButton = findViewById(R.id.button_synthesize);
-    }
+    //endregion
+
+    //region INITIALIZATION
 
     private void initializeVariables() {
         paintDrawable = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimary));
         paintDrawable.setCornerRadius(8);
     }
 
-    private void configureViews() {
-        refreshAllUI();
-
-        messageScrollView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-            Log.d(LOG_TAG, "scrollView2 getBottom(): " + messageScrollView.getBottom() + ". getHeight(): " + messageScrollView.getHeight() + ". getScrollY(): " + messageScrollView.getScrollY());
-            Log.d(LOG_TAG, "linearLayout2 getBottom(): " + messageLinearLayout.getBottom() + ". getHeight(): " + messageLinearLayout.getHeight() + ". getScrollY(): " + messageLinearLayout.getScrollY());
-
-            if (messageLinearLayout.getHeight() > messageScrollView.getHeight() + scrollY && scrollY < oldScrollY && enableAutoScrollDown) {
-                enableAutoScrollDown = false;
-                scrolldownImageView.setVisibility(View.VISIBLE);
-            } else if (messageLinearLayout.getHeight() == messageScrollView.getHeight() + scrollY) {
-                Log.d(LOG_TAG, "ENABLED");
-                enableAutoScrollDown = true;
-                scrolldownImageView.setVisibility(View.GONE);
-            }
-        });
-
-        scrolldownImageView.setOnClickListener(view -> {
-            scrollDown();
-        });
-
-        clearImageButton.setOnClickListener(view -> {
-            clearLastWordOriginalEditText();
-        });
-
-        clearImageButton.setOnLongClickListener(view -> {
-            clearOriginalEditText();
-            return true;
-        });
-
-        textSizeSeekBar.setProgress(textViewSize - seekBarMinValue);
-
-        textSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                textViewSize = i + seekBarMinValue;
-                setTextViewSize();
-                scrollToBottom();
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-
-        synthesizeButton.setEnabled(false);
-
-        synthesizeEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                if (isAutoMode) {
-                    if (charSequence != null) {
-                        String message = charSequence.toString();
-                        int lastIndex = Math.max(message.lastIndexOf("."), Math.max(message.lastIndexOf("?"), message.lastIndexOf("!")));
-                        if (lastIndex == 0) {
-                            synthesizeEditText.setText("");
-                        } else if (lastIndex != -1) {
-                            lastIndex += 1;
-                            synthesizeEditText.setText(message.substring(lastIndex));
-                            synthesizeText(message.substring(0, lastIndex).trim());
-                        }
-                    }
-                } else {
-                    if (charSequence == null || charSequence.toString().trim().length() == 0) {
-                        synthesizeButton.setEnabled(false);
-                    } else {
-                        synthesizeButton.setEnabled(true);
-                    }
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
-        });
-    }
-
-    private void loadSavedInstanceState(final Bundle savedInstanceState) {
-        if (savedInstanceState != null) {
-            String[] messages = savedInstanceState.getStringArray("messages");
-            for (String message : messages) {
-                createAndAddTextView(message);
-            }
-        } else {
-            String welcome = getString(R.string.welcome);
-            createAndAddTextView(welcome);
-        }
+    private void initializeViews() {
+        messageScrollView = findViewById(R.id.scrollView_message);
+        messageLinearLayout = findViewById(R.id.linearLayout_message);
+        scrolldownImageView = findViewById(R.id.imageView_scrolldown);
+        textSizeSeekBar = findViewById(R.id.seekBar_textSize);
+        clearImageButton = findViewById(R.id.imageButton_clear);
+        synthesizeEditText = findViewById(R.id.editText_synthesize);
+        synthesizeButton = findViewById(R.id.button_synthesize);
     }
 
     private void configureCognitiveServices() {
@@ -269,21 +182,28 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO, INTERNET}, permissionRequestCode);
-
-
+        requestPermissionsForCognitiveServices();
         configureTextToSpeech();
         configureSpeechToText();
     }
 
+    //endregion
+
+    //region COGNITIVE SERVICES
+
     private void configureTextToSpeech() {
         synthesizer = new Synthesizer(cognitiveServicesApiKey, cognitiveServicesRegion, Voice.getDefaultVoice(gender));
+    }
 
-        synthesizeButton.setOnClickListener(view -> {
-            String message = synthesizeEditText.getText().toString().trim();
-            synthesizeEditText.setText("");
-            synthesizeText(message);
-        });
+    private void configureSpeechToText() {
+        try {
+            recognizer = new Recognizer(cognitiveServicesApiKey, cognitiveServicesRegion, (order, result) -> {
+                appendSpeakerMessage(order, result);
+            });
+            recognizer.startSpeechToText();
+        } catch (Exception ex) {
+
+        }
     }
 
     private void synthesizeText(String message) {
@@ -319,105 +239,44 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    private void configureSpeechToText() {
-        try {
-            recognizer = new Recognizer(cognitiveServicesApiKey, cognitiveServicesRegion, (order, result) -> {
-                appendSpeakerMessage(order, result);
-            });
-            recognizer.startSpeechToText();
-        } catch (Exception ex) {
-            String message = "Error: Could not configure Speech to text SDK, " + ex.toString();
-            createAndAddTextView(message);
-            Log.e(LOG_TAG, message);
+    //endregion
+
+    //region STATE
+
+    private void toggleGender() {
+        if (synthesizer == null) {
+            return;
         }
+
+        gender = synthesizer.getVoice().toggleVoice();
+        refreshGenderIcon();
     }
 
-    /* ADD TEXTVIEW TO LINEARLAYOUT IN SCROLLVIEW */
-
-    private TextView appendTyperMessage(final String message) {
-        return createAndAddTextView("⌨ " + message);
-    }
-
-    private void appendSpeakerMessage(final Integer order, final String message) {
-        final TextView textView = recognizerTextViews.get(order);
-
-        if (textView == null) {
-            TextView newTextView = createAndAddTextView("\uD83D\uDDE3 " + message);
-            recognizerTextViews.put(order, newTextView);
+    private void toggleAudioSpeed() {
+        if (audioSpeed >= maxAudioSpeed) {
+            audioSpeed = minAudioSpeed;
         } else {
-            MainActivity.this.runOnUiThread(() -> {
-                textView.setText("\uD83D\uDDE3 " + message);
-                scrollToBottom();
-            });
-        }
-    }
-
-    private TextView createAndAddTextView(final String message) {
-        TextView newTextView = new TextView(this);
-        newTextView.setText(message);
-        newTextView.setTextSize(textViewSize);
-        newTextView.setTextIsSelectable(true);
-        newTextView.setBreakStrategy(Layout.BREAK_STRATEGY_SIMPLE); // prevents text "dancing" while speech is being recognized and added
-        newTextView.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT));
-
-        MainActivity.this.runOnUiThread(() -> {
-            messageLinearLayout.addView(newTextView);
-            scrollToBottom();
-        });
-
-        return newTextView;
-    }
-
-    /* SCROLLING IN SCROLLVIEW */
-
-    private void scrollToBottom() {
-        // https://stackoverflow.com/questions/28105945/add-view-to-scrollview-and-then-scroll-to-bottom-which-callback-is-needed
-        messageScrollView.postDelayed(() -> {
-            if (enableAutoScrollDown) {
-                scrollDown();
-            }
-        }, 200);
-    }
-
-    private void scrollDown() {
-        messageScrollView.smoothScrollBy(0, messageScrollView.getHeight() + messageLinearLayout.getHeight() - messageScrollView.getScrollY());
-    }
-
-    /* EDITTEXT */
-
-    private void clearLastWordOriginalEditText() {
-        String originalText = synthesizeEditText.getText().toString().replaceFirst(" +$", "");
-        int lastIndexOfSpace = originalText.lastIndexOf(" ");
-
-        if (lastIndexOfSpace != -1) {
-            if (lastIndexOfSpace + 1 != originalText.length()) {
-                lastIndexOfSpace += 1;
-            }
-            synthesizeEditText.setText(originalText.substring(0, lastIndexOfSpace));
-        } else {
-            synthesizeEditText.setText("");
+            audioSpeed += incrementAudioSpeed;
         }
 
-        synthesizeEditText.setSelection(synthesizeEditText.getText().length());
+        refreshAudioSpeedIcon();
     }
 
-    private void clearOriginalEditText() {
-        synthesizeEditText.setText("");
+    private void toggleAutoMode() {
+        isAutoMode = !isAutoMode;
+
+        refreshAutoModeViews();
     }
 
-    /* TEXT SIZE SEEKBAR */
+    private void toggleAutoScrollDown(Boolean isEnabled) {
+        enableAutoScrollDown = isEnabled;
 
-    private void setTextViewSize() {
-        int childcount = messageLinearLayout.getChildCount();
-        for (int i = 0; i < childcount; i++) {
-            TextView textView = (TextView) messageLinearLayout.getChildAt(i);
-            textView.setTextSize(textViewSize);
-        }
+        refreshScrollDownImageView();
     }
 
-    /* ACTIONBAR OPTIONS */
+    //endregion
+
+    //region ACTIONBAR OPTIONS
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -427,7 +286,7 @@ public class MainActivity extends AppCompatActivity {
         genderMenuItem = menu.findItem(R.id.action_gender);
         speedMenuItem = menu.findItem(R.id.action_audio_speed);
         autoModeMenuItem = menu.findItem(R.id.action_auto_mode);
-        refreshAllUI();
+        refreshAllViews();
 
         return super.onCreateOptionsMenu(menu);
     }
@@ -451,69 +310,196 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /* SETTINGS */
+    //endregion
 
-    private void toggleGender() {
-        if (synthesizer == null) {
-            return;
-        }
+    //region VIEWS
 
-        gender = synthesizer.getVoice().toggleVoice();
-        refreshGenderIcon();
+    // Event listeners
+
+    private void addEventListeners() {
+        messageScrollView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+            Log.d(LOG_TAG, "scrollView2 getBottom(): " + messageScrollView.getBottom() + ". getHeight(): " + messageScrollView.getHeight() + ". getScrollY(): " + messageScrollView.getScrollY());
+            Log.d(LOG_TAG, "linearLayout2 getBottom(): " + messageLinearLayout.getBottom() + ". getHeight(): " + messageLinearLayout.getHeight() + ". getScrollY(): " + messageLinearLayout.getScrollY());
+
+            if (messageLinearLayout.getHeight() > messageScrollView.getHeight() + scrollY && scrollY < oldScrollY && enableAutoScrollDown) {
+                toggleAutoScrollDown(false);
+            } else if (messageLinearLayout.getHeight() == messageScrollView.getHeight() + scrollY) {
+                toggleAutoScrollDown(true);
+            }
+        });
+
+        scrolldownImageView.setOnClickListener(view -> {
+            scrollDown();
+        });
+
+        textSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                messageTextSize = i + seekBarMinValue;
+                refreshMessageTextSize();
+                scrollToBottom();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        clearImageButton.setOnClickListener(view -> {
+            removeLastWordFromSynthesizeEditText();
+        });
+
+        clearImageButton.setOnLongClickListener(view -> {
+            clearSynthesizeEditText();
+            return true;
+        });
+
+        synthesizeEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                if (isAutoMode) {
+                    synthesizeAndRefreshSynthesizeTextView();
+                } else {
+                    refreshSynthesizeButton();
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+
+        synthesizeButton.setOnClickListener(view -> {
+            synthesizeAndRefreshSynthesizeTextView();
+        });
     }
 
-    private void toggleAudioSpeed() {
-        if (audioSpeed >= 2.0) {
-            audioSpeed = 0.50;
+    private void removeLastWordFromSynthesizeEditText() {
+        String originalText = synthesizeEditText.getText().toString().replaceFirst(" +$", "");
+        int lastIndexOfSpace = originalText.lastIndexOf(" ");
+
+        if (lastIndexOfSpace != -1) {
+            if (lastIndexOfSpace + 1 != originalText.length()) {
+                lastIndexOfSpace += 1;
+            }
+            synthesizeEditText.setText(originalText.substring(0, lastIndexOfSpace));
         } else {
-            audioSpeed += 0.25;
+            synthesizeEditText.setText("");
         }
 
-        refreshAudioSpeedIcon();
+        synthesizeEditText.setSelection(synthesizeEditText.getText().length());
     }
 
-
-    private void toggleAutoMode() {
-        isAutoMode = !isAutoMode;
-
-        refreshAutoModeUI();
+    private void clearSynthesizeEditText() {
+        synthesizeEditText.setText("");
     }
 
-    /* UI */
+    private void synthesizeAndRefreshSynthesizeTextView() {
+        String message = synthesizeEditText.getText().toString().trim();
 
-    private void refreshAllUI() {
+        if (isAutoMode) {
+            int lastIndex = Math.max(message.lastIndexOf("."), Math.max(message.lastIndexOf("?"), message.lastIndexOf("!")));
+            if (lastIndex == 0) {
+                synthesizeEditText.setText(""); // forbid [.?!] as first character
+            } else if (lastIndex != -1) {
+                lastIndex += 1;
+                synthesizeEditText.setText(message.substring(lastIndex));
+                synthesizeText(message.substring(0, lastIndex).trim());
+            }
+        } else {
+            synthesizeEditText.setText("");
+            synthesizeText(message);
+        }
+    }
+
+    // Update views based on parameters
+
+    private TextView appendTyperMessage(final String message) {
+        return createAndAddTextView("⌨ " + message);
+    }
+
+    private void appendSpeakerMessage(final Integer order, final String message) {
+        final TextView textView = recognizerTextViews.get(order);
+
+        if (textView == null) {
+            TextView newTextView = createAndAddTextView("\uD83D\uDDE3 " + message);
+            recognizerTextViews.put(order, newTextView);
+        } else {
+            MainActivity.this.runOnUiThread(() -> {
+                textView.setText("\uD83D\uDDE3 " + message);
+                scrollToBottom();
+            });
+        }
+    }
+
+    private TextView createAndAddTextView(final String message) {
+        TextView newTextView = new TextView(this);
+        newTextView.setText(message);
+        newTextView.setTextSize(messageTextSize);
+        newTextView.setTextIsSelectable(true);
+        newTextView.setBreakStrategy(Layout.BREAK_STRATEGY_SIMPLE); // prevents text "dancing" while speech is being recognized and added
+        newTextView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        MainActivity.this.runOnUiThread(() -> {
+            messageLinearLayout.addView(newTextView);
+            scrollToBottom();
+        });
+
+        return newTextView;
+    }
+
+    // Refresh views based on state
+
+    private void refreshAllViews() {
         refreshGenderIcon();
         refreshAudioSpeedIcon();
-        refreshAutoModeUI();
+        refreshAutoModeViews();
+        refreshMessageTextSize();
+        refreshScrollDownImageView();
+        refreshTextSizeSeekBar();
+        refreshSynthesizeButton();
+        scrollToBottom();
     }
 
     private void refreshGenderIcon() {
-        if (genderMenuItem == null) {
-            return;
+        if (genderMenuItem != null) {
+            if (gender == Voice.Gender.Male) {
+                genderMenuItem.setIcon(R.drawable.boy);
+            } else {
+                genderMenuItem.setIcon(R.drawable.girl);
+            }
+            genderMenuItem.setTitle("Gender: " + gender.name());
         }
-
-        if (gender == Voice.Gender.Male) {
-            genderMenuItem.setIcon(R.drawable.boy);
-        } else {
-            genderMenuItem.setIcon(R.drawable.girl);
-        }
-        genderMenuItem.setTitle("Gender: " + gender.name());
     }
 
     private void refreshAudioSpeedIcon() {
-        if (speedMenuItem == null) {
-            return;
+        if (speedMenuItem != null) {
+            String title = String.format("Speed: %.2fX", audioSpeed);
+            speedMenuItem.setTitle(title);
         }
-
-        String title = String.format("Speed: %.2fX", audioSpeed);
-        speedMenuItem.setTitle(title);
     }
 
-    private void refreshAutoModeUI() {
-        if (isAutoMode) {
-            synthesizeButton.setVisibility(View.GONE);
-        } else {
-            synthesizeButton.setVisibility(View.VISIBLE);
+    private void refreshAutoModeViews() {
+        if (synthesizeButton != null) {
+            if (isAutoMode) {
+                synthesizeButton.setVisibility(View.GONE);
+            } else {
+                synthesizeButton.setVisibility(View.VISIBLE);
+            }
         }
 
         if (autoModeMenuItem != null) {
@@ -522,7 +508,62 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /* ACTIVITY INTENT */
+    private void refreshMessageTextSize() {
+        if (messageLinearLayout != null) {
+            int childcount = messageLinearLayout.getChildCount();
+            for (int i = 0; i < childcount; i++) {
+                TextView textView = (TextView) messageLinearLayout.getChildAt(i);
+                textView.setTextSize(messageTextSize);
+            }
+        }
+    }
+
+    private void refreshScrollDownImageView() {
+        if (scrolldownImageView != null) {
+            if (enableAutoScrollDown) {
+                scrolldownImageView.setVisibility(View.GONE);
+            } else {
+                scrolldownImageView.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
+    private void refreshTextSizeSeekBar() {
+        if (textSizeSeekBar != null) {
+            textSizeSeekBar.setProgress(messageTextSize - seekBarMinValue);
+        }
+    }
+
+    private void refreshSynthesizeButton() {
+        if (synthesizeEditText != null && synthesizeButton != null) {
+            if (synthesizeEditText.getText().toString().trim().length() == 0) {
+                synthesizeButton.setEnabled(false);
+            } else {
+                synthesizeButton.setEnabled(true);
+            }
+        }
+    }
+
+    private void scrollToBottom() {
+        // https://stackoverflow.com/questions/28105945/add-view-to-scrollview-and-then-scroll-to-bottom-which-callback-is-needed
+        if (messageScrollView != null) {
+            messageScrollView.postDelayed(() -> {
+                if (enableAutoScrollDown) {
+                    scrollDown();
+                }
+            }, 200);
+        }
+    }
+
+    private void scrollDown() {
+        if (messageScrollView != null && messageLinearLayout != null) {
+            messageScrollView.smoothScrollBy(0, messageScrollView.getHeight() + messageLinearLayout.getHeight() - messageScrollView.getScrollY());
+        }
+    }
+
+    //endregion
+
+    //region ACTIVITY INTENT
 
     private void startSettingsActivity() {
         Intent intent = new Intent(this, SettingsActivity.class);
@@ -562,7 +603,21 @@ public class MainActivity extends AppCompatActivity {
         imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
     }
 
-    /* LAYOUT PERSISTENCE ON ROTATION */
+    //endregion
+
+    //region LAYOUT PERSISTENCE ON ROTATION
+
+    private void loadSavedInstanceState(final Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            String[] messages = savedInstanceState.getStringArray("messages");
+            for (String message : messages) {
+                createAndAddTextView(message);
+            }
+        } else {
+            String welcome = getString(R.string.welcome);
+            createAndAddTextView(welcome);
+        }
+    }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
@@ -582,7 +637,13 @@ public class MainActivity extends AppCompatActivity {
         outState.putStringArray("messages", messages);
     }
 
-    /* PERMISSION */
+    //endregion
+
+    //region PERMISSIONS
+
+    private void requestPermissionsForCognitiveServices() {
+        ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO, INTERNET}, permissionRequestCode);
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -616,4 +677,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    //endregion
 }
