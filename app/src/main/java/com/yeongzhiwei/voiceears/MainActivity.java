@@ -22,6 +22,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -45,10 +46,12 @@ public class MainActivity extends AppCompatActivity {
 
     private MenuItem genderMenuItem;
     private MenuItem speedMenuItem;
+    private MenuItem autoModeMenuItem;
     private ScrollView messageScrollView;
     private LinearLayout messageLinearLayout;
     private SeekBar textSizeSeekBar;
-    private ImageView imageViewScrollDown;
+    private ImageButton clearImageButton;
+    private ImageView scrolldownImageView;
     private EditText synthesizeEditText;
     private Button synthesizeButton;
 
@@ -59,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     private Boolean enableAutoScrollDown = true;
     private Voice.Gender gender = Voice.Gender.Male; // default
     private double audioSpeed = 1.0; // default
+    private Boolean isAutoMode = false;
 
 
     // Cognitive Services
@@ -124,6 +128,7 @@ public class MainActivity extends AppCompatActivity {
         PreferencesHelper.save(this, PreferencesHelper.Key.textViewSizeKey, textViewSize);
         PreferencesHelper.save(this, PreferencesHelper.Key.genderKey, gender.name());
         PreferencesHelper.save(this, PreferencesHelper.Key.audioSpeedKey, (int) (audioSpeed * 100));
+        PreferencesHelper.save(this, PreferencesHelper.Key.autoModeKey, (isAutoMode) ? 1 : 0);
     }
 
     private void loadSavedPreferences() {
@@ -132,13 +137,15 @@ public class MainActivity extends AppCompatActivity {
         textViewSize = PreferencesHelper.loadInt(this, PreferencesHelper.Key.textViewSizeKey, textViewSize);
         gender = Voice.Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, gender.name()));
         audioSpeed = PreferencesHelper.loadInt(this, PreferencesHelper.Key.audioSpeedKey, 100) / 100.0;
+        isAutoMode = ((PreferencesHelper.loadInt(this, PreferencesHelper.Key.autoModeKey, 0)) > 0) ? true : false;
     }
 
     private void initializeViews() {
         messageScrollView = findViewById(R.id.scrollView_textView);
         messageLinearLayout = findViewById(R.id.message_linearLayout);
         textSizeSeekBar = findViewById(R.id.seekBar_textSize);
-        imageViewScrollDown = findViewById(R.id.imageView_scrolldown);
+        clearImageButton = findViewById(R.id.imageButton_clear);
+        scrolldownImageView = findViewById(R.id.imageView_scrolldown);
         synthesizeEditText = findViewById(R.id.editText_synthesize);
         synthesizeButton = findViewById(R.id.button_synthesize);
     }
@@ -149,8 +156,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void configureViews() {
-        refreshGenderIcon();
-        refreshAudioSpeedIcon();
+        refreshAllUI();
 
         messageScrollView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
             Log.d(LOG_TAG, "scrollView2 getBottom(): " + messageScrollView.getBottom() + ". getHeight(): " + messageScrollView.getHeight() + ". getScrollY(): " + messageScrollView.getScrollY());
@@ -158,16 +164,25 @@ public class MainActivity extends AppCompatActivity {
 
             if (messageLinearLayout.getHeight() > messageScrollView.getHeight() + scrollY && scrollY < oldScrollY && enableAutoScrollDown) {
                 enableAutoScrollDown = false;
-                imageViewScrollDown.setVisibility(View.VISIBLE);
+                scrolldownImageView.setVisibility(View.VISIBLE);
             } else if (messageLinearLayout.getHeight() == messageScrollView.getHeight() + scrollY) {
                 Log.d(LOG_TAG, "ENABLED");
                 enableAutoScrollDown = true;
-                imageViewScrollDown.setVisibility(View.GONE);
+                scrolldownImageView.setVisibility(View.GONE);
             }
         });
 
-        imageViewScrollDown.setOnClickListener(view -> {
+        scrolldownImageView.setOnClickListener(view -> {
             scrollDown();
+        });
+
+        clearImageButton.setOnClickListener(view -> {
+            clearLastWordOriginalEditText();
+        });
+
+        clearImageButton.setOnLongClickListener(view -> {
+            clearOriginalEditText();
+            return true;
         });
 
         textSizeSeekBar.setProgress(textViewSize - seekBarMinValue);
@@ -201,10 +216,24 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                if (charSequence == null || charSequence.toString().trim().length() == 0) {
-                    synthesizeButton.setEnabled(false);
+                if (isAutoMode) {
+                    if (charSequence != null) {
+                        String message = charSequence.toString();
+                        int lastIndex = Math.max(message.lastIndexOf("."), Math.max(message.lastIndexOf("?"), message.lastIndexOf("!")));
+                        if (lastIndex == 0) {
+                            synthesizeEditText.setText("");
+                        } else if (lastIndex != -1) {
+                            lastIndex += 1;
+                            synthesizeEditText.setText(message.substring(lastIndex));
+                            synthesizeText(message.substring(0, lastIndex).trim());
+                        }
+                    }
                 } else {
-                    synthesizeButton.setEnabled(true);
+                    if (charSequence == null || charSequence.toString().trim().length() == 0) {
+                        synthesizeButton.setEnabled(false);
+                    } else {
+                        synthesizeButton.setEnabled(true);
+                    }
                 }
             }
 
@@ -251,10 +280,6 @@ public class MainActivity extends AppCompatActivity {
         synthesizer = new Synthesizer(cognitiveServicesApiKey, cognitiveServicesRegion, Voice.getDefaultVoice(gender));
 
         synthesizeButton.setOnClickListener(view -> {
-            if (recognizer != null) {
-                recognizer.stopSpeechToText();
-            }
-
             String message = synthesizeEditText.getText().toString().trim();
             synthesizeEditText.setText("");
             synthesizeText(message);
@@ -263,6 +288,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void synthesizeText(String message) {
         new Thread(() -> {
+            if (recognizer != null) {
+                recognizer.stopSpeechToText();
+            }
+
             Thread runBeforeAudio = new Thread(() -> {
                 counter.incrementAndGet();
             });
@@ -356,6 +385,28 @@ public class MainActivity extends AppCompatActivity {
         messageScrollView.smoothScrollBy(0, messageScrollView.getHeight() + messageLinearLayout.getHeight() - messageScrollView.getScrollY());
     }
 
+    /* EDITTEXT */
+
+    private void clearLastWordOriginalEditText() {
+        String originalText = synthesizeEditText.getText().toString().replaceFirst(" +$", "");
+        int lastIndexOfSpace = originalText.lastIndexOf(" ");
+
+        if (lastIndexOfSpace != -1) {
+            if (lastIndexOfSpace + 1 != originalText.length()) {
+                lastIndexOfSpace += 1;
+            }
+            synthesizeEditText.setText(originalText.substring(0, lastIndexOfSpace));
+        } else {
+            synthesizeEditText.setText("");
+        }
+
+        synthesizeEditText.setSelection(synthesizeEditText.getText().length());
+    }
+
+    private void clearOriginalEditText() {
+        synthesizeEditText.setText("");
+    }
+
     /* TEXT SIZE SEEKBAR */
 
     private void setTextViewSize() {
@@ -375,8 +426,8 @@ public class MainActivity extends AppCompatActivity {
 
         genderMenuItem = menu.findItem(R.id.action_gender);
         speedMenuItem = menu.findItem(R.id.action_audio_speed);
-        refreshGenderIcon();
-        refreshAudioSpeedIcon();
+        autoModeMenuItem = menu.findItem(R.id.action_auto_mode);
+        refreshAllUI();
 
         return super.onCreateOptionsMenu(menu);
     }
@@ -393,10 +444,14 @@ public class MainActivity extends AppCompatActivity {
             toggleAudioSpeed();
         } else if (item.getItemId() == R.id.action_presentation) {
             startPresentationActivity();
+        } else if (item.getItemId() == R.id.action_auto_mode) {
+            toggleAutoMode();
         }
 
         return super.onOptionsItemSelected(item);
     }
+
+    /* SETTINGS */
 
     private void toggleGender() {
         if (synthesizer == null) {
@@ -405,6 +460,31 @@ public class MainActivity extends AppCompatActivity {
 
         gender = synthesizer.getVoice().toggleVoice();
         refreshGenderIcon();
+    }
+
+    private void toggleAudioSpeed() {
+        if (audioSpeed >= 2.0) {
+            audioSpeed = 0.50;
+        } else {
+            audioSpeed += 0.25;
+        }
+
+        refreshAudioSpeedIcon();
+    }
+
+
+    private void toggleAutoMode() {
+        isAutoMode = !isAutoMode;
+
+        refreshAutoModeUI();
+    }
+
+    /* UI */
+
+    private void refreshAllUI() {
+        refreshGenderIcon();
+        refreshAudioSpeedIcon();
+        refreshAutoModeUI();
     }
 
     private void refreshGenderIcon() {
@@ -420,16 +500,6 @@ public class MainActivity extends AppCompatActivity {
         genderMenuItem.setTitle("Gender: " + gender.name());
     }
 
-    private void toggleAudioSpeed() {
-        if (audioSpeed >= 2.0) {
-            audioSpeed = 0.50;
-        } else {
-            audioSpeed += 0.25;
-        }
-
-        refreshAudioSpeedIcon();
-    }
-
     private void refreshAudioSpeedIcon() {
         if (speedMenuItem == null) {
             return;
@@ -437,6 +507,19 @@ public class MainActivity extends AppCompatActivity {
 
         String title = String.format("Speed: %.2fX", audioSpeed);
         speedMenuItem.setTitle(title);
+    }
+
+    private void refreshAutoModeUI() {
+        if (isAutoMode) {
+            synthesizeButton.setVisibility(View.GONE);
+        } else {
+            synthesizeButton.setVisibility(View.VISIBLE);
+        }
+
+        if (autoModeMenuItem != null) {
+            String title = String.format("Auto Mode: %s", (isAutoMode) ? "On" : "Off");
+            autoModeMenuItem.setTitle(title);
+        }
     }
 
     /* ACTIVITY INTENT */

@@ -14,6 +14,11 @@
             android:title="Gender: Male"
             app:showAsAction="always" />
         <item
+            android:id="@+id/action_auto_mode"
+            android:orderInCategory="25"
+            android:title="Auto Mode: Off"
+            app:showAsAction="never" />
+        <item
             android:id="@+id/action_audio_speed"
             android:orderInCategory="30"
             android:title="Speed: 1.0x"

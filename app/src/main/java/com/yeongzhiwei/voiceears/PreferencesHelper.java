@@ -22,7 +22,8 @@ class PreferencesHelper {
         mirroredMirrorMode,
         audioSpeedKey,
         presentationMessagesKey,
-        presentationSelectedMessageIndexKey;
+        presentationSelectedMessageIndexKey,
+        autoModeKey
     }
 
     private static SharedPreferences getSharedPreferences(Context context) {
