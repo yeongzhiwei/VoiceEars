@@ -30,7 +30,8 @@ class Recognizer {
     private boolean continuousListeningStarted = false;
     private SpeechRecognizer speechRecognizer = null;
     private ArrayList<String> content = new ArrayList<>();
-    private AtomicInteger counter = new AtomicInteger();
+//    private AtomicInteger counter = new AtomicInteger();
+    private Counter counter = new Counter();
 
     private Handler handler = new Handler();
     private int handlerDelay = 3000; // 3 sec
@@ -57,7 +58,8 @@ class Recognizer {
 
         try {
             content.clear();
-            counter.incrementAndGet();
+//            counter.incrementAndGet();
+            counter.increment();
 
             AudioConfig audioConfig = AudioConfig.fromStreamInput(createMicrophoneStream());
             speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
@@ -138,7 +140,8 @@ class Recognizer {
         public void run() {
             try {
                 content.clear();
-                counter.incrementAndGet();
+//                counter.incrementAndGet();
+                counter.increment();
             } finally {
                 handler.postDelayed(resetContent, handlerDelay);
             }
