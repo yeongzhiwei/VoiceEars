@@ -19,14 +19,9 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        initializeViews();
         loadSavedPreferences();
-        setEditTextHint();
-    }
-
-    private void initializeViews() {
-        apikeyEditText = findViewById(R.id.editText_key);
-        regionEditText = findViewById(R.id.editText_region);
+        initializeViews();
+        refreshEditTextHint();
     }
 
     private void loadSavedPreferences() {
@@ -34,7 +29,12 @@ public class SettingsActivity extends AppCompatActivity {
         cognitiveServicesRegion = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesRegionKey);
     }
 
-    private void setEditTextHint() {
+    private void initializeViews() {
+        apikeyEditText = findViewById(R.id.editText_key);
+        regionEditText = findViewById(R.id.editText_region);
+    }
+
+    private void refreshEditTextHint() {
         if (cognitiveServicesApiKey != null) {
             apikeyEditText.setHint("***" + cognitiveServicesApiKey.substring(Math.max(0, cognitiveServicesApiKey.length() - 5)));
         }
@@ -44,16 +44,26 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
-    public void onSave(View view) {
+    private void updateCognitiveServicesVariables() {
         String newCognitiveServicesApiKey = apikeyEditText.getText().toString();
         if (newCognitiveServicesApiKey.trim().length() != 0) {
-            PreferencesHelper.save(this, PreferencesHelper.Key.cognitiveServicesApiKeyKey, newCognitiveServicesApiKey);
+            cognitiveServicesApiKey = newCognitiveServicesApiKey;
         }
 
         String newCognitiveServicesRegion = regionEditText.getText().toString();
         if (newCognitiveServicesRegion.trim().length() != 0) {
-            PreferencesHelper.save(this, PreferencesHelper.Key.cognitiveServicesRegionKey, newCognitiveServicesRegion);
+            cognitiveServicesRegion = newCognitiveServicesRegion;
         }
+    }
+
+    private void savePreferences() {
+        PreferencesHelper.save(this, PreferencesHelper.Key.cognitiveServicesApiKeyKey, cognitiveServicesApiKey);
+        PreferencesHelper.save(this, PreferencesHelper.Key.cognitiveServicesRegionKey, cognitiveServicesRegion);
+    }
+
+    public void onSave(View view) {
+        updateCognitiveServicesVariables();
+        savePreferences();
 
         Intent returnIntent = new Intent();
         setResult(RESULT_OK, returnIntent);
