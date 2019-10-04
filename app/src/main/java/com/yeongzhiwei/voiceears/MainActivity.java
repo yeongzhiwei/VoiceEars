@@ -500,8 +500,10 @@ public class MainActivity extends AppCompatActivity {
         if (synthesizeButton != null) {
             if (isAutoMode) {
                 synthesizeButton.setVisibility(View.GONE);
+                clearImageButton.setVisibility(View.VISIBLE);
             } else {
                 synthesizeButton.setVisibility(View.VISIBLE);
+                clearImageButton.setVisibility(View.GONE);
             }
         }
 

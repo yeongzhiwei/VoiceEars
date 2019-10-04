@@ -76,7 +76,7 @@
             android:id="@+id/imageButton_clear"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:contentDescription="@string/mirror_imageButton_clear_contentDescription"
             app:srcCompat="@drawable/clear" />

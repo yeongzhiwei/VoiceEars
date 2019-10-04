@@ -48,47 +48,49 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:max="50"
-        app:layout_constraintBottom_toTopOf="@+id/editText_synthesize"
-        app:layout_constraintEnd_toStartOf="@+id/imageButton_clear"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/scrollView_message" />
 
-    <ImageButton
-        android:id="@+id/imageButton_clear"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:contentDescription="@string/mirror_imageButton_clear_contentDescription"
-        app:srcCompat="@drawable/clear"
-        app:layout_constraintBottom_toTopOf="@+id/editText_synthesize"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/seekBar_textSize"
-        app:layout_constraintTop_toBottomOf="@+id/scrollView_message" />
-
-    <EditText
-        android:id="@+id/editText_synthesize"
-        android:layout_width="0dp"
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        android:ems="10"
-        android:hint="@string/main_editText_synthesize_hint"
-        android:inputType="textShortMessage|textAutoCorrect|text"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/button_synthesize"
-        app:layout_constraintHorizontal_bias="0.08"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:orientation="horizontal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-    <Button
-        android:id="@+id/button_synthesize"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:text="@string/main_button_synthesize_text"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        <EditText
+            android:id="@+id/editText_synthesize"
+            android:layout_width="0dp"
+            android:layout_weight="0.9"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="@string/main_editText_synthesize_hint"
+            android:inputType="textShortMessage|textAutoCorrect|text" />
+
+        <ImageButton
+            android:id="@+id/imageButton_clear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/mirror_imageButton_clear_contentDescription"
+            app:srcCompat="@drawable/clear"/>
+
+        <Button
+            android:id="@+id/button_synthesize"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/main_button_synthesize_text"
+            app:layout_constraintStart_toEndOf="@id/editText_synthesize" />
+    </LinearLayout>
+
+
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
