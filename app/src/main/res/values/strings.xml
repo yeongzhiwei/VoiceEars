@@ -5,6 +5,7 @@
     <string name="main_button_synthesize_text">Speak</string>
     <string name="main_editText_synthesize_hint">Type a message</string>
     <string name="main_imageView_scrolldown_contentDescription">scroll down</string>
+    <string name="main_imageView_loading_contentDescription">loading</string>
     <string name="main_imageButton_synthesize_contentDescription">Speak</string>
 
     <string name="welcome">Start speaking or type and click Speak button. Click the face icon at top-right to toggle the gender.</string>

@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.PaintDrawable;
 import android.os.Bundle;
 import android.text.Editable;
@@ -56,12 +57,14 @@ public class MainActivity extends AppCompatActivity {
     private ScrollView messageScrollView;
     private LinearLayout messageLinearLayout;
     private ImageView scrolldownImageView;
+    private ImageView loadingImageView;
     private SeekBar textSizeSeekBar;
     private ImageButton clearImageButton;
     private EditText synthesizeEditText;
     private Button synthesizeButton;
 
     PaintDrawable paintDrawable = null;
+    AnimationDrawable loadingAnimationDrawable = null;
 
     private Boolean isAutoScrollDown = true;
     private Integer messageTextSize = 12;
@@ -87,8 +90,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         loadSavedPreferences();
-        initializeVariables();
         initializeViews();
+        initializeVariables();
         refreshAllViews();
         addEventListeners();
         loadSavedInstanceState(savedInstanceState);
@@ -153,19 +156,22 @@ public class MainActivity extends AppCompatActivity {
 
     //region INITIALIZATION
 
-    private void initializeVariables() {
-        paintDrawable = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimary));
-        paintDrawable.setCornerRadius(8);
-    }
-
     private void initializeViews() {
         messageScrollView = findViewById(R.id.scrollView_message);
         messageLinearLayout = findViewById(R.id.linearLayout_message);
         scrolldownImageView = findViewById(R.id.imageView_scrolldown);
+        loadingImageView = findViewById(R.id.imageView_loading);
         textSizeSeekBar = findViewById(R.id.seekBar_textSize);
         clearImageButton = findViewById(R.id.imageButton_clear);
         synthesizeEditText = findViewById(R.id.editText_synthesize);
         synthesizeButton = findViewById(R.id.button_synthesize);
+    }
+
+    private void initializeVariables() {
+        paintDrawable = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimary));
+        paintDrawable.setCornerRadius(8);
+
+        loadingAnimationDrawable = (AnimationDrawable) loadingImageView.getBackground();
     }
 
     private void configureCognitiveServices() {
@@ -206,6 +212,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void synthesizeText(String message) {
+        setLoading(true);
         new Thread(() -> {
             if (recognizer != null) {
                 recognizer.stopSpeechToText();
@@ -219,6 +226,7 @@ public class MainActivity extends AppCompatActivity {
             TextView ttsTextView = appendTyperMessage(message);
             synthesizer.speakToAudio(message, audioSpeed, () -> {
                 MainActivity.this.runOnUiThread(() -> {
+                    setLoading(false);
                     ttsTextView.setBackground(paintDrawable);
                 });
             }, () -> {
@@ -428,6 +436,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Update views based on parameters
+
+    private void setLoading(boolean load) {
+
+        if (load) {
+            loadingImageView.setVisibility(View.VISIBLE);
+            loadingAnimationDrawable.start();
+        } else {
+            loadingImageView.setVisibility(View.GONE);
+            loadingAnimationDrawable.stop();
+        }
+    }
 
     private TextView appendTyperMessage(final String message) {
         return createAndAddTextView("⌨ " + message);

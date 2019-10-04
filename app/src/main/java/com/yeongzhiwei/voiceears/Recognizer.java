@@ -1,6 +1,5 @@
 package com.yeongzhiwei.voiceears;
 
-import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -11,10 +10,19 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 class Recognizer {
     private static final String LOG_TAG = Recognizer.class.getSimpleName();
+    private static ExecutorService s_executorService = Executors.newCachedThreadPool();
+
+    public interface RecognizerUI {
+        void update(Integer order, String result);
+    }
+
+    private SpeechConfig speechConfig;
+    private RecognizerUI recognizerUI;
+
 
     private MicrophoneStream microphoneStream;
     private MicrophoneStream createMicrophoneStream() {
@@ -26,22 +34,21 @@ class Recognizer {
         return microphoneStream;
     }
 
-    private SpeechConfig speechConfig;
     private boolean continuousListeningStarted = false;
     private SpeechRecognizer speechRecognizer = null;
     private ArrayList<String> content = new ArrayList<>();
-//    private AtomicInteger counter = new AtomicInteger();
-    private Counter counter = new Counter();
+    private int counter = 0;
+    private ReentrantLock lock = new ReentrantLock(); // mutual exclusion: content & counter
 
-    private Handler handler = new Handler();
-    private int handlerDelay = 3000; // 3 sec
-
-    private static ExecutorService s_executorService;
-    static {
-        s_executorService = Executors.newCachedThreadPool();
-    }
-
-    private RecognizerUI recognizerUI;
+    private LoopHandler resetLoopHandler = new LoopHandler(3000, () -> {
+        lock.lock();
+        try {
+            content.clear();
+            counter++;
+        } finally {
+            lock.unlock();
+        }
+    });
 
     Recognizer(String cognitiveServicesApiKey, String cognitiveServicesRegion, RecognizerUI recognizerUI) {
         speechConfig = SpeechConfig.fromSubscription(cognitiveServicesApiKey, cognitiveServicesRegion);
@@ -57,33 +64,51 @@ class Recognizer {
         }
 
         try {
-            content.clear();
-//            counter.incrementAndGet();
-            counter.increment();
+            lock.lock();
+            try {
+                content.clear();
+                counter++;
+            } finally {
+                lock.unlock();
+            }
 
             AudioConfig audioConfig = AudioConfig.fromStreamInput(createMicrophoneStream());
             speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
 
             speechRecognizer.recognizing.addEventListener((o, speechRecognitionResultEventArgs) -> {
                 final String s = speechRecognitionResultEventArgs.getResult().getText();
-                Log.d(LOG_TAG, "recognizing: " + s);
-                content.add(s);
-                String message = TextUtils.join(" ", content).trim();
-                if (message.length() != 0) {
-                    resetRepeatingTask();
-                    recognizerUI.update(counter.get(), message);
+                String message;
+                int order = -1;  // Note: will crash if not updated to non-negative
+                lock.lock();
+                try {
+                    message = TextUtils.join(" ", content).trim() + " " + s;
+                    order = counter;
+                } finally {
+                    lock.unlock();
                 }
-                content.remove(content.size() - 1);
+
+                if (message.length() != 0) {
+                    resetLoopHandler.reset();
+                    recognizerUI.update(order, message);
+                }
             });
 
             speechRecognizer.recognized.addEventListener((o, speechRecognitionResultEventArgs) -> {
                 final String s = speechRecognitionResultEventArgs.getResult().getText();
-                Log.d(LOG_TAG, "recognized: " + s);
-                content.add(s);
-                String message = TextUtils.join(" ", content).trim();
-                if (message.length() != 0) { // && continuousListeningStarted
-                    resetRepeatingTask();
-                    recognizerUI.update(counter.get(), message);
+                String message;
+                int order = -1; // Note: will crash if not updated to non-negative
+                lock.lock();
+                try {
+                    content.add(s);
+                    message = TextUtils.join(" ", content).trim();
+                    order = counter;
+                } finally {
+                    lock.unlock();
+                }
+
+                if (message.length() != 0) {
+                    resetLoopHandler.reset();
+                    recognizerUI.update(order, message);
                 }
             });
 
@@ -98,7 +123,7 @@ class Recognizer {
     }
 
     synchronized void stopSpeechToText() {
-        stopRepeatingTask();
+        resetLoopHandler.stop();
         if (speechRecognizer != null) {
             final Future<Void> task = speechRecognizer.stopContinuousRecognitionAsync();
             setOnTaskCompletedListener(task, result -> {
@@ -119,10 +144,6 @@ class Recognizer {
         }
     }
 
-    public interface RecognizerUI {
-        void update(Integer order, String result);
-    }
-
     private <T> void setOnTaskCompletedListener(Future<T> task, OnTaskCompletedListener<T> listener) {
         s_executorService.submit(() -> {
             T result = task.get();
@@ -133,30 +154,5 @@ class Recognizer {
 
     private interface OnTaskCompletedListener<T> {
         void onCompleted(T taskResult);
-    }
-
-    private Runnable resetContent = new Runnable() {
-        @Override
-        public void run() {
-            try {
-                content.clear();
-//                counter.incrementAndGet();
-                counter.increment();
-            } finally {
-                handler.postDelayed(resetContent, handlerDelay);
-            }
-        }
-    };
-
-    private void startRepeatingTask() {
-        resetContent.run();
-    }
-    private void resetRepeatingTask() {
-        handler.removeCallbacks(resetContent);
-        handler.postDelayed(resetContent, handlerDelay);
-    }
-
-    private void stopRepeatingTask() {
-        handler.removeCallbacks(resetContent);
     }
 }
