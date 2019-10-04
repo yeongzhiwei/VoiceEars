@@ -21,7 +21,8 @@ public class PresentationMessageActivity extends AppCompatActivity {
         setContentView(R.layout.activity_presentation_message);
 
         initializeViews();
-        configureViews();
+        refreshSaveButton();
+        addEventListeners();
         getIntentAndUpdateViews();
     }
 
@@ -31,9 +32,7 @@ public class PresentationMessageActivity extends AppCompatActivity {
         cancelButton = findViewById(R.id.button_cancel);
     }
 
-    private void configureViews() {
-        refreshSaveButton();
-
+    private void addEventListeners() {
         messageEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -52,12 +51,7 @@ public class PresentationMessageActivity extends AppCompatActivity {
         });
 
         saveButton.setOnClickListener(view -> {
-            String message = messageEditText.getText().toString();
-
-            Intent returnIntent = new Intent();
-            returnIntent.putExtra(PresentationActivity.EXTRA_MESSAGE, message);
-            setResult(RESULT_OK, returnIntent);
-            finish();
+            saveAndReturnIntent();
         });
 
         cancelButton.setOnClickListener(view -> {
@@ -67,6 +61,15 @@ public class PresentationMessageActivity extends AppCompatActivity {
 
     private void refreshSaveButton() {
         saveButton.setEnabled(messageEditText.getText().toString().trim().length() != 0);
+    }
+
+    private void saveAndReturnIntent() {
+        String message = messageEditText.getText().toString();
+
+        Intent returnIntent = new Intent();
+        returnIntent.putExtra(PresentationActivity.EXTRA_MESSAGE, message);
+        setResult(RESULT_OK, returnIntent);
+        finish();
     }
 
     private void getIntentAndUpdateViews() {
