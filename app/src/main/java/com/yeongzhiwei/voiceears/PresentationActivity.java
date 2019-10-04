@@ -10,6 +10,7 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PaintDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -44,7 +45,7 @@ public class PresentationActivity extends AppCompatActivity {
     private Double audioSpeed = 1.0;
     private Boolean isPlaying = false;
     private ArrayList<String> messages = new ArrayList<>();
-    private Integer selectedMessageIndex;
+    private int selectedMessageIndex;
 
     // Azure Cognitive Services
     private String cognitiveServicesApiKey;
@@ -123,6 +124,9 @@ public class PresentationActivity extends AppCompatActivity {
     //region COGNITIVE SERVICES
 
     private void synthesizeText() {
+        isPlaying = true;
+        refreshButtons();
+
         if (selectedMessageIndex < 0 || selectedMessageIndex >= messages.size()) {
             return;
         }
@@ -132,9 +136,7 @@ public class PresentationActivity extends AppCompatActivity {
         new Thread(() -> {
             synthesizer.speakToAudio(message, audioSpeed, () -> {
                 PresentationActivity.this.runOnUiThread(() -> {
-                    isPlaying = true;
                     refreshTextViewsBackground();
-                    refreshButtons();
                 });
             }, () -> {
                 PresentationActivity.this.runOnUiThread(() -> {
@@ -156,6 +158,32 @@ public class PresentationActivity extends AppCompatActivity {
         refreshMessageTextSize();
     }
 
+    private void addMessage(String message) {
+        String[] newMessages = message.replaceAll("\n", "").split("[.!?]");
+        for (int i = 0; i < newMessages.length; i++) {
+            addSingleMessage(newMessages[i].trim());
+        }
+        Toast.makeText(PresentationActivity.this, "Added a message.", Toast.LENGTH_SHORT).show();
+
+        refreshTextViews();
+    }
+
+    private void addSingleMessage(String message) {
+        if (selectedMessageIndex >= 0 && selectedMessageIndex < messages.size()) {
+            selectedMessageIndex += 1;
+        } else {
+            selectedMessageIndex = messages.size();
+        }
+        messages.add(selectedMessageIndex, message);
+    }
+
+    private void editCurrentMessage(String newMessage) {
+        messages.set(selectedMessageIndex, newMessage);
+        Toast.makeText(PresentationActivity.this, "Edited a message.", Toast.LENGTH_SHORT).show();
+
+        refreshTextViews();
+    }
+
     private void deleteCurrentMessage() {
         String message = messages.get(selectedMessageIndex);
         String alertMessage = message.length() < 20 ? message : message.substring(0, 100) + "...";
@@ -166,6 +194,22 @@ public class PresentationActivity extends AppCompatActivity {
                     messages.remove(selectedMessageIndex);
                     refreshTextViews();
                     Toast.makeText(PresentationActivity.this, "Deleted a message.", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("No", (dialog, which) -> {
+
+                })
+                .create()
+                .show();
+    }
+
+    private void deleteAllMessages() {
+        new AlertDialog.Builder(PresentationActivity.this)
+                .setMessage("Do you want to delete all messages?")
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    messages.clear();
+                    selectedMessageIndex = 0;
+                    refreshTextViews();
+                    Toast.makeText(PresentationActivity.this, "Deleted all messages.", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("No", (dialog, which) -> {
 
@@ -202,6 +246,11 @@ public class PresentationActivity extends AppCompatActivity {
 
         deleteImageButton.setOnClickListener(view -> {
             deleteCurrentMessage();
+        });
+
+        deleteImageButton.setOnLongClickListener(view -> {
+            deleteAllMessages();
+            return true;
         });
 
         editImageButton.setOnClickListener(view -> {
@@ -328,18 +377,10 @@ public class PresentationActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             String message = data.getStringExtra(EXTRA_MESSAGE);
             if (requestCode == editRequestCode) {
-                messages.set(selectedMessageIndex, message);
-                Toast.makeText(PresentationActivity.this, "Edited a message.", Toast.LENGTH_SHORT).show();
+                editCurrentMessage(message);
             } else if (requestCode == addRequestCode) {
-                if (selectedMessageIndex >= 0 && selectedMessageIndex < messages.size()) {
-                    selectedMessageIndex += 1;
-                } else {
-                    selectedMessageIndex = messages.size();
-                }
-                messages.add(selectedMessageIndex, message);
-                Toast.makeText(PresentationActivity.this, "Added a message.", Toast.LENGTH_SHORT).show();
+                addMessage(message);
             }
-            refreshTextViews();
         } else {
             Toast.makeText(PresentationActivity.this, "Cancelled.", Toast.LENGTH_SHORT).show();
         }
