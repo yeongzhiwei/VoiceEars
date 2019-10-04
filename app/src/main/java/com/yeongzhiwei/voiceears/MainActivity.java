@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
     private Boolean isAutoScrollDown = true;
     private Integer messageTextSize = 12;
     private Voice.Gender gender = Voice.Gender.Male;
-    private double audioSpeed = 1.0;
+    private Double audioSpeed = 1.0;
     private Boolean isAutoMode = false;
     private HashMap<Integer, TextView> recognizerTextViews = new HashMap<>();
 
