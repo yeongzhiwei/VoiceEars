@@ -44,6 +44,10 @@ public class MainActivity extends AppCompatActivity {
     public static int permissionRequestCode = 10;
     public static int settingsRequestCode = 20;
     public static int mirrorRequestCode = 30;
+    private static final Integer seekBarMinValue = 10;
+    private static final Double minAudioSpeed = 0.75;
+    private static final Double maxAudioSpeed = 1.50;
+    private static final Double incrementAudioSpeed = 0.25;
 
     private MenuItem genderMenuItem;
     private MenuItem speedMenuItem;
@@ -59,12 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
     PaintDrawable paintDrawable = null;
 
-    private final Integer seekBarMinValue = 10;
-    private final Double minAudioSpeed = 0.75;
-    private final Double maxAudioSpeed = 1.50;
-    private final Double incrementAudioSpeed = 0.25;
-
-    private Boolean enableAutoScrollDown = true;
+    private Boolean isAutoScrollDown = true;
     private Integer messageTextSize = 12;
     private Voice.Gender gender = Voice.Gender.Male;
     private double audioSpeed = 1.0;
@@ -132,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
 
     //endregion
 
-    //region PREFERENCES
+    //region SHARED PREFERENCES
 
     private void savePreferences() {
         PreferencesHelper.save(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
@@ -269,9 +268,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void toggleAutoScrollDown(Boolean isEnabled) {
-        enableAutoScrollDown = isEnabled;
+        isAutoScrollDown = isEnabled;
 
         refreshScrollDownImageView();
+    }
+
+    private void setMessageTextSize(Integer size) {
+        messageTextSize = size;
+        refreshMessageTextSize();
+        scrollToBottom();
     }
 
     //endregion
@@ -321,7 +326,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d(LOG_TAG, "scrollView2 getBottom(): " + messageScrollView.getBottom() + ". getHeight(): " + messageScrollView.getHeight() + ". getScrollY(): " + messageScrollView.getScrollY());
             Log.d(LOG_TAG, "linearLayout2 getBottom(): " + messageLinearLayout.getBottom() + ". getHeight(): " + messageLinearLayout.getHeight() + ". getScrollY(): " + messageLinearLayout.getScrollY());
 
-            if (messageLinearLayout.getHeight() > messageScrollView.getHeight() + scrollY && scrollY < oldScrollY && enableAutoScrollDown) {
+            if (messageLinearLayout.getHeight() > messageScrollView.getHeight() + scrollY && scrollY < oldScrollY && isAutoScrollDown) {
                 toggleAutoScrollDown(false);
             } else if (messageLinearLayout.getHeight() == messageScrollView.getHeight() + scrollY) {
                 toggleAutoScrollDown(true);
@@ -335,9 +340,7 @@ public class MainActivity extends AppCompatActivity {
         textSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                messageTextSize = i + seekBarMinValue;
-                refreshMessageTextSize();
-                scrollToBottom();
+                setMessageTextSize(i + seekBarMinValue);
             }
 
             @Override
@@ -520,7 +523,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void refreshScrollDownImageView() {
         if (scrolldownImageView != null) {
-            if (enableAutoScrollDown) {
+            if (isAutoScrollDown) {
                 scrolldownImageView.setVisibility(View.GONE);
             } else {
                 scrolldownImageView.setVisibility(View.VISIBLE);
@@ -548,7 +551,7 @@ public class MainActivity extends AppCompatActivity {
         // https://stackoverflow.com/questions/28105945/add-view-to-scrollview-and-then-scroll-to-bottom-which-callback-is-needed
         if (messageScrollView != null) {
             messageScrollView.postDelayed(() -> {
-                if (enableAutoScrollDown) {
+                if (isAutoScrollDown) {
                     scrollDown();
                 }
             }, 200);
