@@ -650,8 +650,10 @@ public class MainActivity extends AppCompatActivity {
     private void loadSavedInstanceState(final Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             String[] messages = savedInstanceState.getStringArray("messages");
-            for (String message : messages) {
-                appendMessage(message);
+            if (messages != null) {
+                for (String message : messages) {
+                    appendMessage(message);
+                }
             }
         } else {
             String welcome = getString(R.string.welcome);
