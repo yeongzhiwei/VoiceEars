@@ -11,4 +11,6 @@
     <color name="colorBgSpeechBubbleIncoming">#FFFFFF</color>
     <color name="colorBgSpeechBubbleOutgoing">#BBBBBB</color>
     <color name="colorBgSpeechBubbleOutgoingActive">#666666</color>
+
+    <color name="colorDefault">#26A69A</color>
 </resources>
