@@ -8,7 +8,7 @@
     <string name="main_imageView_loading_contentDescription">loading</string>
     <string name="main_imageButton_synthesize_contentDescription">Speak</string>
 
-    <string name="welcome">Start speaking or type and click Speak button. Click the face icon at top-right to toggle the gender.</string>
+    <string name="welcome">Welcome to VoiceEars. Start speaking or typing to use this app.</string>
     <string name="toast_blank_key_or_region">Enter the subscription key and region to start using this app.</string>
     <string name="toast_invalid_key_or_region">Failed to authenticate. Check the API key and region.</string>
     <string name="alert_permission_microphone_request_message">Allow this app to record your audio to enable Speech-to-text.</string>

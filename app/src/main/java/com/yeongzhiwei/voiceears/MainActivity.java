@@ -10,11 +10,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.AnimationDrawable;
-import android.graphics.drawable.PaintDrawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.Layout;
 import android.text.TextWatcher;
+import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -60,7 +61,6 @@ public class MainActivity extends AppCompatActivity {
     private EditText synthesizeEditText;
     private Button synthesizeButton;
 
-    PaintDrawable paintDrawable = null;
     AnimationDrawable loadingAnimationDrawable = null;
 
     private Boolean isAutoScrollDown = true;
@@ -166,9 +166,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeVariables() {
-        paintDrawable = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimary));
-        paintDrawable.setCornerRadius(8);
-
         loadingAnimationDrawable = (AnimationDrawable) loadingImageView.getBackground();
     }
 
@@ -225,11 +222,11 @@ public class MainActivity extends AppCompatActivity {
             synthesizer.speakToAudio(message, audioSpeed, () -> {
                 MainActivity.this.runOnUiThread(() -> {
                     setLoading(false);
-                    ttsTextView.setBackground(paintDrawable);
+                    ttsTextView.setBackgroundResource(R.drawable.bg_speech_bubble_outgoing_active);
                 });
             }, () -> {
                 MainActivity.this.runOnUiThread(() -> {
-                    ttsTextView.setBackground(null);
+                    ttsTextView.setBackgroundResource(R.drawable.bg_speech_bubble_outgoing);
                 });
 
                 Thread runAfterAudio = new Thread(() -> {
@@ -329,8 +326,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void addEventListeners() {
         messageScrollView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-//            Log.d(LOG_TAG, "scrollView2 getBottom(): " + messageScrollView.getBottom() + ". getHeight(): " + messageScrollView.getHeight() + ". getScrollY(): " + messageScrollView.getScrollY());
-//            Log.d(LOG_TAG, "linearLayout2 getBottom(): " + messageLinearLayout.getBottom() + ". getHeight(): " + messageLinearLayout.getHeight() + ". getScrollY(): " + messageLinearLayout.getScrollY());
+            Log.d(LOG_TAG, "scrollView2 getBottom(): " + messageScrollView.getBottom() + ". getHeight(): " + messageScrollView.getHeight() + ". getScrollY(): " + messageScrollView.getScrollY());
+            Log.d(LOG_TAG, "linearLayout2 getBottom(): " + messageLinearLayout.getBottom() + ". getHeight(): " + messageLinearLayout.getHeight() + ". getScrollY(): " + messageLinearLayout.getScrollY());
+
+            Log.d(LOG_TAG, "isAutoScrollDown: " + ((isAutoScrollDown) ? "true" : "false"));
+            Log.d(LOG_TAG, messageLinearLayout.getHeight() + " > " + messageScrollView.getHeight() + " + " + scrollY + " && " + scrollY + " < " + oldScrollY + " && " + ((isAutoScrollDown) ? "true" : "false"));
+            Log.d(LOG_TAG, messageLinearLayout.getHeight() + " == " + messageScrollView.getHeight() + " + " + scrollY);
 
             if (messageLinearLayout.getHeight() > messageScrollView.getHeight() + scrollY && scrollY < oldScrollY && isAutoScrollDown) {
                 toggleAutoScrollDown(false);
@@ -447,20 +448,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private TextView appendTyperMessage(final String message) {
-        return appendMessage("⌨ " + message);
+        return appendMessage(message);
     }
 
     private void appendSpeakerMessage(final String message, final Boolean isFinal) {
-        final TextView textView = appendMessage("\uD83D\uDDE3 " + message, currentSpeakerTextView);
+        final TextView textView = appendMessage(message, currentSpeakerTextView, true);
         currentSpeakerTextView = (isFinal) ? null : textView;
     }
 
     private TextView appendMessage(final String message) {
-        return this.appendMessage(message, null);
+        return this.appendMessage(message, null, false);
     }
 
-    private TextView appendMessage(final String message, TextView textView) {
-        final TextView messageTextView = (textView == null) ? createAndAppendTextView() : textView;
+    private TextView appendMessage(final String message, final TextView textView, final Boolean isLeft) {
+        final TextView messageTextView = (textView == null) ? createAndAppendTextView(isLeft) : textView;
 
         MainActivity.this.runOnUiThread(() -> {
             messageTextView.setText(message);
@@ -470,14 +471,26 @@ public class MainActivity extends AppCompatActivity {
         return messageTextView;
     }
 
-    private TextView createAndAppendTextView() {
+    private TextView createAndAppendTextView(final Boolean isLeft) {
         TextView textView = new TextView(this);
         textView.setTextSize(messageTextSize);
         textView.setTextIsSelectable(true);
         textView.setBreakStrategy(Layout.BREAK_STRATEGY_SIMPLE); // prevents text "dancing" while speech is being recognized and added
-        textView.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT));
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+
+        if (isLeft) {
+            textView.setBackgroundResource(R.drawable.bg_speech_bubble_incoming);
+            textView.setPadding(60, 4, 24, 4);
+            layoutParams.rightMargin = 100;
+            layoutParams.gravity = Gravity.START;
+        } else {
+            textView.setBackgroundResource(R.drawable.bg_speech_bubble_outgoing);
+            textView.setPadding(24, 4, 60 , 4);
+            layoutParams.leftMargin = 100;
+            layoutParams.gravity = Gravity.END;
+        }
+
+        textView.setLayoutParams(layoutParams);
 
         MainActivity.this.runOnUiThread(() -> {
             messageLinearLayout.addView(textView);

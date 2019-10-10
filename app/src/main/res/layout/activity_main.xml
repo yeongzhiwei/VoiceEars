@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorLightGrey"
     tools:context=".MainActivity">
 
     <ScrollView
@@ -25,7 +26,9 @@
             android:id="@+id/linearLayout_message"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" />
+            android:orientation="vertical"
+            android:showDividers="middle"
+            android:divider="@drawable/divider_linearlayout" />
     </ScrollView>
 
     <ImageView
@@ -43,12 +46,12 @@
         android:id="@+id/imageView_loading"
         android:layout_width="28dp"
         android:layout_height="28dp"
-        android:layout_marginEnd="20dp"
+        android:layout_marginStart="20dp"
         android:contentDescription="@string/main_imageView_loading_contentDescription"
         android:background="@drawable/loading"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/scrollView_message"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintStart_toStartOf="parent" />
 
 
     <SeekBar
