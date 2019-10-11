@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Editable;
@@ -236,7 +235,7 @@ public class MirrorActivity extends AppCompatActivity {
             originalEditText.getLayoutParams().height = 0;
             originalEditText.requestLayout();
             originalEditText.setMaxLines(Integer.MAX_VALUE);
-            originalEditText.setBackgroundResource(Color.TRANSPARENT); // remove the underbar
+            originalEditText.setBackground(null); // remove the underbar
             originalEditText.setTextSize(mirroredTextSize);
 
             modeImageButton.setImageResource(R.drawable.ic_mirror_borderless);

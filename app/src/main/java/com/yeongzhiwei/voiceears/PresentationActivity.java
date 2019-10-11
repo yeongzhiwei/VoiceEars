@@ -89,7 +89,7 @@ public class PresentationActivity extends AppCompatActivity {
         messageTextSize = PreferencesHelper.loadInt(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
         gender = Voice.Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, gender.name()));
         audioSpeed = PreferencesHelper.loadInt(this, PreferencesHelper.Key.audioSpeedKey, 100) / 100.0;
-        messages = PreferencesHelper.loadStringArray(this, PreferencesHelper.Key.presentationMessagesKey, new ArrayList<String>());
+        messages = PreferencesHelper.loadStringArray(this, PreferencesHelper.Key.presentationMessagesKey, new ArrayList<>());
         selectedMessageIndex = PreferencesHelper.loadInt(this, PreferencesHelper.Key.presentationSelectedMessageIndexKey, -1);
     }
 
@@ -159,8 +159,8 @@ public class PresentationActivity extends AppCompatActivity {
 
     private void addMessage(String message) {
         String[] newMessages = message.replaceAll("\n", "").split("[.!?]");
-        for (int i = 0; i < newMessages.length; i++) {
-            addSingleMessage(newMessages[i].trim());
+        for (String newMessage : newMessages) {
+            addSingleMessage(newMessage.trim());
         }
         Toast.makeText(PresentationActivity.this, "Added a message.", Toast.LENGTH_SHORT).show();
 
@@ -375,6 +375,9 @@ public class PresentationActivity extends AppCompatActivity {
 
         if (resultCode == RESULT_OK) {
             String message = data.getStringExtra(EXTRA_MESSAGE);
+            if (message == null) {
+                message = "";
+            }
             if (requestCode == editRequestCode) {
                 editCurrentMessage(message);
             } else if (requestCode == addRequestCode) {

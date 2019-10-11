@@ -195,9 +195,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void configureSpeechToText() {
         try {
-            recognizer = new Recognizer(cognitiveServicesApiKey, cognitiveServicesRegion, (text, isFinal) -> {
-                appendIncomingMessage(text, isFinal);
-            });
+            recognizer = new Recognizer(cognitiveServicesApiKey, cognitiveServicesRegion, this::appendIncomingMessage);
             recognizer.startSpeechToText();
         } catch (Exception ex) {
 
@@ -632,8 +630,10 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-        InputMethodManager imm = (InputMethodManager)   getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+        }
     }
 
     //endregion
