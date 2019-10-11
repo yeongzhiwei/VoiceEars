@@ -40,8 +40,7 @@ public class PresentationActivity extends AppCompatActivity {
     PaintDrawable paintDrawablePlay = null;
 
     private Integer messageTextSize = 20;
-    private Voice.Gender gender = Voice.Gender.Male;
-    private Double audioSpeed = 1.0;
+    private Synthesizer.Gender gender = Synthesizer.Gender.Male;
     private Boolean isPlaying = false;
     private ArrayList<String> messages = new ArrayList<>();
     private int selectedMessageIndex;
@@ -87,8 +86,7 @@ public class PresentationActivity extends AppCompatActivity {
         cognitiveServicesApiKey = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesApiKeyKey, "");
         cognitiveServicesRegion = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesRegionKey, "");
         messageTextSize = PreferencesHelper.loadInt(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
-        gender = Voice.Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, gender.name()));
-        audioSpeed = PreferencesHelper.loadInt(this, PreferencesHelper.Key.audioSpeedKey, 100) / 100.0;
+        gender = Synthesizer.Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, gender.name()));
         messages = PreferencesHelper.loadStringArray(this, PreferencesHelper.Key.presentationMessagesKey, new ArrayList<>());
         selectedMessageIndex = PreferencesHelper.loadInt(this, PreferencesHelper.Key.presentationSelectedMessageIndexKey, -1);
     }
@@ -115,7 +113,7 @@ public class PresentationActivity extends AppCompatActivity {
     }
 
     private void configureTextToSpeech() {
-        synthesizer = new Synthesizer(cognitiveServicesApiKey, cognitiveServicesRegion);
+        synthesizer = new Synthesizer(cognitiveServicesApiKey, cognitiveServicesRegion, gender);
     }
 
     //endregion
@@ -133,7 +131,7 @@ public class PresentationActivity extends AppCompatActivity {
         String message = messages.get(selectedMessageIndex);
 
         new Thread(() -> {
-            synthesizer.speakToAudio(message, audioSpeed, () -> {
+            synthesizer.speak(message, () -> {
                 PresentationActivity.this.runOnUiThread(() -> {
                     refreshTextViewsBackground();
                 });
@@ -143,6 +141,10 @@ public class PresentationActivity extends AppCompatActivity {
                     selectedMessageIndex += 1;
                     refreshTextViewsBackground();
                     refreshButtons();
+                });
+            }, () -> {
+                PresentationActivity.this.runOnUiThread(() -> {
+                    Toast.makeText(PresentationActivity.this, getString(R.string.network_error), Toast.LENGTH_SHORT).show();
                 });
             });
         }).start();

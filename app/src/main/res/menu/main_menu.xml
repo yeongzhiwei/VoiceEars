@@ -19,11 +19,6 @@
             android:title="@string/action_toggle_auto_tts_title"
             app:showAsAction="never" />
         <item
-            android:id="@+id/action_audio_speed"
-            android:orderInCategory="30"
-            android:title="@string/action_audio_speed_title"
-            app:showAsAction="never" />
-        <item
             android:id="@+id/action_presentation"
             android:orderInCategory="40"
             android:title="@string/action_presentation_title"

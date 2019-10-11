@@ -1,106 +1,67 @@
 package com.yeongzhiwei.voiceears;
 
-import android.media.AudioFormat;
-import android.media.AudioManager;
-import android.media.AudioTrack;
-import android.os.AsyncTask;
 import android.util.Log;
 
+import com.microsoft.cognitiveservices.speech.*;
 
+import java.util.concurrent.ExecutionException;
+
+// https://github.com/Azure-Samples/cognitive-services-speech-sdk/blob/master/samples/java/jre/console/src/com/microsoft/cognitiveservices/speech/samples/console/SpeechSynthesisSamples.java
 class Synthesizer {
-    private static final String LOG_TAG = Synthesizer.class.getName();
+    enum Gender {
+        Male, Female;
 
-    private TtsServiceClient ttsServiceClient;
-    private Voice voice;
-    private AudioTrack audioTrack;
-
-    Synthesizer(String apiKey, String region) {
-        this(apiKey, region, Voice.getDefaultVoice(Voice.Gender.Male));
-    }
-
-    Synthesizer(String apiKey, String region, Voice voice) {
-        this.ttsServiceClient = new TtsServiceClient(apiKey, region);
-        this.voice = voice;
-    }
-
-    Voice getVoice() {
-        return this.voice;
-    }
-
-    void speakToAudio(String text, Runnable callOnPlay, Runnable callOnStop) {
-        playSound(speak(text, 1), callOnPlay, callOnStop);
-    }
-
-    void speakToAudio(String text, double speed, Runnable callOnPlay, Runnable callOnStop) {
-        playSound(speak(text, speed), callOnPlay, callOnStop);
-    }
-
-    private byte[] speak(String text, double speed) {
-        String ssml = "<speak version='1.0' xml:lang='" + voice.getLang()
-                + "'><voice xml:lang='" + voice.getLang()
-                + "' xml:gender='" + voice.getGender()
-                + "' name='" + voice.getVoiceName()
-                + "'><prosody rate='" + speed + "'>"
-                + text + "</prosody></voice></speak>";
-        Log.d(LOG_TAG, "Sending ssml: " + ssml);
-
-        return speakSSML(ssml);
-    }
-
-
-    void speakSSMLToAudio(String ssml, Runnable callOnPlay, Runnable callOnStop) {
-        playSound(speakSSML(ssml), callOnPlay, callOnStop);
-    }
-
-    private byte[] speakSSML(String ssml) {
-        byte[] result;
-        result = ttsServiceClient.speakSSML(ssml);
-        if (result == null || result.length == 0) {
-            return null;
+        Gender toggle() {
+            return (this.equals(Male)) ? Female : Male;
         }
-        return result;
     }
 
-    private void playSound(final byte[] sound, final Runnable callOnPlay, Runnable callOnStop) {
-        if (sound == null || sound.length == 0){
-            Log.d(LOG_TAG, "playSound: no sound!");
+    private static final String LOG_TAG = Synthesizer.class.getSimpleName();
+
+    private SpeechConfig speechConfig;
+    private SpeechSynthesizer synthesizer;
+
+    Synthesizer(String cognitiveServicesApiKey, String cognitiveServicesRegion, Gender gender) {
+        speechConfig = SpeechConfig.fromSubscription(cognitiveServicesApiKey, cognitiveServicesRegion);
+        setVoiceGender(gender);
+
+        synthesizer = new SpeechSynthesizer(speechConfig);
+    }
+
+    synchronized void speak(String text, Runnable callOnStart, Runnable callOnEnd, Runnable callOnError) {
+        try {
+            if (callOnStart != null) {
+                callOnStart.run();
+            }
+
+            SpeechSynthesisResult result = synthesizer.SpeakTextAsync(text).get();
+
+            if (callOnEnd != null) {
+                callOnEnd.run();
+            }
+
+            if (result.getReason() == ResultReason.Canceled && callOnError != null) {
+                callOnError.run();
+            }
+
+            result.close();
+        } catch (InterruptedException ex) {
+
+        } catch (ExecutionException ex) {
+
+        }
+    }
+
+    void setVoiceGender(Gender gender) {
+        if (speechConfig == null) {
             return;
         }
 
-        AsyncTask.execute(() -> {
-            if (callOnPlay != null) {
-                callOnPlay.run();
-            }
-
-            final int SAMPLE_RATE = 16000;
-
-            audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, AudioFormat.CHANNEL_CONFIGURATION_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT, AudioTrack.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_CONFIGURATION_MONO, AudioFormat.ENCODING_PCM_16BIT), AudioTrack.MODE_STREAM);
-
-            if (audioTrack.getState() == AudioTrack.STATE_INITIALIZED) {
-                audioTrack.play();
-                audioTrack.write(sound, 0, sound.length);
-                audioTrack.stop();
-                audioTrack.release();
-            }
-
-            if (callOnStop != null) {
-                callOnStop.run();
-            }
-        });
-    }
-
-    //stop playing audio data
-    // if use STREAM mode, will wait for the end of the last write buffer data will stop.
-    // if you stop immediately, call the pause() method and then call the flush() method to discard the data that has not yet been played
-    void stopSound() {
-        try {
-            if (audioTrack != null && audioTrack.getState() == AudioTrack.STATE_INITIALIZED) {
-                audioTrack.pause();
-                audioTrack.flush();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (gender == Gender.Male) {
+            speechConfig.setSpeechSynthesisVoiceName("en-US-GuyNeural");
+        } else {
+            speechConfig.setSpeechSynthesisVoiceName("en-US-JessaNeural");
         }
     }
 }
+

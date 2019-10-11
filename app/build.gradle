@@ -30,5 +30,5 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-    implementation 'com.microsoft.cognitiveservices.speech:client-sdk:1.6.0'
+    implementation 'com.microsoft.cognitiveservices.speech:client-sdk:1.7.0'
 }

@@ -52,4 +52,7 @@
 
     /* shortcuts */
     <string name="mirror_shortcut_short_label">MirrorText</string>
+
+    /* common */
+    <string name="network_error">Error: Check your network connection and try again.</string>
 </resources>

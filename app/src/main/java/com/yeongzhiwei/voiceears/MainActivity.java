@@ -43,12 +43,8 @@ public class MainActivity extends AppCompatActivity {
     public static int settingsRequestCode = 20;
     public static int mirrorRequestCode = 30;
     private static final Integer seekBarMinValue = 10;
-    private static final Double minAudioSpeed = 0.75;
-    private static final Double maxAudioSpeed = 1.50;
-    private static final Double incrementAudioSpeed = 0.25;
 
     private MenuItem genderMenuItem;
-    private MenuItem speedMenuItem;
 
     private ScrollView messageScrollView;
     private LinearLayout messageLinearLayout;
@@ -63,8 +59,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Boolean isAutoScrollDown = true;
     private Integer messageTextSize = 20;
-    private Voice.Gender gender = Voice.Gender.Male;
-    private Double audioSpeed = 1.0;
+    private Synthesizer.Gender gender = Synthesizer.Gender.Male;
     private Boolean isAutoTTS = false;
 
     // Azure Cognitive Services
@@ -135,7 +130,6 @@ public class MainActivity extends AppCompatActivity {
     private void savePreferences() {
         PreferencesHelper.save(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
         PreferencesHelper.save(this, PreferencesHelper.Key.genderKey, gender.name());
-        PreferencesHelper.save(this, PreferencesHelper.Key.audioSpeedKey, (int) (audioSpeed * 100));
         PreferencesHelper.save(this, PreferencesHelper.Key.autoTTSKey, (isAutoTTS) ? 1 : 0);
     }
 
@@ -143,8 +137,7 @@ public class MainActivity extends AppCompatActivity {
         cognitiveServicesApiKey = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesApiKeyKey);
         cognitiveServicesRegion = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesRegionKey);
         messageTextSize = PreferencesHelper.loadInt(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
-        gender = Voice.Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, gender.name()));
-        audioSpeed = PreferencesHelper.loadInt(this, PreferencesHelper.Key.audioSpeedKey, 100) / 100.0;
+        gender = Synthesizer.Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, gender.name()));
         isAutoTTS = ((PreferencesHelper.loadInt(this, PreferencesHelper.Key.autoTTSKey, 0)) > 0) ? true : false;
     }
 
@@ -190,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
     //region COGNITIVE SERVICES
 
     private void configureTextToSpeech() {
-        synthesizer = new Synthesizer(cognitiveServicesApiKey, cognitiveServicesRegion, Voice.getDefaultVoice(gender));
+        synthesizer = new Synthesizer(cognitiveServicesApiKey, cognitiveServicesRegion, gender);
     }
 
     private void configureSpeechToText() {
@@ -203,19 +196,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void synthesizeText(String message) {
-        setLoading(true);
-        new Thread(() -> {
+        if (counter.get() == 0) {
+            setLoading(true);
+
             if (recognizer != null) {
                 recognizer.stopSpeechToText();
             }
+        }
 
-            Thread runBeforeAudio = new Thread(() -> {
+        new Thread(() -> {
+            new Thread(() -> {
                 counter.incrementAndGet();
-            });
-            runBeforeAudio.start();
+            }).start();
 
             TextView ttsTextView = appendOutgoingMessage(message);
-            synthesizer.speakToAudio(message, audioSpeed, () -> {
+
+            synthesizer.speak(message, () -> {
                 MainActivity.this.runOnUiThread(() -> {
                     setLoading(false);
                     ttsTextView.setBackgroundResource(R.drawable.bg_speech_bubble_outgoing_active);
@@ -225,14 +221,17 @@ public class MainActivity extends AppCompatActivity {
                     ttsTextView.setBackgroundResource(R.drawable.bg_speech_bubble_outgoing);
                 });
 
-                Thread runAfterAudio = new Thread(() -> {
+                new Thread(() -> {
                     if (counter.decrementAndGet() == 0) {
                         if (recognizer != null) {
                             recognizer.startSpeechToText();
                         }
                     }
+                }).start();
+            }, () -> {
+                MainActivity.this.runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.this, getString(R.string.network_error), Toast.LENGTH_SHORT).show();
                 });
-                runAfterAudio.start();
             });
         }).start();
     }
@@ -246,18 +245,9 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        gender = synthesizer.getVoice().toggleVoice();
+        gender = gender.toggle();
+        synthesizer.setVoiceGender(gender);
         refreshGenderIcon();
-    }
-
-    private void toggleAudioSpeed() {
-        if (audioSpeed >= maxAudioSpeed) {
-            audioSpeed = minAudioSpeed;
-        } else {
-            audioSpeed += incrementAudioSpeed;
-        }
-
-        refreshAudioSpeedIcon();
     }
 
     private void toggleAutoTTS() {
@@ -288,7 +278,6 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.main_menu, menu);
 
         genderMenuItem = menu.findItem(R.id.action_gender);
-        speedMenuItem = menu.findItem(R.id.action_audio_speed);
         refreshAllViews();
 
         return super.onCreateOptionsMenu(menu);
@@ -302,8 +291,6 @@ public class MainActivity extends AppCompatActivity {
             toggleGender();
         } else if (item.getItemId() == R.id.action_settings) {
             startSettingsActivity();
-        } else if (item.getItemId() == R.id.action_audio_speed) {
-            toggleAudioSpeed();
         } else if (item.getItemId() == R.id.action_presentation) {
             startPresentationActivity();
         } else if (item.getItemId() == R.id.action_toggle_auto_tts) {
@@ -499,7 +486,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void refreshAllViews() {
         refreshGenderIcon();
-        refreshAudioSpeedIcon();
         refreshAutoTTSViews();
         refreshMessageTextSize();
         refreshScrollDownImageView();
@@ -510,20 +496,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void refreshGenderIcon() {
         if (genderMenuItem != null) {
-            if (gender == Voice.Gender.Male) {
+            if (gender == Synthesizer.Gender.Male) {
                 genderMenuItem.setIcon(R.drawable.ic_male);
                 genderMenuItem.setTitle(R.string.action_gender_title_male);
             } else {
                 genderMenuItem.setIcon(R.drawable.ic_female);
                 genderMenuItem.setTitle(R.string.action_gender_title_female);
             }
-        }
-    }
-
-    private void refreshAudioSpeedIcon() {
-        if (speedMenuItem != null) {
-            String title = String.format( "%s: %sx", getResources().getString(R.string.action_audio_speed_title), Double.toString(audioSpeed));
-            speedMenuItem.setTitle(title);
         }
     }
 
