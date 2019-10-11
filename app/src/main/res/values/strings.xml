@@ -10,7 +10,7 @@
 
     <string name="welcome">Welcome to VoiceEars. Start speaking or typing to use this app.</string>
     <string name="toast_blank_key_or_region">Enter the subscription key and region to start using this app.</string>
-    <string name="toast_invalid_key_or_region">Failed to authenticate. Check the API key and region.</string>
+    <string name="toast_invalid_key_or_region">Failed to authenticate. Check your network connection or settings and try again.</string>
     <string name="alert_permission_microphone_request_message">Allow this app to record your audio to enable Speech-to-text.</string>
     <string name="toast_permission_microphone_denied">WARNING: Speech-to-text is disabled. To enable it, go to Settings and allow this app to access your microphone and restart the app.</string>
 
@@ -54,5 +54,5 @@
     <string name="mirror_shortcut_short_label">MirrorText</string>
 
     /* common */
-    <string name="network_error">Error: Check your network connection and try again.</string>
+    <string name="network_error">Error: Check your network connection or settings and try again.</string>
 </resources>

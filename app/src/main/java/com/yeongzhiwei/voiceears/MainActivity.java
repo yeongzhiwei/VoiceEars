@@ -167,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        if (! Helper.authenticateApiKey(this)) {
+        if (! Authentication.authenticate(cognitiveServicesApiKey, cognitiveServicesRegion)) {
             startSettingsActivity();
             Toast.makeText(MainActivity.this, R.string.toast_invalid_key_or_region, Toast.LENGTH_LONG).show();
             return;
@@ -599,7 +599,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == settingsRequestCode) {
             if (resultCode == RESULT_CANCELED) {
-                if (!Helper.authenticateApiKey(this)) {
+                if (!Authentication.authenticate(cognitiveServicesApiKey, cognitiveServicesRegion)) {
                     finish();
                 }
             } else if (resultCode == RESULT_OK) {
