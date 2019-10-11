@@ -430,20 +430,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private TextView appendOutgoingMessage(final String message) {
-        return appendMessage(message);
+        return appendMessage(message, SpeechBubble.Outgoing, null);
     }
 
     private void appendIncomingMessage(final String message, final Boolean isFinal) {
-        final TextView textView = appendMessage(message, currentIncomingTextView, true);
+        final TextView textView = appendMessage(message, SpeechBubble.Incoming, currentIncomingTextView);
         currentIncomingTextView = (isFinal) ? null : textView;
     }
 
-    private TextView appendMessage(final String message) {
-        return this.appendMessage(message, null, false);
+    private TextView appendMessage(final String message, final SpeechBubble speechBubble) {
+        return this.appendMessage(message, speechBubble, null);
     }
 
-    private TextView appendMessage(final String message, final TextView textView, final Boolean isLeft) {
-        final TextView messageTextView = (textView == null) ? createAndAppendTextView(isLeft) : textView;
+    private TextView appendMessage(final String message, final SpeechBubble speechBubble, final TextView textView) {
+        final TextView messageTextView = (textView == null) ? createAndAppendTextView(speechBubble) : textView;
 
         MainActivity.this.runOnUiThread(() -> {
             messageTextView.setText(message);
@@ -453,23 +453,30 @@ public class MainActivity extends AppCompatActivity {
         return messageTextView;
     }
 
-    private TextView createAndAppendTextView(final Boolean isLeft) {
+    private TextView createAndAppendTextView(final SpeechBubble speechBubble) {
         TextView textView = new TextView(this);
         textView.setTextSize(messageTextSize);
         textView.setTextIsSelectable(true);
         textView.setBreakStrategy(Layout.BREAK_STRATEGY_SIMPLE); // prevents text "dancing" while speech is being recognized and added
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        textView.setTag(speechBubble.toString());
+        LinearLayout.LayoutParams layoutParams = null;
 
-        if (isLeft) {
+        if (speechBubble == SpeechBubble.Incoming) {
             textView.setBackgroundResource(R.drawable.bg_speech_bubble_incoming);
             textView.setPadding(60, 4, 24, 4);
+            layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             layoutParams.rightMargin = 100;
             layoutParams.gravity = Gravity.START;
-        } else {
+        } else if (speechBubble == SpeechBubble.Outgoing) {
             textView.setBackgroundResource(R.drawable.bg_speech_bubble_outgoing);
             textView.setPadding(24, 4, 60 , 4);
+            layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             layoutParams.leftMargin = 100;
             layoutParams.gravity = Gravity.END;
+        } else if (speechBubble == SpeechBubble.System) {
+            textView.setBackgroundResource(R.drawable.bg_speech_bubble_system);
+            textView.setPadding(60, 4, 60, 4);
+            layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         }
 
         textView.setLayoutParams(layoutParams);
@@ -622,14 +629,15 @@ public class MainActivity extends AppCompatActivity {
     private void loadSavedInstanceState(final Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             String[] messages = savedInstanceState.getStringArray("messages");
+            String[] speechBubbles = savedInstanceState.getStringArray("speechBubbles");
             if (messages != null) {
-                for (String message : messages) {
-                    appendMessage(message);
+                for (int i = 0; i < messages.length; i++) {
+                    appendMessage(messages[i], SpeechBubble.valueOf(speechBubbles[i]));
                 }
             }
         } else {
             String welcome = getString(R.string.welcome);
-            appendMessage(welcome);
+            appendMessage(welcome, SpeechBubble.System);
         }
     }
 
@@ -643,12 +651,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String[] messages = new String[childCount];
+        String[] speechBubbles = new String[childCount];
         for (int i = 0; i < childCount; i++) {
             TextView textView = (TextView) messageLinearLayout.getChildAt(i);
             messages[i] = textView.getText().toString();
+            speechBubbles[i] = (String) textView.getTag();
         }
 
         outState.putStringArray("messages", messages);
+        outState.putStringArray("speechBubbles", speechBubbles);
     }
 
     //endregion
@@ -693,4 +704,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //endregion
+
+    private enum SpeechBubble {
+        Incoming, Outgoing, System;
+    }
 }
