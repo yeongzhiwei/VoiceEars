@@ -37,35 +37,35 @@ class Recognizer {
             return;
         }
 
-            AudioConfig audioConfig = AudioConfig.fromStreamInput(createMicrophoneStream());
-            speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
+        AudioConfig audioConfig = AudioConfig.fromStreamInput(createMicrophoneStream());
+        speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
 
-            speechRecognizer.recognizing.addEventListener((o, speechRecognitionResultEventArgs) -> {
-                final String s = speechRecognitionResultEventArgs.getResult().getText();
-                Log.d(LOG_TAG, "recognizing: " + s);
+        speechRecognizer.recognizing.addEventListener((o, speechRecognitionResultEventArgs) -> {
+            final String s = speechRecognitionResultEventArgs.getResult().getText();
+            Log.d(LOG_TAG, "recognizing: " + s);
 
-                if (!s.isEmpty()) {
-                    recognition.recognize(s, false);
-                }
+            if (!s.isEmpty()) {
+                recognition.recognize(s, false);
+            }
 
-            });
+        });
 
-            speechRecognizer.recognized.addEventListener((o, speechRecognitionResultEventArgs) -> {
-                final String s = speechRecognitionResultEventArgs.getResult().getText();
-                Log.d(LOG_TAG, "recognized: " + s);
+        speechRecognizer.recognized.addEventListener((o, speechRecognitionResultEventArgs) -> {
+            final String s = speechRecognitionResultEventArgs.getResult().getText();
+            Log.d(LOG_TAG, "recognized: " + s);
 
-                if (!s.isEmpty()) {
-                    recognition.recognize(s, true);
-                }
+            if (!s.isEmpty()) {
+                recognition.recognize(s, true);
+            }
 
-            });
+        });
 
-            final Future<Void> task = speechRecognizer.startContinuousRecognitionAsync();
+        final Future<Void> task = speechRecognizer.startContinuousRecognitionAsync();
 
-            setOnTaskCompletedListener(task, result -> {
-                continuousListeningStarted = true;
-                Log.d(LOG_TAG, "Started Speech to Text");
-            });
+        setOnTaskCompletedListener(task, result -> {
+            continuousListeningStarted = true;
+            Log.d(LOG_TAG, "Started Speech to Text");
+        });
     }
 
     synchronized void stopSpeechToText() {
