@@ -15,14 +15,13 @@ import javax.net.ssl.HttpsURLConnection;
 class Authentication {
     private static final String LOG_TAG = Authentication.class.getName();
 
+    // Access Token expires every 10 minutes. Renew it every 9 minutes only.
+    private final static int RefreshTokenDuration = 9 * 60 * 1000;
+
     private String apiKey;
     private String accessTokenUri;
     private String accessToken;
-    private Timer accessTokenRenewer;
 
-    // Access Token expires every 10 minutes. Renew it every 9 minutes only.
-    private TimerTask nineMinitesTask = null;
-    private final int RefreshTokenDuration = 9 * 60 * 1000;
 
     Authentication(String apiKey, String region) {
         this(apiKey, region, true);
@@ -45,8 +44,8 @@ class Authentication {
 
         if (renew) {
             // renew the accessToken every specified minutes
-            accessTokenRenewer = new Timer();
-            nineMinitesTask = new TimerTask() {
+            Timer accessTokenRenewer = new Timer();
+            TimerTask nineMinitesTask = new TimerTask() {
                 public void run() {
                     RenewAccessToken();
                 }

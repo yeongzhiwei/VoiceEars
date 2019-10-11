@@ -10,9 +10,9 @@ import javax.net.ssl.HttpsURLConnection;
 
 class TtsServiceClient {
     private static final String LOG_TAG = TtsServiceClient.class.getName();
-    private static String contentType = "application/ssml+xml";
+    private static final String contentType = "application/ssml+xml";
+    private static final String audioOutputFormat = "raw-16khz-16bit-mono-pcm";
     private final String serviceUri;
-    private String audioOutputFormat = "raw-16khz-16bit-mono-pcm";
     private final Authentication authentication;
     private byte[] result;
 

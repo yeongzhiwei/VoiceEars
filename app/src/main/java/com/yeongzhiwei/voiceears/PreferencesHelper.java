@@ -9,7 +9,7 @@ import org.json.JSONException;
 import java.util.ArrayList;
 
 class PreferencesHelper {
-    static final String sharedPreferencesName = "hmLwWy669t";
+    private static final String sharedPreferencesName = "hmLwWy669t";
 
     enum Key {
         // WARNING: DO NOT CHANGE THE ORDER. ADD NEW KEY TO THE BOTTOM
@@ -23,7 +23,7 @@ class PreferencesHelper {
         audioSpeedKey,
         presentationMessagesKey,
         presentationSelectedMessageIndexKey,
-        autoModeKey
+        autoTTSKey
     }
 
     private static SharedPreferences getSharedPreferences(Context context) {

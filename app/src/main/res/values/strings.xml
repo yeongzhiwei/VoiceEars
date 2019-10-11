@@ -4,7 +4,7 @@
     /* MainActivity */
     <string name="main_button_synthesize_text">Speak</string>
     <string name="main_editText_synthesize_hint">Type a message</string>
-    <string name="main_imageView_scrolldown_contentDescription">scroll down</string>
+    <string name="main_imageView_scrollDown_contentDescription">scroll down</string>
     <string name="main_imageView_loading_contentDescription">loading</string>
     <string name="main_imageButton_synthesize_contentDescription">Speak</string>
 
@@ -15,7 +15,13 @@
     <string name="toast_permission_microphone_denied">WARNING: Speech-to-text is disabled. To enable it, go to Settings and allow this app to access your microphone and restart the app.</string>
 
     /* Main Menu */
+    <string name="action_mirror_title">MirrorText</string>
+    <string name="action_gender_title_male">Gender: Male</string>
+    <string name="action_gender_title_female">Gender: Female</string>
     <string name="action_settings_title">Settings</string>
+    <string name="action_toggle_auto_tts_title">Toggle Auto TTS</string>
+    <string name="action_audio_speed_title">Speed</string>
+    <string name="action_presentation_title">Presentation Mode</string>
 
     /* SettingsActivity */
     <string name="settings_textView_title">Azure Cognitive Services</string>
@@ -38,7 +44,10 @@
     <string name="presentation_button_play_text">PLAY AUDIO</string>
 
     /* PresentationMessageActivity */
+    <string name="presentation_message_editText_hint">Presentation message</string>
+    <string name="presentation_message_editText_hint_new">New message</string>
     <string name="presentation_message_button_save">Save</string>
+    <string name="presentation_message_button_create">Create</string>
     <string name="presentation_message_button_cancel">Cancel</string>
 
     /* shortcuts */

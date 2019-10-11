@@ -14,6 +14,7 @@
         android:inputType="textMultiLine"
         android:scrollHorizontally="false"
         android:gravity="top"
+        android:hint="@string/presentation_message_editText_hint"
         app:layout_constraintBottom_toTopOf="@+id/linearLayout_buttons"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

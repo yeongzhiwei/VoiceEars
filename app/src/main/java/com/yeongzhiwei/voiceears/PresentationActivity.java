@@ -10,7 +10,6 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PaintDrawable;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -301,8 +300,8 @@ public class PresentationActivity extends AppCompatActivity {
 
     private void refreshMessageTextSize() {
         if (messageLinearLayout != null) {
-            int childcount = messageLinearLayout.getChildCount();
-            for (int i = 0; i < childcount; i++) {
+            int childCount = messageLinearLayout.getChildCount();
+            for (int i = 0; i < childCount; i++) {
                 TextView textView = (TextView) messageLinearLayout.getChildAt(i);
                 textView.setTextSize(messageTextSize);
             }

@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -78,11 +77,11 @@ public class PresentationMessageActivity extends AppCompatActivity {
         int requestCode = intent.getIntExtra(PresentationActivity.EXTRA_REQUEST_CODE, -1);
 
         if (requestCode == PresentationActivity.addRequestCode) {
-            messageEditText.setHint("New message");
-            saveButton.setText("Create");
+            messageEditText.setHint(R.string.presentation_message_editText_hint_new);
+            saveButton.setText(R.string.presentation_message_button_create);
         } else if (requestCode == PresentationActivity.editRequestCode) {
             messageEditText.setText(message);
-            saveButton.setText("Save");
+            saveButton.setText(R.string.presentation_message_button_save);
         }
     }
 }
