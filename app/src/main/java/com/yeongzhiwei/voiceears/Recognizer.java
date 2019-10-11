@@ -10,28 +10,19 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 class Recognizer {
-    private static final String LOG_TAG = Recognizer.class.getSimpleName();
-    private static ExecutorService s_executorService = Executors.newCachedThreadPool();
-
     interface Recognition {
         void recognize(String text, Boolean isFinal);
     }
 
-    private SpeechConfig speechConfig;
-    private Recognition recognition;
+    private static final String LOG_TAG = Recognizer.class.getSimpleName();
+    private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
+    private SpeechConfig speechConfig;
+    private SpeechRecognizer speechRecognizer = null;
+    private Recognition recognition;
     private MicrophoneStream microphoneStream;
-    private MicrophoneStream createMicrophoneStream() {
-        if (microphoneStream != null) {
-            microphoneStream.close();
-            microphoneStream = null;
-        }
-        microphoneStream = new MicrophoneStream();
-        return microphoneStream;
-    }
 
     private boolean continuousListeningStarted = false;
-    private SpeechRecognizer speechRecognizer = null;
 
     Recognizer(String cognitiveServicesApiKey, String cognitiveServicesRegion, Recognition recognition) {
         speechConfig = SpeechConfig.fromSubscription(cognitiveServicesApiKey, cognitiveServicesRegion);
@@ -98,8 +89,17 @@ class Recognizer {
         }
     }
 
+    private MicrophoneStream createMicrophoneStream() {
+        if (microphoneStream != null) {
+            microphoneStream.close();
+            microphoneStream = null;
+        }
+        microphoneStream = new MicrophoneStream();
+        return microphoneStream;
+    }
+
     private <T> void setOnTaskCompletedListener(Future<T> task, OnTaskCompletedListener<T> listener) {
-        s_executorService.submit(() -> {
+        executorService.submit(() -> {
             T result = task.get();
             listener.onCompleted(result);
             return null;

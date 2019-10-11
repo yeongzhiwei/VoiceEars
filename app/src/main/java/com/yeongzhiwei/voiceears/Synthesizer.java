@@ -1,7 +1,5 @@
 package com.yeongzhiwei.voiceears;
 
-import android.util.Log;
-
 import com.microsoft.cognitiveservices.speech.*;
 
 import java.util.concurrent.ExecutionException;
@@ -15,8 +13,6 @@ class Synthesizer {
             return (this.equals(Male)) ? Female : Male;
         }
     }
-
-    private static final String LOG_TAG = Synthesizer.class.getSimpleName();
 
     private SpeechConfig speechConfig;
     private SpeechSynthesizer synthesizer;
