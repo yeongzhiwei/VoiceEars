@@ -40,7 +40,7 @@ public class PresentationActivity extends AppCompatActivity {
     PaintDrawable paintDrawableSelect = null;
     PaintDrawable paintDrawablePlay = null;
 
-    private Integer messageTextSize = 12;
+    private Integer messageTextSize = 20;
     private Voice.Gender gender = Voice.Gender.Male;
     private Double audioSpeed = 1.0;
     private Boolean isPlaying = false;

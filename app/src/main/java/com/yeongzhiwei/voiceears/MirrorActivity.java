@@ -34,7 +34,7 @@ public class MirrorActivity extends AppCompatActivity {
 
     private Boolean isMirrorMode = true;
     private String mirroredText;
-    private Integer mirroredTextSize = 12;
+    private Integer mirroredTextSize = 20;
 
     private Float defaultEditTextSize;
     private Drawable defaultEditTextDrawable;

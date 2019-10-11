@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
     AnimationDrawable loadingAnimationDrawable = null;
 
     private Boolean isAutoScrollDown = true;
-    private Integer messageTextSize = 12;
+    private Integer messageTextSize = 20;
     private Voice.Gender gender = Voice.Gender.Male;
     private Double audioSpeed = 1.0;
     private Boolean isAutoMode = false;
