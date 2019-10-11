@@ -60,7 +60,7 @@
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
             android:contentDescription="@string/presentation_imageButton_delete_contentDescription"
-            app:srcCompat="@drawable/trashbin" />
+            app:srcCompat="@drawable/ic_trashbin" />
 
         <LinearLayout
             android:id="@+id/linearLayout_textSize"
@@ -91,14 +91,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/presentation_imageButton_edit_contentDescription"
-                app:srcCompat="@drawable/edit" />
+                app:srcCompat="@drawable/ic_edit" />
 
             <ImageButton
                 android:id="@+id/imageButton_add"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/presentation_imageButton_add_contentDescription"
-                app:srcCompat="@drawable/add" />
+                app:srcCompat="@drawable/ic_add" />
         </LinearLayout>
     </RelativeLayout>
 

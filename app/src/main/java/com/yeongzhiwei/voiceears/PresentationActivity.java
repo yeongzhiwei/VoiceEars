@@ -336,9 +336,9 @@ public class PresentationActivity extends AppCompatActivity {
     private void refreshButtons() {
         boolean isEnabled = !isPlaying && selectedMessageIndex >= 0 && selectedMessageIndex < messageLinearLayout.getChildCount();
         playButton.setEnabled(isEnabled);
-        setImageButtonEnabled(isEnabled, deleteImageButton, getDrawable(R.drawable.trashbin));
-        setImageButtonEnabled(isEnabled, editImageButton, getDrawable(R.drawable.edit));
-        setImageButtonEnabled(!isPlaying, addImageButton, getDrawable(R.drawable.add));
+        setImageButtonEnabled(isEnabled, deleteImageButton, getDrawable(R.drawable.ic_trashbin));
+        setImageButtonEnabled(isEnabled, editImageButton, getDrawable(R.drawable.ic_edit));
+        setImageButtonEnabled(!isPlaying, addImageButton, getDrawable(R.drawable.ic_add));
     }
 
     public void setImageButtonEnabled(boolean enabled, ImageButton item, Drawable originalIcon) {

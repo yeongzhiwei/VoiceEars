@@ -220,7 +220,7 @@ public class MirrorActivity extends AppCompatActivity {
             originalEditText.setBackground(defaultEditTextDrawable); // add the underbar
             originalEditText.setTextSize(TypedValue.COMPLEX_UNIT_PX, defaultEditTextSize);
 
-            modeImageButton.setImageResource(R.drawable.text_borderless);
+            modeImageButton.setImageResource(R.drawable.ic_text_borderless);
         } else {
             // Toggle to Text Mode
             mirroredScrollView.setVisibility(View.GONE);
@@ -239,7 +239,7 @@ public class MirrorActivity extends AppCompatActivity {
             originalEditText.setBackgroundResource(Color.TRANSPARENT); // remove the underbar
             originalEditText.setTextSize(mirroredTextSize);
 
-            modeImageButton.setImageResource(R.drawable.mirror_borderless);
+            modeImageButton.setImageResource(R.drawable.ic_mirror_borderless);
         }
     }
 

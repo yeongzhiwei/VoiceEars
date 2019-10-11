@@ -4,14 +4,14 @@
         <item
             android:id="@+id/action_mirror"
             android:orderInCategory="10"
-            android:icon="@drawable/mirror"
-            android:title="MirrorText"
+            android:icon="@drawable/ic_mirror"
+            android:title="@string/action_mirror_title"
             app:showAsAction="always" />
         <item
             android:id="@+id/action_gender"
             android:orderInCategory="20"
-            android:icon="@drawable/boy"
-            android:title="Gender: Male"
+            android:icon="@drawable/ic_boy"
+            android:title="@string/action_gender_title_male"
             app:showAsAction="always" />
         <item
             android:id="@+id/action_auto_mode"

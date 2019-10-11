@@ -55,7 +55,7 @@
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
             android:contentDescription="@string/mirror_imageButton_mode_contentDescription"
-            app:srcCompat="@drawable/text_borderless" />
+            app:srcCompat="@drawable/ic_text_borderless" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -79,7 +79,7 @@
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:contentDescription="@string/mirror_imageButton_clear_contentDescription"
-            app:srcCompat="@drawable/clear" />
+            app:srcCompat="@drawable/ic_clear" />
     </RelativeLayout>
 
     <EditText

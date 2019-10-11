@@ -516,9 +516,9 @@ public class MainActivity extends AppCompatActivity {
     private void refreshGenderIcon() {
         if (genderMenuItem != null) {
             if (gender == Voice.Gender.Male) {
-                genderMenuItem.setIcon(R.drawable.boy);
+                genderMenuItem.setIcon(R.drawable.ic_boy);
             } else {
-                genderMenuItem.setIcon(R.drawable.girl);
+                genderMenuItem.setIcon(R.drawable.ic_girl);
             }
             genderMenuItem.setTitle("Gender: " + gender.name());
         }

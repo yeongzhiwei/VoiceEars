@@ -40,7 +40,7 @@
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/scrollView_message"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/down_arrow" />
+        app:srcCompat="@drawable/ic_down_arrow" />
 
     <ImageView
         android:id="@+id/imageView_loading"
@@ -48,7 +48,7 @@
         android:layout_height="28dp"
         android:layout_marginStart="20dp"
         android:contentDescription="@string/main_imageView_loading_contentDescription"
-        android:background="@drawable/loading"
+        android:background="@drawable/ic_loading"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/scrollView_message"
         app:layout_constraintStart_toStartOf="parent" />
@@ -93,7 +93,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/mirror_imageButton_clear_contentDescription"
-            app:srcCompat="@drawable/clear"/>
+            app:srcCompat="@drawable/ic_clear"/>
 
         <Button
             android:id="@+id/button_synthesize"
