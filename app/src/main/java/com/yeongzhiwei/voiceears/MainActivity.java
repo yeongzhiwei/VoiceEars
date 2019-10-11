@@ -167,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        if (! Authentication.authenticate(cognitiveServicesApiKey, cognitiveServicesRegion)) {
+        if (!Authentication.authenticate(cognitiveServicesApiKey, cognitiveServicesRegion)) {
             startSettingsActivity();
             Toast.makeText(MainActivity.this, R.string.toast_invalid_key_or_region, Toast.LENGTH_LONG).show();
             return;
@@ -186,12 +186,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void configureSpeechToText() {
-        // call this only after Microphone permission is granted
+        // call this only after Microphone permission is granted and only once
         try {
             recognizer = new Recognizer(cognitiveServicesApiKey, cognitiveServicesRegion, this::appendIncomingMessage);
             recognizer.startSpeechToText();
         } catch (Exception ex) {
-
+            Log.e(LOG_TAG, "Error: " + ex.getMessage());
         }
     }
 
@@ -679,6 +679,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == this.permissionRequestCode) {
             for (int i = 0, len = permissions.length; i < len; i++) {
                 String permission = permissions[i];
+
                 if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
                     boolean shouldShowRationale = shouldShowRequestPermissionRationale(permission);
                     if (!shouldShowRationale) {
@@ -696,7 +697,9 @@ public class MainActivity extends AppCompatActivity {
                             .show();
                     }
                 } else if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                    configureSpeechToText();
+                    if (RECORD_AUDIO.equals(permission)) {
+                        configureSpeechToText();
+                    }
                 }
             }
         }
