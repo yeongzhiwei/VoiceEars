@@ -210,6 +210,7 @@ public class MainActivity extends AppCompatActivity {
             }).start();
 
             TextView ttsTextView = appendOutgoingMessage(message);
+            scrollDown();
 
             synthesizer.speak(message, () -> {
                 MainActivity.this.runOnUiThread(() -> {
@@ -308,12 +309,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void addEventListeners() {
         messageScrollView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-            Log.d(LOG_TAG, "scrollView2 getBottom(): " + messageScrollView.getBottom() + ". getHeight(): " + messageScrollView.getHeight() + ". getScrollY(): " + messageScrollView.getScrollY());
-            Log.d(LOG_TAG, "linearLayout2 getBottom(): " + messageLinearLayout.getBottom() + ". getHeight(): " + messageLinearLayout.getHeight() + ". getScrollY(): " + messageLinearLayout.getScrollY());
-
-            Log.d(LOG_TAG, "isAutoScrollDown: " + ((isAutoScrollDown) ? "true" : "false"));
-            Log.d(LOG_TAG, messageLinearLayout.getHeight() + " > " + messageScrollView.getHeight() + " + " + scrollY + " && " + scrollY + " < " + oldScrollY + " && " + ((isAutoScrollDown) ? "true" : "false"));
-            Log.d(LOG_TAG, messageLinearLayout.getHeight() + " == " + messageScrollView.getHeight() + " + " + scrollY);
+//            Log.d(LOG_TAG, "scrollView2 getBottom(): " + messageScrollView.getBottom() + ". getHeight(): " + messageScrollView.getHeight() + ". getScrollY(): " + messageScrollView.getScrollY());
+//            Log.d(LOG_TAG, "linearLayout2 getBottom(): " + messageLinearLayout.getBottom() + ". getHeight(): " + messageLinearLayout.getHeight() + ". getScrollY(): " + messageLinearLayout.getScrollY());
+//
+//            Log.d(LOG_TAG, "isAutoScrollDown: " + ((isAutoScrollDown) ? "true" : "false"));
+//            Log.d(LOG_TAG, messageLinearLayout.getHeight() + " > " + messageScrollView.getHeight() + " + " + scrollY + " && " + scrollY + " < " + oldScrollY + " && " + ((isAutoScrollDown) ? "true" : "false"));
+//            Log.d(LOG_TAG, messageLinearLayout.getHeight() + " == " + messageScrollView.getHeight() + " + " + scrollY);
 
             if (messageLinearLayout.getHeight() > messageScrollView.getHeight() + scrollY && scrollY < oldScrollY && isAutoScrollDown) {
                 toggleAutoScrollDown(false);
@@ -483,7 +484,6 @@ public class MainActivity extends AppCompatActivity {
 
         MainActivity.this.runOnUiThread(() -> {
             messageLinearLayout.addView(textView);
-            scrollToBottom();
         });
 
         return textView;
@@ -576,6 +576,7 @@ public class MainActivity extends AppCompatActivity {
         if (messageScrollView != null && messageLinearLayout != null) {
             messageScrollView.smoothScrollBy(0, messageScrollView.getHeight() + messageLinearLayout.getHeight() - messageScrollView.getScrollY());
         }
+        toggleAutoScrollDown(true);
     }
 
     //endregion
