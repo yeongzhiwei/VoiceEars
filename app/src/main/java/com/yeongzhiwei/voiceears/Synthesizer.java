@@ -1,5 +1,7 @@
 package com.yeongzhiwei.voiceears;
 
+import android.util.Log;
+
 import com.microsoft.cognitiveservices.speech.*;
 
 import java.util.concurrent.ExecutionException;
@@ -13,6 +15,8 @@ class Synthesizer {
             return (this.equals(Male)) ? Female : Male;
         }
     }
+
+    private static final String LOG_TAG = Synthesizer.class.getSimpleName();
 
     private SpeechConfig speechConfig;
     private SpeechSynthesizer synthesizer;
@@ -42,9 +46,9 @@ class Synthesizer {
 
             result.close();
         } catch (InterruptedException ex) {
-
+            Log.e(LOG_TAG, "InterruptedException: " + ex.getMessage());
         } catch (ExecutionException ex) {
-
+            Log.e(LOG_TAG, "ExecutionException: " + ex.getMessage());
         }
     }
 
@@ -53,11 +57,17 @@ class Synthesizer {
             return;
         }
 
+        if (synthesizer != null) {
+            synthesizer.close();
+        }
+
         if (gender == Gender.Male) {
             speechConfig.setSpeechSynthesisVoiceName("en-US-GuyNeural");
         } else {
             speechConfig.setSpeechSynthesisVoiceName("en-US-JessaNeural");
         }
+
+        synthesizer = new SpeechSynthesizer(speechConfig);
     }
 }
 
