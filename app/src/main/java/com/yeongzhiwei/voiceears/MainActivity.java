@@ -680,27 +680,27 @@ public class MainActivity extends AppCompatActivity {
             for (int i = 0, len = permissions.length; i < len; i++) {
                 String permission = permissions[i];
 
-                if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
-                    boolean shouldShowRationale = shouldShowRequestPermissionRationale(permission);
-                    if (!shouldShowRationale) {
-                        Toast.makeText(MainActivity.this, getString(R.string.toast_permission_microphone_denied), Toast.LENGTH_LONG).show();
-                    } else if (RECORD_AUDIO.equals(permission)) {
-                        new AlertDialog.Builder(MainActivity.this)
-                            .setMessage(getString(R.string.alert_permission_microphone_request_message))
-                            .setPositiveButton("OK", (dialog, which) -> {
-                                ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO}, requestCode);
-                            })
-                            .setNegativeButton("Cancel", (dialog, which) -> {
-                                Toast.makeText(MainActivity.this, getString(R.string.toast_permission_microphone_denied), Toast.LENGTH_LONG).show();
-                            })
-                            .create()
-                            .show();
-                    }
-                } else if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                    if (RECORD_AUDIO.equals(permission)) {
+                if (RECORD_AUDIO.equals(permission)) {
+                    if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
+                        if (!shouldShowRequestPermissionRationale(permission)) {
+                            Toast.makeText(MainActivity.this, getString(R.string.toast_permission_microphone_denied), Toast.LENGTH_LONG).show();
+                        } else {
+                            new AlertDialog.Builder(MainActivity.this)
+                                    .setMessage(getString(R.string.alert_permission_microphone_request_message))
+                                    .setPositiveButton("OK", (dialog, which) -> {
+                                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO}, requestCode);
+                                    })
+                                    .setNegativeButton("Cancel", (dialog, which) -> {
+                                        Toast.makeText(MainActivity.this, getString(R.string.toast_permission_microphone_denied), Toast.LENGTH_LONG).show();
+                                    })
+                                    .create()
+                                    .show();
+                        }
+                    } else if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         configureSpeechToText();
                     }
                 }
+
             }
         }
     }
