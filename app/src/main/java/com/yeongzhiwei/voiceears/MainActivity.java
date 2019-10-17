@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
 
         if (recognizer != null) {
-            recognizer.stopSpeechToText();
+            recognizer.stopSpeechToTextAndReleaseMicrophone();
         }
     }
 
@@ -112,15 +112,6 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
 
         savePreferences();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        if (recognizer != null) {
-            recognizer.stopSpeechToTextAndReleaseMicrophone();
-        }
     }
 
     //endregion
