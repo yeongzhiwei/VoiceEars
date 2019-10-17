@@ -2,6 +2,7 @@ package com.yeongzhiwei.voiceears;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -9,6 +10,7 @@ import org.json.JSONException;
 import java.util.ArrayList;
 
 class PreferencesHelper {
+    private static final String LOG_TAG = PreferencesHelper.class.getSimpleName();
     private static final String sharedPreferencesName = "AFsvsVY0ja";
 
     enum Key {
@@ -26,13 +28,13 @@ class PreferencesHelper {
     }
 
     private static SharedPreferences getSharedPreferences(Context context) {
-        return context.getSharedPreferences(sharedPreferencesName, context.MODE_PRIVATE);
+        return context.getSharedPreferences(sharedPreferencesName, Context.MODE_PRIVATE);
     }
 
     static void save(Context context, Key key, String newValue) {
         SharedPreferences sharedPreferences = getSharedPreferences(context);
 
-        sharedPreferences.edit().putString(key.toString(), newValue).commit();
+        sharedPreferences.edit().putString(key.toString(), newValue).apply();
     }
 
     static String loadString(Context context, Key key) {
@@ -53,9 +55,9 @@ class PreferencesHelper {
             for (int i = 0; i < newValues.size(); i++) {
                 jsonArray.put(newValues.get(i));
             }
-            sharedPreferences.edit().putString(key.toString(), jsonArray.toString()).commit();
+            sharedPreferences.edit().putString(key.toString(), jsonArray.toString()).apply();
         } else {
-            sharedPreferences.edit().putString(key.toString(), null).commit();
+            sharedPreferences.edit().putString(key.toString(), null).apply();
         }
     }
 
@@ -75,7 +77,7 @@ class PreferencesHelper {
                 }
                 return values;
             } catch (JSONException e) {
-
+                Log.e(LOG_TAG, "Error: " + e.getMessage());
             }
         }
 
@@ -85,7 +87,7 @@ class PreferencesHelper {
     static void save(Context context, Key key, Integer newValue) {
         SharedPreferences sharedPreferences = getSharedPreferences(context);
 
-        sharedPreferences.edit().putInt(key.toString(), newValue).commit();
+        sharedPreferences.edit().putInt(key.toString(), newValue).apply();
     }
 
     static int loadInt(Context context, Key key, Integer defaultValue) {
