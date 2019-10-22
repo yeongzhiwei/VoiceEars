@@ -154,13 +154,13 @@ public class MainActivity extends AppCompatActivity {
     private void configureCognitiveServices() {
         if (cognitiveServicesApiKey == null || cognitiveServicesRegion == null) {
             startSettingsActivity();
-            Toast.makeText(MainActivity.this, R.string.toast_blank_key_or_region, Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), R.string.toast_blank_key_or_region, Toast.LENGTH_LONG).show();
             return;
         }
 
         if (!Authentication.authenticate(cognitiveServicesApiKey, cognitiveServicesRegion)) {
             startSettingsActivity();
-            Toast.makeText(MainActivity.this, R.string.toast_invalid_key_or_region, Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), R.string.toast_invalid_key_or_region, Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -222,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
                 }).start();
             }, () -> {
                 MainActivity.this.runOnUiThread(() -> {
-                    Toast.makeText(MainActivity.this, getString(R.string.network_error), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.network_error), Toast.LENGTH_SHORT).show();
                 });
             });
         }).start();
@@ -674,7 +674,7 @@ public class MainActivity extends AppCompatActivity {
                 if (RECORD_AUDIO.equals(permission)) {
                     if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
                         if (!shouldShowRequestPermissionRationale(permission)) {
-                            Toast.makeText(MainActivity.this, getString(R.string.toast_permission_microphone_denied), Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), getString(R.string.toast_permission_microphone_denied), Toast.LENGTH_LONG).show();
                         } else {
                             new AlertDialog.Builder(MainActivity.this)
                                     .setMessage(getString(R.string.alert_permission_microphone_request_message))
@@ -682,7 +682,7 @@ public class MainActivity extends AppCompatActivity {
                                         ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO}, requestCode);
                                     })
                                     .setNegativeButton("Cancel", (dialog, which) -> {
-                                        Toast.makeText(MainActivity.this, getString(R.string.toast_permission_microphone_denied), Toast.LENGTH_LONG).show();
+                                        Toast.makeText(getApplicationContext(), getString(R.string.toast_permission_microphone_denied), Toast.LENGTH_LONG).show();
                                     })
                                     .create()
                                     .show();

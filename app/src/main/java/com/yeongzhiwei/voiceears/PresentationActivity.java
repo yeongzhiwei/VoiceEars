@@ -144,7 +144,7 @@ public class PresentationActivity extends AppCompatActivity {
                 });
             }, () -> {
                 PresentationActivity.this.runOnUiThread(() -> {
-                    Toast.makeText(PresentationActivity.this, getString(R.string.network_error), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.network_error), Toast.LENGTH_SHORT).show();
                 });
             });
         }).start();
@@ -164,7 +164,7 @@ public class PresentationActivity extends AppCompatActivity {
         for (String newMessage : newMessages) {
             addSingleMessage(newMessage.trim());
         }
-        Toast.makeText(PresentationActivity.this, "Added a message.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), "Added a message.", Toast.LENGTH_SHORT).show();
 
         refreshTextViews();
     }
@@ -180,7 +180,7 @@ public class PresentationActivity extends AppCompatActivity {
 
     private void editCurrentMessage(String newMessage) {
         messages.set(selectedMessageIndex, newMessage);
-        Toast.makeText(PresentationActivity.this, "Edited a message.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), "Edited a message.", Toast.LENGTH_SHORT).show();
 
         refreshTextViews();
     }
@@ -194,7 +194,7 @@ public class PresentationActivity extends AppCompatActivity {
                 .setPositiveButton("Yes", (dialog, which) -> {
                     messages.remove(selectedMessageIndex);
                     refreshTextViews();
-                    Toast.makeText(PresentationActivity.this, "Deleted a message.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Deleted a message.", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("No", (dialog, which) -> {
 
@@ -210,7 +210,7 @@ public class PresentationActivity extends AppCompatActivity {
                     messages.clear();
                     selectedMessageIndex = 0;
                     refreshTextViews();
-                    Toast.makeText(PresentationActivity.this, "Deleted all messages.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Deleted all messages.", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("No", (dialog, which) -> {
 
@@ -386,7 +386,7 @@ public class PresentationActivity extends AppCompatActivity {
                 addMessage(message);
             }
         } else {
-            Toast.makeText(PresentationActivity.this, "Cancelled.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Cancelled.", Toast.LENGTH_SHORT).show();
         }
     }
 
