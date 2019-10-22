@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
         loadingImageView = findViewById(R.id.imageView_loading);
         textSizeSeekBar = findViewById(R.id.seekBar_textSize);
         clearImageButton = findViewById(R.id.imageButton_clear);
-        synthesizeEditText = findViewById(R.id.editText_synthesize);
+        synthesizeEditText = findViewById(R.id.editText_synthesizeText);
         synthesizeButton = findViewById(R.id.button_synthesize);
     }
 

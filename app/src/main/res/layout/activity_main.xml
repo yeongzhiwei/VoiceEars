@@ -80,12 +80,13 @@
         app:layout_constraintBottom_toBottomOf="parent">
 
         <EditText
-            android:id="@+id/editText_synthesize"
+            android:id="@+id/editText_synthesizeText"
             android:layout_width="0dp"
             android:layout_weight="0.9"
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="@string/main_editText_synthesize_hint"
+            android:importantForAutofill="no"
             android:inputType="textShortMessage|textAutoCorrect|text" />
 
         <ImageButton
@@ -100,7 +101,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/main_button_synthesize_text"
-            app:layout_constraintStart_toEndOf="@id/editText_synthesize" />
+            app:layout_constraintStart_toEndOf="@id/editText_synthesizeText" />
     </LinearLayout>
 
 
