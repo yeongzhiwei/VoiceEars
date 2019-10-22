@@ -565,7 +565,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void scrollDown() {
         if (messageScrollView != null && messageLinearLayout != null) {
-            messageScrollView.smoothScrollBy(0, messageScrollView.getHeight() + messageLinearLayout.getHeight() - messageScrollView.getScrollY());
+            int bottom = messageLinearLayout.getBottom() + messageScrollView.getPaddingBottom();
+            int sy = messageScrollView.getScrollY();
+            int sh = messageScrollView.getHeight();
+            int delta = bottom - (sy + sh);
+
+            messageScrollView.smoothScrollBy(0, delta);
         }
         toggleAutoScrollDown(true);
     }
