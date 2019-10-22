@@ -19,7 +19,8 @@
     <string name="action_gender_title_male">Gender: Male</string>
     <string name="action_gender_title_female">Gender: Female</string>
     <string name="action_settings_title">Settings</string>
-    <string name="action_toggle_auto_tts_title">Toggle Auto TTS</string>
+    <string name="action_auto_tts_title_on">Auto TTS: On</string>
+    <string name="action_auto_tts_title_off">Auto TTS: Off</string>
     <string name="action_audio_speed_title">Speed</string>
     <string name="action_presentation_title">Presentation Mode</string>
 
