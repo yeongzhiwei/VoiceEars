@@ -43,6 +43,8 @@
     <string name="presentation_imageButton_edit_contentDescription">Edit the text</string>
     <string name="presentation_imageButton_add_contentDescription">Add new text</string>
     <string name="presentation_button_play_text">PLAY AUDIO</string>
+    <string name="presentation_context_menu_edit">Edit</string>
+    <string name="presentation_context_menu_delete">Delete</string>
 
     /* PresentationMessageActivity */
     <string name="presentation_message_editText_hint">Presentation message</string>
@@ -56,4 +58,5 @@
 
     /* common */
     <string name="network_error">Error: Check your network connection or settings and try again.</string>
+    <string name="presentation_context_menu_delete_all">Delete All</string>
 </resources>

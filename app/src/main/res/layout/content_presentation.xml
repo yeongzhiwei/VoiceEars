@@ -43,16 +43,16 @@
         </LinearLayout>
     </ScrollView>
 
-    <Button
-        android:id="@+id/button_play"
-        android:layout_width="200sp"
-        android:layout_height="200sp"
-        android:text="@string/presentation_button_play_text"
+    <ImageView
+        android:id="@+id/imageView_loading"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_margin="16dp"
+        android:contentDescription="@string/main_imageView_loading_contentDescription"
+        android:background="@drawable/ic_loading"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

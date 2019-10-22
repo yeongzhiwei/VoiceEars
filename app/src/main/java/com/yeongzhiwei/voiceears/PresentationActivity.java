@@ -7,12 +7,16 @@ import androidx.core.content.ContextCompat;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PaintDrawable;
 import android.os.Bundle;
+import android.view.ContextMenu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,12 +33,14 @@ public class PresentationActivity extends AppCompatActivity {
     public static int addRequestCode = 100;
     public static int editRequestCode = 200;
 
+    private FloatingActionButton playFloatingActionButton;
     private FloatingActionButton addFloatingActionButton;
     private LinearLayout messageLinearLayout;
-    private Button playButton;
+    private ImageView loadingImageView;
 
     PaintDrawable paintDrawableSelect = null;
     PaintDrawable paintDrawablePlay = null;
+    AnimationDrawable loadingAnimationDrawable = null;
 
     private Integer messageTextSize = 20;
     private Synthesizer.Gender gender = Synthesizer.Gender.Male;
@@ -93,9 +99,10 @@ public class PresentationActivity extends AppCompatActivity {
     //region INITIALIZATION
 
     private void initializeViews() {
+        playFloatingActionButton = findViewById(R.id.fab_play);
         addFloatingActionButton = findViewById(R.id.fab_add);
         messageLinearLayout = findViewById(R.id.linearLayout_message);
-        playButton = findViewById(R.id.button_play);
+        loadingImageView = findViewById(R.id.imageView_loading);
     }
 
     private void initializeVariables() {
@@ -104,6 +111,8 @@ public class PresentationActivity extends AppCompatActivity {
 
         paintDrawablePlay = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimaryDark));
         paintDrawablePlay.setCornerRadius(8);
+
+        loadingAnimationDrawable = (AnimationDrawable) loadingImageView.getBackground();
     }
 
     private void configureTextToSpeech() {
@@ -115,18 +124,20 @@ public class PresentationActivity extends AppCompatActivity {
     //region COGNITIVE SERVICES
 
     private void synthesizeText() {
-        isPlaying = true;
-        refreshButtons();
-
         if (selectedMessageIndex < 0 || selectedMessageIndex >= messages.size()) {
             return;
         }
+
+        isPlaying = true;
+        refreshButtons();
+        setLoading(true);
 
         String message = messages.get(selectedMessageIndex);
 
         new Thread(() -> {
             synthesizer.speak(message, () -> {
                 PresentationActivity.this.runOnUiThread(() -> {
+                    setLoading(false);
                     refreshTextViewsBackground();
                 });
             }, () -> {
@@ -147,11 +158,6 @@ public class PresentationActivity extends AppCompatActivity {
     //endregion
 
     //region STATE
-
-    private void setMessageTextSize(Integer size) {
-        messageTextSize = size;
-        refreshMessageTextSize();
-    }
 
     private void addMessage(String message) {
         String[] newMessages = message.replaceAll("\n", "").split("[.!?]");
@@ -181,7 +187,7 @@ public class PresentationActivity extends AppCompatActivity {
 
     private void deleteCurrentMessage() {
         String message = messages.get(selectedMessageIndex);
-        String alertMessage = message.length() < 20 ? message : message.substring(0, 100) + "...";
+        String alertMessage = message.length() < 20 ? message : message.substring(0, 20) + "...";
 
         new AlertDialog.Builder(PresentationActivity.this)
                 .setMessage("Do you want to delete this message?\n\n" + alertMessage)
@@ -218,22 +224,9 @@ public class PresentationActivity extends AppCompatActivity {
     //region VIEWS
 
     private void addEventListeners() {
-        playButton.setOnClickListener(view -> {
+        playFloatingActionButton.setOnClickListener(view -> {
             synthesizeText();
         });
-
-//        deleteImageButton.setOnClickListener(view -> {
-//            deleteCurrentMessage();
-//        });
-//
-//        deleteImageButton.setOnLongClickListener(view -> {
-//            deleteAllMessages();
-//            return true;
-//        });
-//
-//        editImageButton.setOnClickListener(view -> {
-//            startPresentationMessageActivityEditMessage();
-//        });
 
         addFloatingActionButton.setOnClickListener(view -> {
             startPresentationMessageActivityAddMessage();
@@ -257,6 +250,17 @@ public class PresentationActivity extends AppCompatActivity {
         }
     }
 
+    private void setLoading(boolean load) {
+
+        if (load) {
+            loadingImageView.setVisibility(View.VISIBLE);
+            loadingAnimationDrawable.start();
+        } else {
+            loadingImageView.setVisibility(View.GONE);
+            loadingAnimationDrawable.stop();
+        }
+    }
+
     public void addTextViewToLinearLayout(String message) {
         TextView newTextView = new TextView(this);
         newTextView.setText(message);
@@ -270,20 +274,11 @@ public class PresentationActivity extends AppCompatActivity {
             selectedMessageIndex = messageLinearLayout.indexOfChild(view);
             refreshTextViews();
         });
+        registerForContextMenu(newTextView);
 
         PresentationActivity.this.runOnUiThread(() -> {
             messageLinearLayout.addView(newTextView);
         });
-    }
-
-    private void refreshMessageTextSize() {
-        if (messageLinearLayout != null) {
-            int childCount = messageLinearLayout.getChildCount();
-            for (int i = 0; i < childCount; i++) {
-                TextView textView = (TextView) messageLinearLayout.getChildAt(i);
-                textView.setTextSize(messageTextSize);
-            }
-        }
     }
 
     private void refreshTextViewsBackground() {
@@ -306,15 +301,13 @@ public class PresentationActivity extends AppCompatActivity {
 
     private void refreshButtons() {
         boolean isEnabled = !isPlaying && selectedMessageIndex >= 0 && selectedMessageIndex < messageLinearLayout.getChildCount();
-        playButton.setEnabled(isEnabled);
-//        setImageButtonEnabled(isEnabled, deleteImageButton, getDrawable(R.drawable.ic_trashbin));
-//        setImageButtonEnabled(isEnabled, editImageButton, getDrawable(R.drawable.ic_edit));
-//        setImageButtonEnabled(!isPlaying, addImageButton, getDrawable(R.drawable.ic_add));
+        setFABEnabled(isEnabled, playFloatingActionButton, getDrawable(R.drawable.ic_play));
+        setFABEnabled(!isPlaying, addFloatingActionButton, getDrawable(R.drawable.ic_add));
     }
 
-    public void setImageButtonEnabled(boolean enabled, ImageButton item, Drawable originalIcon) {
+    public void setFABEnabled(boolean enabled, FloatingActionButton fab, Drawable originalIcon) {
         // https://stackoverflow.com/questions/7228985/android-imagebutton-with-disabled-ui-feel
-        item.setEnabled(enabled);
+        fab.setEnabled(enabled);
 
         Drawable res = originalIcon.mutate();
         if (enabled) {
@@ -322,7 +315,39 @@ public class PresentationActivity extends AppCompatActivity {
         } else {
             res.setColorFilter(Color.GRAY, PorterDuff.Mode.SRC_IN);
         }
-        item.setImageDrawable(res);
+        fab.setImageDrawable(res);
+    }
+
+    //endregion
+
+    //region CONTEXT MENU
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, view, menuInfo);
+
+        selectedMessageIndex = messageLinearLayout.indexOfChild(view);
+        refreshTextViews();
+
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.presentation_context_menu, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.context_edit:
+                startPresentationMessageActivityEditMessage();
+                return true;
+            case R.id.context_delete:
+                deleteCurrentMessage();
+                return true;
+            case R.id.context_delete_all:
+                deleteAllMessages();
+                return true;
+            default:
+                return super.onContextItemSelected(item);
+        }
     }
 
     //endregion
