@@ -19,8 +19,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private static final Integer seekBarMinValue = 10;
 
     private MenuItem genderMenuItem;
+    private MenuItem autoTTSMenuItem;
 
     private ScrollView messageScrollView;
     private LinearLayout messageLinearLayout;
@@ -53,14 +54,13 @@ public class MainActivity extends AppCompatActivity {
     private SeekBar textSizeSeekBar;
     private ImageButton clearImageButton;
     private EditText synthesizeEditText;
-    private Button synthesizeButton;
 
     AnimationDrawable loadingAnimationDrawable = null;
 
     private Boolean isAutoScrollDown = true;
     private Integer messageTextSize = 20;
     private Synthesizer.Gender gender = Synthesizer.Gender.Male;
-    private Boolean isAutoTTS = false;
+    private Boolean isAutoTTS = true;
 
     // Azure Cognitive Services
     private static String cognitiveServicesApiKey;
@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
         cognitiveServicesRegion = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesRegionKey);
         messageTextSize = PreferencesHelper.loadInt(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
         gender = Synthesizer.Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, gender.name()));
-        isAutoTTS = ((PreferencesHelper.loadInt(this, PreferencesHelper.Key.autoTTSKey, 0)) > 0) ? true : false;
+        isAutoTTS = (PreferencesHelper.loadInt(this, PreferencesHelper.Key.autoTTSKey, 1)) > 0;
     }
 
     //endregion
@@ -144,7 +144,6 @@ public class MainActivity extends AppCompatActivity {
         textSizeSeekBar = findViewById(R.id.seekBar_textSize);
         clearImageButton = findViewById(R.id.imageButton_clear);
         synthesizeEditText = findViewById(R.id.editText_synthesizeText);
-        synthesizeButton = findViewById(R.id.button_synthesize);
     }
 
     private void initializeVariables() {
@@ -270,6 +269,7 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.main_menu, menu);
 
         genderMenuItem = menu.findItem(R.id.action_gender);
+        autoTTSMenuItem = menu.findItem(R.id.action_toggle_auto_tts);
         refreshAllViews();
 
         return super.onCreateOptionsMenu(menu);
@@ -346,16 +346,14 @@ public class MainActivity extends AppCompatActivity {
 
         synthesizeEditText.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
 
             }
 
             @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
                 if (isAutoTTS) {
-                    synthesizeAndRefreshSynthesizeTextView();
-                } else {
-                    refreshSynthesizeButton();
+                    synthesizePhraseAndRefreshSynthesizeTextView();
                 }
             }
 
@@ -365,8 +363,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        synthesizeButton.setOnClickListener(view -> {
-            synthesizeAndRefreshSynthesizeTextView();
+        synthesizeEditText.setOnEditorActionListener((textView, actionId, keyEvent) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                synthesizeAndRefreshSynthesizeTextView();
+                return true;
+            }
+            return false;
         });
     }
 
@@ -390,22 +392,22 @@ public class MainActivity extends AppCompatActivity {
         synthesizeEditText.setText("");
     }
 
+    private void synthesizePhraseAndRefreshSynthesizeTextView() {
+        String message = synthesizeEditText.getText().toString().trim();
+        int lastIndex = Math.max(message.lastIndexOf("."), Math.max(message.lastIndexOf("?"), message.lastIndexOf("!")));
+        if (lastIndex == 0) {
+            synthesizeEditText.setText(""); // forbid [.?!] as first character
+        } else if (lastIndex != -1) {
+            lastIndex += 1;
+            synthesizeEditText.setText(message.substring(lastIndex));
+            synthesizeText(message.substring(0, lastIndex).trim());
+        }
+    }
+
     private void synthesizeAndRefreshSynthesizeTextView() {
         String message = synthesizeEditText.getText().toString().trim();
-
-        if (isAutoTTS) {
-            int lastIndex = Math.max(message.lastIndexOf("."), Math.max(message.lastIndexOf("?"), message.lastIndexOf("!")));
-            if (lastIndex == 0) {
-                synthesizeEditText.setText(""); // forbid [.?!] as first character
-            } else if (lastIndex != -1) {
-                lastIndex += 1;
-                synthesizeEditText.setText(message.substring(lastIndex));
-                synthesizeText(message.substring(0, lastIndex).trim());
-            }
-        } else {
-            synthesizeEditText.setText("");
-            synthesizeText(message);
-        }
+        clearSynthesizeEditText();
+        synthesizeText(message);
     }
 
     // Update views based on parameters
@@ -488,7 +490,6 @@ public class MainActivity extends AppCompatActivity {
         refreshMessageTextSize();
         refreshScrollDownImageView();
         refreshTextSizeSeekBar();
-        refreshSynthesizeButton();
         scrollToBottom();
     }
 
@@ -505,13 +506,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void refreshAutoTTSViews() {
-        if (synthesizeButton != null) {
+        if (autoTTSMenuItem != null) {
             if (isAutoTTS) {
-                synthesizeButton.setVisibility(View.GONE);
-                clearImageButton.setVisibility(View.VISIBLE);
+                autoTTSMenuItem.setTitle(R.string.action_auto_tts_title_on);
             } else {
-                synthesizeButton.setVisibility(View.VISIBLE);
-                clearImageButton.setVisibility(View.GONE);
+                autoTTSMenuItem.setTitle(R.string.action_auto_tts_title_off);
             }
         }
     }
@@ -539,16 +538,6 @@ public class MainActivity extends AppCompatActivity {
     private void refreshTextSizeSeekBar() {
         if (textSizeSeekBar != null) {
             textSizeSeekBar.setProgress(messageTextSize - seekBarMinValue);
-        }
-    }
-
-    private void refreshSynthesizeButton() {
-        if (synthesizeEditText != null && synthesizeButton != null) {
-            if (synthesizeEditText.getText().toString().trim().length() == 0) {
-                synthesizeButton.setEnabled(false);
-            } else {
-                synthesizeButton.setEnabled(true);
-            }
         }
     }
 
@@ -672,7 +661,7 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         // https://stackoverflow.com/questions/30719047/android-m-check-runtime-permission-how-to-determine-if-the-user-checked-nev
-        if (requestCode == this.permissionRequestCode) {
+        if (requestCode == permissionRequestCode) {
             for (int i = 0, len = permissions.length; i < len; i++) {
                 String permission = permissions[i];
 
@@ -704,6 +693,6 @@ public class MainActivity extends AppCompatActivity {
     //endregion
 
     private enum SpeechBubble {
-        Incoming, Outgoing, System;
+        Incoming, Outgoing, System
     }
 }

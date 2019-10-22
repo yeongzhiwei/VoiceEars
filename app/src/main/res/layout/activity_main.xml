@@ -95,13 +95,6 @@
             android:layout_height="wrap_content"
             android:contentDescription="@string/mirror_imageButton_clear_contentDescription"
             app:srcCompat="@drawable/ic_clear"/>
-
-        <Button
-            android:id="@+id/button_synthesize"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/main_button_synthesize_text"
-            app:layout_constraintStart_toEndOf="@id/editText_synthesizeText" />
     </LinearLayout>
 
 
