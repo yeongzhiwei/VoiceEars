@@ -14,9 +14,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 
@@ -27,14 +28,10 @@ public class PresentationActivity extends AppCompatActivity {
     public static String EXTRA_REQUEST_CODE = "com.yeongzhiwei.voiceears.REQUESTCODE";
     public static int addRequestCode = 100;
     public static int editRequestCode = 200;
-    private static final Integer seekBarMinValue = 10;
 
+    private FloatingActionButton addFloatingActionButton;
     private LinearLayout messageLinearLayout;
     private Button playButton;
-    private SeekBar textSizeSeekBar;
-    private ImageButton deleteImageButton;
-    private ImageButton editImageButton;
-    private ImageButton addImageButton;
 
     PaintDrawable paintDrawableSelect = null;
     PaintDrawable paintDrawablePlay = null;
@@ -96,12 +93,9 @@ public class PresentationActivity extends AppCompatActivity {
     //region INITIALIZATION
 
     private void initializeViews() {
+        addFloatingActionButton = findViewById(R.id.fab_add);
         messageLinearLayout = findViewById(R.id.linearLayout_message);
         playButton = findViewById(R.id.button_play);
-        textSizeSeekBar = findViewById(R.id.seekBar_textSize);
-        deleteImageButton = findViewById(R.id.imageButton_delete);
-        editImageButton = findViewById(R.id.imageButton_edit);
-        addImageButton = findViewById(R.id.imageButton_add);
     }
 
     private void initializeVariables() {
@@ -224,48 +218,30 @@ public class PresentationActivity extends AppCompatActivity {
     //region VIEWS
 
     private void addEventListeners() {
-        textSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                setMessageTextSize(i + seekBarMinValue);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                PreferencesHelper.save(PresentationActivity.this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
-            }
-        });
-
         playButton.setOnClickListener(view -> {
             synthesizeText();
         });
 
-        deleteImageButton.setOnClickListener(view -> {
-            deleteCurrentMessage();
-        });
+//        deleteImageButton.setOnClickListener(view -> {
+//            deleteCurrentMessage();
+//        });
+//
+//        deleteImageButton.setOnLongClickListener(view -> {
+//            deleteAllMessages();
+//            return true;
+//        });
+//
+//        editImageButton.setOnClickListener(view -> {
+//            startPresentationMessageActivityEditMessage();
+//        });
 
-        deleteImageButton.setOnLongClickListener(view -> {
-            deleteAllMessages();
-            return true;
-        });
-
-        editImageButton.setOnClickListener(view -> {
-            startPresentationMessageActivityEditMessage();
-        });
-
-        addImageButton.setOnClickListener(view -> {
+        addFloatingActionButton.setOnClickListener(view -> {
             startPresentationMessageActivityAddMessage();
         });
     }
 
     private void refreshAllViews() {
         refreshTextViews();
-        refreshTextSizeSeekBar();
         refreshButtons();
     }
 
@@ -310,12 +286,6 @@ public class PresentationActivity extends AppCompatActivity {
         }
     }
 
-    private void refreshTextSizeSeekBar() {
-        if (textSizeSeekBar != null) {
-            textSizeSeekBar.setProgress(messageTextSize - seekBarMinValue);
-        }
-    }
-
     private void refreshTextViewsBackground() {
         if (messageLinearLayout != null) {
             for (int i = 0; i < messageLinearLayout.getChildCount(); i++) {
@@ -337,9 +307,9 @@ public class PresentationActivity extends AppCompatActivity {
     private void refreshButtons() {
         boolean isEnabled = !isPlaying && selectedMessageIndex >= 0 && selectedMessageIndex < messageLinearLayout.getChildCount();
         playButton.setEnabled(isEnabled);
-        setImageButtonEnabled(isEnabled, deleteImageButton, getDrawable(R.drawable.ic_trashbin));
-        setImageButtonEnabled(isEnabled, editImageButton, getDrawable(R.drawable.ic_edit));
-        setImageButtonEnabled(!isPlaying, addImageButton, getDrawable(R.drawable.ic_add));
+//        setImageButtonEnabled(isEnabled, deleteImageButton, getDrawable(R.drawable.ic_trashbin));
+//        setImageButtonEnabled(isEnabled, editImageButton, getDrawable(R.drawable.ic_edit));
+//        setImageButtonEnabled(!isPlaying, addImageButton, getDrawable(R.drawable.ic_add));
     }
 
     public void setImageButtonEnabled(boolean enabled, ImageButton item, Drawable originalIcon) {
