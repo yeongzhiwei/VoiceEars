@@ -3,8 +3,8 @@ package com.yeongzhiwei.voiceears.ttsstt;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.util.Log;
 
-import com.microsoft.cognitiveservices.speech.audio.AudioStreamFormat;
 import com.microsoft.cognitiveservices.speech.audio.PullAudioInputStreamCallback;
 
 /**
@@ -14,6 +14,8 @@ import com.microsoft.cognitiveservices.speech.audio.PullAudioInputStreamCallback
  * https://github.com/Azure-Samples/cognitive-services-speech-sdk/blob/master/samples/java/android/sdkdemo/app/src/main/java/com/microsoft/cognitiveservices/speech/samples/sdkdemo/MicrophoneStream.java
  */
 class MicrophoneStream extends PullAudioInputStreamCallback {
+
+    private static final String LOG_TAG = MicrophoneStream.class.getSimpleName();
 
     private final static int SAMPLE_RATE = 16000;
     private AudioRecord audioRecord;
@@ -32,6 +34,7 @@ class MicrophoneStream extends PullAudioInputStreamCallback {
     public void close() {
         this.audioRecord.release();
         this.audioRecord = null;
+        Log.d(LOG_TAG, "Released microphone");
     }
 
     private void initMic() {
@@ -47,6 +50,7 @@ class MicrophoneStream extends PullAudioInputStreamCallback {
                 .build();
 
         this.audioRecord.startRecording();
+        Log.d(LOG_TAG, "Started listening on microphone");
     }
 
 }

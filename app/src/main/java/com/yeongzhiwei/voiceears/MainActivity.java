@@ -35,6 +35,7 @@ import com.yeongzhiwei.voiceears.presentation.PresentationActivity;
 import com.yeongzhiwei.voiceears.setting.SettingsActivity;
 import com.yeongzhiwei.voiceears.ttsstt.Authentication;
 import com.yeongzhiwei.voiceears.ttsstt.Gender;
+import com.yeongzhiwei.voiceears.ttsstt.Recognition;
 import com.yeongzhiwei.voiceears.ttsstt.Recognizer;
 import com.yeongzhiwei.voiceears.ttsstt.Synthesizer;
 
@@ -186,7 +187,17 @@ public class MainActivity extends AppCompatActivity {
     private void configureSpeechToText() {
         // call this only after Microphone permission is granted and only once
         try {
-            recognizer = new Recognizer(cognitiveServicesApiKey, cognitiveServicesRegion, this::appendIncomingMessage);
+            recognizer = new Recognizer(cognitiveServicesApiKey, cognitiveServicesRegion, new Recognition() {
+                @Override
+                public void recognizing(String text) {
+                    appendIncomingMessage(text, false);
+                }
+
+                @Override
+                public void recognized(String text) {
+                    appendIncomingMessage(text, true);
+                }
+            });
             recognizer.startSpeechToText();
         } catch (Exception ex) {
             Log.e(LOG_TAG, "Error: " + ex.getMessage());

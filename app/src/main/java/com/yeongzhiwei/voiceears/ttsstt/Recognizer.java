@@ -2,8 +2,11 @@ package com.yeongzhiwei.voiceears.ttsstt;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.cognitiveservices.speech.*;
 import com.microsoft.cognitiveservices.speech.audio.AudioConfig;
+import com.microsoft.cognitiveservices.speech.util.EventHandler;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -11,58 +14,53 @@ import java.util.concurrent.Future;
 
 public class Recognizer {
 
-    public interface Recognition {
-        void recognize(String text, Boolean isFinal);
-    }
-
     private static final String LOG_TAG = Recognizer.class.getSimpleName();
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
     private SpeechConfig speechConfig;
-    private SpeechRecognizer speechRecognizer = null;
-    private Recognition recognition;
+    private SpeechRecognizer speechRecognizer;
     private MicrophoneStream microphoneStream;
 
-    private boolean continuousListeningStarted = false;
+    private EventHandler<SpeechRecognitionEventArgs> recognizingEventHandler;
+    private EventHandler<SpeechRecognitionEventArgs> recognizedEventHandler;
 
-    public Recognizer(String cognitiveServicesApiKey, String cognitiveServicesRegion, Recognition recognition) {
-        speechConfig = SpeechConfig.fromSubscription(cognitiveServicesApiKey, cognitiveServicesRegion);
+    private boolean continuousRecognitionStarted = false;
 
-        this.recognition = recognition;
+    public Recognizer(@NonNull String cognitiveServicesApiKey, @NonNull String cognitiveServicesRegion, @NonNull Recognition recognition) {
+        this.speechConfig = SpeechConfig.fromSubscription(cognitiveServicesApiKey, cognitiveServicesRegion);
+
+        this.recognizingEventHandler = (o, speechRecognitionEventArgs) -> {
+            final String text = speechRecognitionEventArgs.getResult().getText();
+            Log.d(LOG_TAG, "recognizing: " + text);
+
+            if (!text.isEmpty()) {
+                recognition.recognizing(text);
+            }
+        };
+
+        this.recognizedEventHandler = (o, speechRecognitionEventArgs) -> {
+            final String text = speechRecognitionEventArgs.getResult().getText();
+            Log.d(LOG_TAG, "recognized: " + text);
+
+            if (!text.isEmpty()) {
+                recognition.recognized(text);
+            }
+        };
     }
 
     synchronized public void startSpeechToText() {
-        if (continuousListeningStarted) {
+        if (continuousRecognitionStarted) {
             return;
         }
 
         AudioConfig audioConfig = AudioConfig.fromStreamInput(createMicrophoneStream());
         speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
-
-        speechRecognizer.recognizing.addEventListener((o, speechRecognitionEventArgs) -> {
-            final String s = speechRecognitionEventArgs.getResult().getText();
-            Log.d(LOG_TAG, "recognizing: " + s);
-
-            if (!s.isEmpty()) {
-                recognition.recognize(s, false);
-            }
-
-        });
-
-        speechRecognizer.recognized.addEventListener((o, speechRecognitionEventArgs) -> {
-            final String s = speechRecognitionEventArgs.getResult().getText();
-            Log.d(LOG_TAG, "recognized: " + s);
-
-            if (!s.isEmpty()) {
-                recognition.recognize(s, true);
-            }
-
-        });
+        speechRecognizer.recognizing.addEventListener(recognizingEventHandler);
+        speechRecognizer.recognized.addEventListener(recognizedEventHandler);
 
         final Future<Void> task = speechRecognizer.startContinuousRecognitionAsync();
-
         setOnTaskCompletedListener(task, result -> {
-            continuousListeningStarted = true;
+            continuousRecognitionStarted = true;
             Log.d(LOG_TAG, "Started Speech to Text");
         });
     }
@@ -70,13 +68,12 @@ public class Recognizer {
     synchronized public void stopSpeechToText() {
         if (speechRecognizer != null) {
             final Future<Void> task = speechRecognizer.stopContinuousRecognitionAsync();
-
             setOnTaskCompletedListener(task, result -> {
-                continuousListeningStarted = false;
+                continuousRecognitionStarted = false;
                 Log.d(LOG_TAG, "Stopped Speech to Text");
             });
         } else {
-            continuousListeningStarted = false;
+            continuousRecognitionStarted = false;
             Log.d(LOG_TAG, "Speech to Text was not started");
         }
     }
