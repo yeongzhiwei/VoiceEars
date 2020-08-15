@@ -10,9 +10,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
-import android.text.Editable;
 import android.text.Layout;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
@@ -48,10 +46,10 @@ public class MainActivity extends AppCompatActivity {
     //region VARIABLES
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
-    public static int permissionRequestCode = 10;
-    public static int settingsRequestCode = 20;
-    public static int mirrorRequestCode = 30;
-    private static final Integer seekBarMinValue = 10;
+    private static final Integer SEEK_BAR_MIN_VALUE = 10;
+    public static final int PERMISSION_REQUEST_CODE = 10;
+    public static final int SETTINGS_REQUEST_CODE = 20;
+    public static final int MIRROR_REQUEST_CODE = 30;
 
     private ScrollView messageScrollView;
     private LinearLayout messageLinearLayout;
@@ -61,17 +59,17 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton clearImageButton;
     private EditText synthesizeEditText;
 
-    AnimationDrawable loadingAnimationDrawable = null;
-
+    private AnimationDrawable loadingAnimationDrawable;
     private Boolean isAutoScrollDown = true;
     private Integer messageTextSize = 20;
-    private Gender gender = Gender.Male;
 
     // Azure Cognitive Services
-    private static String cognitiveServicesApiKey;
-    private static String cognitiveServicesRegion;
-    private Synthesizer synthesizer = null;
-    private Recognizer recognizer = null;
+    private String cognitiveServicesApiKey;
+    private String cognitiveServicesRegion;
+    private Gender gender;
+
+    private Synthesizer synthesizer;
+    private Recognizer recognizer;
     private AtomicInteger counter = new AtomicInteger();
 
     private TextView currentIncomingTextView;
@@ -85,9 +83,17 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        messageScrollView = findViewById(R.id.scrollView_message);
+        messageLinearLayout = findViewById(R.id.linearLayout_message);
+        scrollDownImageView = findViewById(R.id.imageView_scrollDown);
+        loadingImageView = findViewById(R.id.imageView_loading);
+        textSizeSeekBar = findViewById(R.id.seekBar_textSize);
+        clearImageButton = findViewById(R.id.imageButton_clear);
+        synthesizeEditText = findViewById(R.id.editText_synthesizeText);
+
+        loadingAnimationDrawable = (AnimationDrawable) loadingImageView.getBackground();
+
         loadSavedPreferences();
-        initializeViews();
-        initializeVariables();
         refreshAllViews();
         addEventListeners();
         loadSavedInstanceState(savedInstanceState);
@@ -125,33 +131,18 @@ public class MainActivity extends AppCompatActivity {
 
     private void savePreferences() {
         PreferencesHelper.save(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
-        PreferencesHelper.save(this, PreferencesHelper.Key.genderKey, gender.name());
     }
 
     private void loadSavedPreferences() {
         cognitiveServicesApiKey = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesApiKeyKey);
         cognitiveServicesRegion = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesRegionKey);
+        gender = Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey));
         messageTextSize = PreferencesHelper.loadInt(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
-        gender = Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, gender.name()));
     }
 
     //endregion
 
-    //region INITIALIZATION
-
-    private void initializeViews() {
-        messageScrollView = findViewById(R.id.scrollView_message);
-        messageLinearLayout = findViewById(R.id.linearLayout_message);
-        scrollDownImageView = findViewById(R.id.imageView_scrollDown);
-        loadingImageView = findViewById(R.id.imageView_loading);
-        textSizeSeekBar = findViewById(R.id.seekBar_textSize);
-        clearImageButton = findViewById(R.id.imageButton_clear);
-        synthesizeEditText = findViewById(R.id.editText_synthesizeText);
-    }
-
-    private void initializeVariables() {
-        loadingAnimationDrawable = (AnimationDrawable) loadingImageView.getBackground();
-    }
+    //region COGNITIVE SERVICES
 
     private void configureCognitiveServices() {
         if (cognitiveServicesApiKey == null || cognitiveServicesRegion == null) {
@@ -170,32 +161,24 @@ public class MainActivity extends AppCompatActivity {
         configureTextToSpeech();
     }
 
-    //endregion
-
-    //region COGNITIVE SERVICES
-
     private void configureTextToSpeech() {
         synthesizer = new Synthesizer(cognitiveServicesApiKey, cognitiveServicesRegion, gender);
     }
 
     private void configureSpeechToText() {
         // call this only after Microphone permission is granted and only once
-        try {
-            recognizer = new Recognizer(cognitiveServicesApiKey, cognitiveServicesRegion, new Recognition() {
-                @Override
-                public void recognizing(String text) {
-                    appendIncomingMessage(text, false);
-                }
+        recognizer = new Recognizer(cognitiveServicesApiKey, cognitiveServicesRegion, new Recognition() {
+            @Override
+            public void recognizing(String text) {
+                appendIncomingMessage(text, false);
+            }
 
-                @Override
-                public void recognized(String text) {
-                    appendIncomingMessage(text, true);
-                }
-            });
-            recognizer.startSpeechToText();
-        } catch (Exception ex) {
-            Log.e(LOG_TAG, "Error: " + ex.getMessage());
-        }
+            @Override
+            public void recognized(String text) {
+                appendIncomingMessage(text, true);
+            }
+        });
+        recognizer.startSpeechToText();
     }
 
     private void synthesizeText(String message) {
@@ -262,11 +245,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // https://stackoverflow.com/questions/38158953/how-to-create-button-in-action-bar-in-android
         getMenuInflater().inflate(R.menu.main_menu, menu);
-
-        refreshAllViews();
-
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -312,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
         textSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                setMessageTextSize(i + seekBarMinValue);
+                setMessageTextSize(i + SEEK_BAR_MIN_VALUE);
             }
 
             @Override
@@ -473,7 +452,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void refreshTextSizeSeekBar() {
         if (textSizeSeekBar != null) {
-            textSizeSeekBar.setProgress(messageTextSize - seekBarMinValue);
+            textSizeSeekBar.setProgress(messageTextSize - SEEK_BAR_MIN_VALUE);
         }
     }
 
@@ -506,14 +485,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void startSettingsActivity() {
         Intent intent = new Intent(this, SettingsActivity.class);
-        startActivityForResult(intent, settingsRequestCode);
+        startActivityForResult(intent, SETTINGS_REQUEST_CODE);
     }
 
     private void startMirrorActivity() {
         String message = synthesizeEditText.getText().toString();
         PreferencesHelper.save(this, PreferencesHelper.Key.mirroredTextKey, message);
         Intent intent = new Intent(this, MirrorActivity.class);
-        startActivityForResult(intent, mirrorRequestCode);
+        startActivityForResult(intent, MIRROR_REQUEST_CODE);
     }
 
     private void startPresentationActivity() {
@@ -526,7 +505,7 @@ public class MainActivity extends AppCompatActivity {
 
         loadSavedPreferences();
 
-        if (requestCode == settingsRequestCode) {
+        if (requestCode == SETTINGS_REQUEST_CODE) {
             if (resultCode == RESULT_CANCELED) {
                 if (!Authentication.authenticate(cognitiveServicesApiKey, cognitiveServicesRegion)) {
                     finish();
@@ -534,7 +513,7 @@ public class MainActivity extends AppCompatActivity {
             } else if (resultCode == RESULT_OK) {
                 configureCognitiveServices();
             }
-        } else if (requestCode == mirrorRequestCode) {
+        } else if (requestCode == MIRROR_REQUEST_CODE) {
 
         }
 
@@ -589,7 +568,7 @@ public class MainActivity extends AppCompatActivity {
     //region PERMISSIONS
 
     private void requestPermissionsForCognitiveServices() {
-        ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO, INTERNET}, permissionRequestCode);
+        ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO, INTERNET}, PERMISSION_REQUEST_CODE);
     }
 
     @Override
@@ -597,7 +576,7 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         // https://stackoverflow.com/questions/30719047/android-m-check-runtime-permission-how-to-determine-if-the-user-checked-nev
-        if (requestCode == permissionRequestCode) {
+        if (requestCode == PERMISSION_REQUEST_CODE) {
             for (int i = 0, len = permissions.length; i < len; i++) {
                 String permission = permissions[i];
 
@@ -631,4 +610,5 @@ public class MainActivity extends AppCompatActivity {
     private enum SpeechBubble {
         Incoming, Outgoing, System
     }
+
 }
