@@ -11,6 +11,7 @@ import java.net.URL;
 import javax.net.ssl.HttpsURLConnection;
 
 public class Authentication {
+
     private static final String LOG_TAG = Authentication.class.getName();
 
     private String cognitiveServicesApiKey;
@@ -26,21 +27,19 @@ public class Authentication {
         this.cognitiveServicesApiKey = cognitiveServicesApiKey;
         this.cognitiveServicesAccessTokenUri = "https://" + cognitiveServicesRegion + ".api.cognitive.microsoft.com/sts/v1.0/issueToken";
 
-        Thread th = new Thread(() -> {
-            getAccessToken();
-        });
+        Thread th = new Thread(this::getAccessToken);
 
         try {
             th.start();
             th.join();
         } catch (Exception ex) {
-
+            Log.d(LOG_TAG, "Authentication(): failed to get access token");
         }
     }
 
     private void getAccessToken() {
-        InputStream inputStream = null;
-        HttpsURLConnection httpsURLConnection = null;
+        InputStream inputStream;
+        HttpsURLConnection httpsURLConnection;
 
         //Prepare OAuth request
         try{
@@ -67,7 +66,7 @@ public class Authentication {
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
             BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
             StringBuffer stringBuffer = new StringBuffer();
-            String line = null;
+            String line;
             while ((line = bufferedReader.readLine()) != null) {
                 stringBuffer.append(line);
             }

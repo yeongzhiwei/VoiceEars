@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class Recognizer {
+
     public interface Recognition {
         void recognize(String text, Boolean isFinal);
     }
@@ -30,8 +31,6 @@ public class Recognizer {
         this.recognition = recognition;
     }
 
-    // Adapted from Sample code for the Microsoft Cognitive Services Speech SDK
-    // https://github.com/Azure-Samples/cognitive-services-speech-sdk
     synchronized public void startSpeechToText() {
         if (continuousListeningStarted) {
             return;
@@ -40,8 +39,8 @@ public class Recognizer {
         AudioConfig audioConfig = AudioConfig.fromStreamInput(createMicrophoneStream());
         speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
 
-        speechRecognizer.recognizing.addEventListener((o, speechRecognitionResultEventArgs) -> {
-            final String s = speechRecognitionResultEventArgs.getResult().getText();
+        speechRecognizer.recognizing.addEventListener((o, speechRecognitionEventArgs) -> {
+            final String s = speechRecognitionEventArgs.getResult().getText();
             Log.d(LOG_TAG, "recognizing: " + s);
 
             if (!s.isEmpty()) {
@@ -50,8 +49,8 @@ public class Recognizer {
 
         });
 
-        speechRecognizer.recognized.addEventListener((o, speechRecognitionResultEventArgs) -> {
-            final String s = speechRecognitionResultEventArgs.getResult().getText();
+        speechRecognizer.recognized.addEventListener((o, speechRecognitionEventArgs) -> {
+            final String s = speechRecognitionEventArgs.getResult().getText();
             Log.d(LOG_TAG, "recognized: " + s);
 
             if (!s.isEmpty()) {
@@ -71,13 +70,14 @@ public class Recognizer {
     synchronized public void stopSpeechToText() {
         if (speechRecognizer != null) {
             final Future<Void> task = speechRecognizer.stopContinuousRecognitionAsync();
+
             setOnTaskCompletedListener(task, result -> {
                 continuousListeningStarted = false;
                 Log.d(LOG_TAG, "Stopped Speech to Text");
             });
         } else {
             continuousListeningStarted = false;
-            Log.d(LOG_TAG, "Stopped Speech to Text");
+            Log.d(LOG_TAG, "Speech to Text was not started");
         }
     }
 
@@ -109,4 +109,5 @@ public class Recognizer {
     private interface OnTaskCompletedListener<T> {
         void onCompleted(T taskResult);
     }
+
 }

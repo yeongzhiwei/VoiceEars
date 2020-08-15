@@ -11,15 +11,14 @@ import com.microsoft.cognitiveservices.speech.audio.PullAudioInputStreamCallback
  * MicrophoneStream exposes the Android Microphone as an PullAudioInputStreamCallback
  * to be consumed by the Speech SDK.
  * It configures the microphone with 16 kHz sample rate, 16 bit samples, mono (single-channel).
+ * https://github.com/Azure-Samples/cognitive-services-speech-sdk/blob/master/samples/java/android/sdkdemo/app/src/main/java/com/microsoft/cognitiveservices/speech/samples/sdkdemo/MicrophoneStream.java
  */
-public class MicrophoneStream extends PullAudioInputStreamCallback {
+class MicrophoneStream extends PullAudioInputStreamCallback {
 
     private final static int SAMPLE_RATE = 16000;
-    private final AudioStreamFormat audioStreamFormat;
     private AudioRecord audioRecord;
 
-    public MicrophoneStream() {
-        this.audioStreamFormat = AudioStreamFormat.getWaveFormatPCM(SAMPLE_RATE, (short)16, (short)1);
+    MicrophoneStream() {
         this.initMic();
     }
 
@@ -49,4 +48,5 @@ public class MicrophoneStream extends PullAudioInputStreamCallback {
 
         this.audioRecord.startRecording();
     }
+
 }
