@@ -24,8 +24,6 @@ public class Recognizer {
     private EventHandler<SpeechRecognitionEventArgs> recognizingEventHandler;
     private EventHandler<SpeechRecognitionEventArgs> recognizedEventHandler;
 
-    private boolean continuousRecognitionStarted = false;
-
     public Recognizer(@NonNull String cognitiveServicesApiKey, @NonNull String cognitiveServicesRegion, @NonNull Recognition recognition) {
         this.speechConfig = SpeechConfig.fromSubscription(cognitiveServicesApiKey, cognitiveServicesRegion);
 
@@ -49,7 +47,8 @@ public class Recognizer {
     }
 
     synchronized public void startSpeechToText() {
-        if (continuousRecognitionStarted) {
+        if (speechRecognizer != null) {
+            Log.d(LOG_TAG, "Could not start speech to text - speechRecognizer is not null");
             return;
         }
 
@@ -61,27 +60,24 @@ public class Recognizer {
 
         final Future<Void> task = speechRecognizer.startContinuousRecognitionAsync();
         setOnTaskCompletedListener(task, result -> {
-            continuousRecognitionStarted = true;
             Log.d(LOG_TAG, "Started Speech to Text");
         });
     }
 
     synchronized public void stopSpeechToText() {
-        if (speechRecognizer != null) {
-            final Future<Void> task = speechRecognizer.stopContinuousRecognitionAsync();
-            setOnTaskCompletedListener(task, result -> {
-                continuousRecognitionStarted = false;
-                Log.d(LOG_TAG, "Stopped Speech to Text");
-            });
-        } else {
-            continuousRecognitionStarted = false;
-            Log.d(LOG_TAG, "Speech to Text was not started");
+        if (speechRecognizer == null) {
+            Log.d(LOG_TAG, "Could not stop speech to text - speechRecognizer is null");
+            return;
         }
 
-        if (microphoneStream != null) {
+        final Future<Void> task = speechRecognizer.stopContinuousRecognitionAsync();
+        setOnTaskCompletedListener(task, result -> {
+            speechRecognizer.close();
+            speechRecognizer = null;
             microphoneStream.close();
             microphoneStream = null;
-        }
+            Log.d(LOG_TAG, "Stopped Speech to Text");
+        });
     }
 
     private <T> void setOnTaskCompletedListener(Future<T> task, OnTaskCompletedListener<T> listener) {
