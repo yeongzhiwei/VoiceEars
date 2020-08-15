@@ -76,16 +76,28 @@
         app:layout_constraintTop_toBottomOf="@+id/textView_region" />
 
     <TextView
-        android:id="@+id/textView_message"
+        android:id="@+id/textView_gender"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:text="@string/settings_textView_message"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:text="@string/gender12333"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toStartOf="@id/spinner_gender"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button_save" />
+        app:layout_constraintTop_toBottomOf="@+id/editText_region" />
+
+    <Spinner
+        android:id="@+id/spinner_gender"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintStart_toEndOf="@id/textView_gender"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/editText_region" />
 
     <Button
         android:id="@+id/button_save"
@@ -96,7 +108,7 @@
         android:onClick="onSave"
         android:text="@string/settings_button_save"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editText_region" />
+        app:layout_constraintTop_toBottomOf="@+id/spinner_gender" />
 
     <Button
         android:id="@+id/button_cancel"
@@ -107,5 +119,17 @@
         android:onClick="onCancel"
         android:text="@android:string/cancel"
         app:layout_constraintStart_toEndOf="@+id/button_save"
-        app:layout_constraintTop_toBottomOf="@+id/editText_region" />
+        app:layout_constraintTop_toBottomOf="@+id/spinner_gender" />
+
+    <TextView
+        android:id="@+id/textView_message"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/settings_textView_message"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button_save" />
 </androidx.constraintlayout.widget.ConstraintLayout>

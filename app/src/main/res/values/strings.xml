@@ -16,8 +16,6 @@
 
     /* Main Menu */
     <string name="action_mirror_title">MirrorText</string>
-    <string name="action_gender_title_male">Gender: Male</string>
-    <string name="action_gender_title_female">Gender: Female</string>
     <string name="action_settings_title">Settings</string>
     <string name="action_auto_tts_title_on">Auto TTS: On</string>
     <string name="action_auto_tts_title_off">Auto TTS: Off</string>
@@ -59,4 +57,5 @@
     /* common */
     <string name="network_error">Error: Check your network connection or settings and try again.</string>
     <string name="presentation_context_menu_delete_all">Delete All</string>
+    <string name="gender12333">Gender:</string>
 </resources>

@@ -53,7 +53,6 @@ public class MainActivity extends AppCompatActivity {
     public static int mirrorRequestCode = 30;
     private static final Integer seekBarMinValue = 10;
 
-    private MenuItem genderMenuItem;
     private MenuItem autoTTSMenuItem;
 
     private ScrollView messageScrollView;
@@ -250,16 +249,6 @@ public class MainActivity extends AppCompatActivity {
 
     //region STATE
 
-    private void toggleGender() {
-        if (synthesizer == null) {
-            return;
-        }
-
-        gender = gender.toggle();
-        synthesizer.setVoiceGender(gender);
-        refreshGenderIcon();
-    }
-
     private void toggleAutoTTS() {
         isAutoTTS = !isAutoTTS;
 
@@ -287,7 +276,6 @@ public class MainActivity extends AppCompatActivity {
         // https://stackoverflow.com/questions/38158953/how-to-create-button-in-action-bar-in-android
         getMenuInflater().inflate(R.menu.main_menu, menu);
 
-        genderMenuItem = menu.findItem(R.id.action_gender);
         autoTTSMenuItem = menu.findItem(R.id.action_toggle_auto_tts);
         refreshAllViews();
 
@@ -298,8 +286,6 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.action_mirror) {
             startMirrorActivity();
-        } else if (item.getItemId() == R.id.action_gender) {
-            toggleGender();
         } else if (item.getItemId() == R.id.action_settings) {
             startSettingsActivity();
         } else if (item.getItemId() == R.id.action_presentation) {
@@ -504,24 +490,11 @@ public class MainActivity extends AppCompatActivity {
     // Refresh views based on state
 
     private void refreshAllViews() {
-        refreshGenderIcon();
         refreshAutoTTSViews();
         refreshMessageTextSize();
         refreshScrollDownImageView();
         refreshTextSizeSeekBar();
         scrollToBottom();
-    }
-
-    private void refreshGenderIcon() {
-        if (genderMenuItem != null) {
-            if (gender == Gender.Male) {
-                genderMenuItem.setIcon(R.drawable.ic_male);
-                genderMenuItem.setTitle(R.string.action_gender_title_male);
-            } else {
-                genderMenuItem.setIcon(R.drawable.ic_female);
-                genderMenuItem.setTitle(R.string.action_gender_title_female);
-            }
-        }
     }
 
     private void refreshAutoTTSViews() {

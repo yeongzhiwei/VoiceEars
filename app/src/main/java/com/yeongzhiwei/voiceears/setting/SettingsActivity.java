@@ -5,68 +5,69 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.Spinner;
 
 import com.yeongzhiwei.voiceears.PreferencesHelper;
 import com.yeongzhiwei.voiceears.R;
+import com.yeongzhiwei.voiceears.ttsstt.Gender;
 
 public class SettingsActivity extends AppCompatActivity {
-    private String cognitiveServicesApiKey;
-    private String cognitiveServicesRegion;
 
     private EditText apikeyEditText;
     private EditText regionEditText;
+    private Spinner genderSpinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        loadSavedPreferences();
-        initializeViews();
-        refreshEditTextHint();
-    }
-
-    private void loadSavedPreferences() {
-        cognitiveServicesApiKey = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesApiKeyKey);
-        cognitiveServicesRegion = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesRegionKey);
-    }
-
-    private void initializeViews() {
         apikeyEditText = findViewById(R.id.editText_key);
         regionEditText = findViewById(R.id.editText_region);
+        genderSpinner = findViewById(R.id.spinner_gender);
+
+        initGenderSpinner();
+        refreshUI();
     }
 
-    private void refreshEditTextHint() {
+    private void initGenderSpinner() {
+        ArrayAdapter<Gender> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, Gender.values());
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        genderSpinner.setAdapter(adapter);
+    }
+
+    private void refreshUI() {
+        String cognitiveServicesApiKey = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesApiKeyKey);
         if (cognitiveServicesApiKey != null) {
             apikeyEditText.setHint("***" + cognitiveServicesApiKey.substring(Math.max(0, cognitiveServicesApiKey.length() - 5)));
         }
 
-        if (cognitiveServicesRegion != null) {
-            regionEditText.setHint(cognitiveServicesRegion);
-        }
+        String cognitiveServicesRegion = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesRegionKey, "");
+        regionEditText.setHint(cognitiveServicesRegion);
+
+        String gender = PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, Gender.Male.name());
+        genderSpinner.setSelection(Gender.valueOf(gender).ordinal());
     }
 
-    private void updateCognitiveServicesVariables() {
-        String newCognitiveServicesApiKey = apikeyEditText.getText().toString();
-        if (newCognitiveServicesApiKey.trim().length() != 0) {
-            cognitiveServicesApiKey = newCognitiveServicesApiKey;
+    private void saveSettings() {
+        String cognitiveServicesApiKey = apikeyEditText.getText().toString().trim();
+        if (cognitiveServicesApiKey.length() != 0) {
+            PreferencesHelper.save(this, PreferencesHelper.Key.cognitiveServicesApiKeyKey, cognitiveServicesApiKey);
         }
 
-        String newCognitiveServicesRegion = regionEditText.getText().toString();
-        if (newCognitiveServicesRegion.trim().length() != 0) {
-            cognitiveServicesRegion = newCognitiveServicesRegion;
+        String cognitiveServicesRegion = regionEditText.getText().toString().trim();
+        if (cognitiveServicesRegion.length() != 0) {
+            PreferencesHelper.save(this, PreferencesHelper.Key.cognitiveServicesRegionKey, cognitiveServicesRegion);
         }
-    }
 
-    private void savePreferences() {
-        PreferencesHelper.save(this, PreferencesHelper.Key.cognitiveServicesApiKeyKey, cognitiveServicesApiKey);
-        PreferencesHelper.save(this, PreferencesHelper.Key.cognitiveServicesRegionKey, cognitiveServicesRegion);
+        String gender = genderSpinner.getSelectedItem().toString();
+        PreferencesHelper.save(this, PreferencesHelper.Key.genderKey, gender);
     }
 
     public void onSave(View view) {
-        updateCognitiveServicesVariables();
-        savePreferences();
+        saveSettings();
 
         Intent returnIntent = new Intent();
         setResult(RESULT_OK, returnIntent);
@@ -78,4 +79,5 @@ public class SettingsActivity extends AppCompatActivity {
         setResult(RESULT_CANCELED, returnIntent);
         finish();
     }
+
 }

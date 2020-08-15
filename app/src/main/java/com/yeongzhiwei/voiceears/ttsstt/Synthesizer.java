@@ -47,13 +47,7 @@ public class Synthesizer {
         }
     }
 
-    public void setVoiceGender(Gender gender) {
-        synthesizer.close();
-        speechConfig.setSpeechSynthesisVoiceName(getVoiceName(gender));
-        synthesizer = new SpeechSynthesizer(speechConfig);
-    }
-
-    private String getVoiceName(Gender gender) {
+    private static String getVoiceName(Gender gender) {
         switch (gender) {
             case Male:
                 return MALE_VOICE_NAME;
