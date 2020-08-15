@@ -6,24 +6,19 @@ import com.microsoft.cognitiveservices.speech.*;
 
 import java.util.concurrent.ExecutionException;
 
-// https://github.com/Azure-Samples/cognitive-services-speech-sdk/blob/master/samples/java/jre/console/src/com/microsoft/cognitiveservices/speech/samples/console/SpeechSynthesisSamples.java
 public class Synthesizer {
-    public enum Gender {
-        Male, Female;
-
-        public Gender toggle() {
-            return (this.equals(Male)) ? Female : Male;
-        }
-    }
 
     private static final String LOG_TAG = Synthesizer.class.getSimpleName();
+
+    private static final String MALE_VOICE_NAME = "en-US-GuyNeural";
+    private static final String FEMALE_VOICE_NAME = "en-US-JessaNeural";
 
     private SpeechConfig speechConfig;
     private SpeechSynthesizer synthesizer;
 
     public Synthesizer(String cognitiveServicesApiKey, String cognitiveServicesRegion, Gender gender) {
         speechConfig = SpeechConfig.fromSubscription(cognitiveServicesApiKey, cognitiveServicesRegion);
-        setVoiceGender(gender);
+        speechConfig.setSpeechSynthesisVoiceName(getVoiceName(gender));
 
         synthesizer = new SpeechSynthesizer(speechConfig);
     }
@@ -53,21 +48,20 @@ public class Synthesizer {
     }
 
     public void setVoiceGender(Gender gender) {
-        if (speechConfig == null) {
-            return;
-        }
-
-        if (synthesizer != null) {
-            synthesizer.close();
-        }
-
-        if (gender == Gender.Male) {
-            speechConfig.setSpeechSynthesisVoiceName("en-US-GuyNeural");
-        } else {
-            speechConfig.setSpeechSynthesisVoiceName("en-US-JessaNeural");
-        }
-
+        synthesizer.close();
+        speechConfig.setSpeechSynthesisVoiceName(getVoiceName(gender));
         synthesizer = new SpeechSynthesizer(speechConfig);
+    }
+
+    private String getVoiceName(Gender gender) {
+        switch (gender) {
+            case Male:
+                return MALE_VOICE_NAME;
+            case Female:
+                return FEMALE_VOICE_NAME;
+            default:
+                return "";
+        }
     }
 }
 

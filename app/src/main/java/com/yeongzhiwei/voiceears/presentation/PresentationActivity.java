@@ -25,6 +25,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.yeongzhiwei.voiceears.MainActivity;
 import com.yeongzhiwei.voiceears.PreferencesHelper;
 import com.yeongzhiwei.voiceears.R;
+import com.yeongzhiwei.voiceears.ttsstt.Gender;
 import com.yeongzhiwei.voiceears.ttsstt.Synthesizer;
 
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class PresentationActivity extends AppCompatActivity {
     AnimationDrawable loadingAnimationDrawable = null;
 
     private Integer messageTextSize = 20;
-    private Synthesizer.Gender gender = Synthesizer.Gender.Male;
+    private Gender gender = Gender.Male;
     private Boolean isPlaying = false;
     private ArrayList<String> messages = new ArrayList<>();
     private int selectedMessageIndex;
@@ -93,7 +94,7 @@ public class PresentationActivity extends AppCompatActivity {
         cognitiveServicesApiKey = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesApiKeyKey, "");
         cognitiveServicesRegion = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesRegionKey, "");
         messageTextSize = PreferencesHelper.loadInt(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
-        gender = Synthesizer.Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, gender.name()));
+        gender = Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, gender.name()));
         messages = PreferencesHelper.loadStringArray(this, PreferencesHelper.Key.presentationMessagesKey, new ArrayList<>());
         selectedMessageIndex = PreferencesHelper.loadInt(this, PreferencesHelper.Key.presentationSelectedMessageIndexKey, -1);
     }

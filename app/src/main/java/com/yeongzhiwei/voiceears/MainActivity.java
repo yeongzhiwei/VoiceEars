@@ -34,6 +34,7 @@ import com.yeongzhiwei.voiceears.mirror.MirrorActivity;
 import com.yeongzhiwei.voiceears.presentation.PresentationActivity;
 import com.yeongzhiwei.voiceears.setting.SettingsActivity;
 import com.yeongzhiwei.voiceears.ttsstt.Authentication;
+import com.yeongzhiwei.voiceears.ttsstt.Gender;
 import com.yeongzhiwei.voiceears.ttsstt.Recognizer;
 import com.yeongzhiwei.voiceears.ttsstt.Synthesizer;
 
@@ -66,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Boolean isAutoScrollDown = true;
     private Integer messageTextSize = 20;
-    private Synthesizer.Gender gender = Synthesizer.Gender.Male;
+    private Gender gender = Gender.Male;
     private Boolean isAutoTTS = true;
 
     // Azure Cognitive Services
@@ -135,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
         cognitiveServicesApiKey = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesApiKeyKey);
         cognitiveServicesRegion = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesRegionKey);
         messageTextSize = PreferencesHelper.loadInt(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
-        gender = Synthesizer.Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, gender.name()));
+        gender = Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, gender.name()));
         isAutoTTS = (PreferencesHelper.loadInt(this, PreferencesHelper.Key.autoTTSKey, 1)) > 0;
     }
 
@@ -502,7 +503,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void refreshGenderIcon() {
         if (genderMenuItem != null) {
-            if (gender == Synthesizer.Gender.Male) {
+            if (gender == Gender.Male) {
                 genderMenuItem.setIcon(R.drawable.ic_male);
                 genderMenuItem.setTitle(R.string.action_gender_title_male);
             } else {
