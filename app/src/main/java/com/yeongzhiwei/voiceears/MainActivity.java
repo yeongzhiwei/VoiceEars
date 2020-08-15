@@ -11,7 +11,6 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.text.Layout;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -47,9 +46,9 @@ public class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     private static final Integer SEEK_BAR_MIN_VALUE = 10;
-    public static final int PERMISSION_REQUEST_CODE = 10;
-    public static final int SETTINGS_REQUEST_CODE = 20;
-    public static final int MIRROR_REQUEST_CODE = 30;
+    private static final int PERMISSION_REQUEST_CODE = 10;
+    private static final int SETTINGS_REQUEST_CODE = 20;
+    private static final int MIRROR_REQUEST_CODE = 30;
 
     private ScrollView messageScrollView;
     private LinearLayout messageLinearLayout;
@@ -70,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Synthesizer synthesizer;
     private Recognizer recognizer;
-    private AtomicInteger counter = new AtomicInteger();
+    private final AtomicInteger counter = new AtomicInteger();
 
     private TextView currentIncomingTextView;
 
@@ -514,7 +513,7 @@ public class MainActivity extends AppCompatActivity {
                 configureCognitiveServices();
             }
         } else if (requestCode == MIRROR_REQUEST_CODE) {
-
+            // Do nothing
         }
 
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -543,7 +542,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
 
         final int childCount = messageLinearLayout.getChildCount();

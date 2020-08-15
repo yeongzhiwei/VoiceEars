@@ -17,12 +17,12 @@ public class Recognizer {
     private static final String LOG_TAG = Recognizer.class.getSimpleName();
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
-    private SpeechConfig speechConfig;
+    private final SpeechConfig speechConfig;
     private SpeechRecognizer speechRecognizer;
     private MicrophoneStream microphoneStream;
 
-    private EventHandler<SpeechRecognitionEventArgs> recognizingEventHandler;
-    private EventHandler<SpeechRecognitionEventArgs> recognizedEventHandler;
+    private final EventHandler<SpeechRecognitionEventArgs> recognizingEventHandler;
+    private final EventHandler<SpeechRecognitionEventArgs> recognizedEventHandler;
 
     public Recognizer(@NonNull String cognitiveServicesApiKey, @NonNull String cognitiveServicesRegion, @NonNull Recognition recognition) {
         this.speechConfig = SpeechConfig.fromSubscription(cognitiveServicesApiKey, cognitiveServicesRegion);

@@ -33,19 +33,19 @@ import java.util.ArrayList;
 public class PresentationActivity extends AppCompatActivity {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
-    public static String EXTRA_MESSAGE = "com.yeongzhiwei.voiceears.MESSAGE";
-    public static String EXTRA_REQUEST_CODE = "com.yeongzhiwei.voiceears.REQUESTCODE";
-    public static int addRequestCode = 100;
-    public static int editRequestCode = 200;
+    public static final String EXTRA_MESSAGE = "com.yeongzhiwei.voiceears.MESSAGE";
+    public static final String EXTRA_REQUEST_CODE = "com.yeongzhiwei.voiceears.REQUESTCODE";
+    public static final int addRequestCode = 100;
+    public static final int editRequestCode = 200;
 
     private FloatingActionButton playFloatingActionButton;
     private FloatingActionButton addFloatingActionButton;
     private LinearLayout messageLinearLayout;
     private ImageView loadingImageView;
 
-    PaintDrawable paintDrawableSelect = null;
-    PaintDrawable paintDrawablePlay = null;
-    AnimationDrawable loadingAnimationDrawable = null;
+    private PaintDrawable paintDrawableSelect = null;
+    private PaintDrawable paintDrawablePlay = null;
+    private AnimationDrawable loadingAnimationDrawable = null;
 
     private Integer messageTextSize = 20;
     private Gender gender = Gender.Male;
@@ -266,7 +266,7 @@ public class PresentationActivity extends AppCompatActivity {
         }
     }
 
-    public void addTextViewToLinearLayout(String message) {
+    private void addTextViewToLinearLayout(String message) {
         TextView newTextView = new TextView(this);
         newTextView.setText(message);
         newTextView.setTextSize(messageTextSize);
@@ -310,7 +310,7 @@ public class PresentationActivity extends AppCompatActivity {
         setFABEnabled(!isPlaying, addFloatingActionButton, getDrawable(R.drawable.ic_add));
     }
 
-    public void setFABEnabled(boolean enabled, FloatingActionButton fab, Drawable originalIcon) {
+    private void setFABEnabled(boolean enabled, FloatingActionButton fab, Drawable originalIcon) {
         // https://stackoverflow.com/questions/7228985/android-imagebutton-with-disabled-ui-feel
         fab.setEnabled(enabled);
 

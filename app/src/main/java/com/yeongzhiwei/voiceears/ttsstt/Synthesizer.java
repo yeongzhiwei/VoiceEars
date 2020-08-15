@@ -13,13 +13,13 @@ public class Synthesizer {
     private static final String MALE_VOICE_NAME = "en-US-GuyNeural";
     private static final String FEMALE_VOICE_NAME = "en-US-JessaNeural";
 
-    private SpeechSynthesizer synthesizer;
+    private final SpeechSynthesizer speechSynthesizer;
 
     public Synthesizer(String cognitiveServicesApiKey, String cognitiveServicesRegion, Gender gender) {
         SpeechConfig speechConfig = SpeechConfig.fromSubscription(cognitiveServicesApiKey, cognitiveServicesRegion);
         speechConfig.setSpeechSynthesisVoiceName(getVoiceName(gender));
 
-        synthesizer = new SpeechSynthesizer(speechConfig);
+        speechSynthesizer = new SpeechSynthesizer(speechConfig);
     }
 
     synchronized public void speak(String text, Runnable callOnStart, Runnable callOnEnd, Runnable callOnError) {
@@ -28,7 +28,7 @@ public class Synthesizer {
                 callOnStart.run();
             }
 
-            SpeechSynthesisResult result = synthesizer.SpeakTextAsync(text).get();
+            SpeechSynthesisResult result = speechSynthesizer.SpeakTextAsync(text).get();
 
             if (callOnEnd != null) {
                 callOnEnd.run();
