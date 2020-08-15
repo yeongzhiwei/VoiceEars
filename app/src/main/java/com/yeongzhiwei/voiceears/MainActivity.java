@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
 
         if (recognizer != null) {
-            recognizer.stopSpeechToTextAndReleaseMicrophone();
+            recognizer.stopSpeechToText();
         }
     }
 

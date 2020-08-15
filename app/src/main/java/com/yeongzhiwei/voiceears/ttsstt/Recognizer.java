@@ -53,7 +53,8 @@ public class Recognizer {
             return;
         }
 
-        AudioConfig audioConfig = AudioConfig.fromStreamInput(createMicrophoneStream());
+        microphoneStream = new MicrophoneStream();
+        AudioConfig audioConfig = AudioConfig.fromStreamInput(microphoneStream);
         speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
         speechRecognizer.recognizing.addEventListener(recognizingEventHandler);
         speechRecognizer.recognized.addEventListener(recognizedEventHandler);
@@ -76,23 +77,11 @@ public class Recognizer {
             continuousRecognitionStarted = false;
             Log.d(LOG_TAG, "Speech to Text was not started");
         }
-    }
 
-    public void stopSpeechToTextAndReleaseMicrophone() {
-        stopSpeechToText();
         if (microphoneStream != null) {
             microphoneStream.close();
             microphoneStream = null;
         }
-    }
-
-    private MicrophoneStream createMicrophoneStream() {
-        if (microphoneStream != null) {
-            microphoneStream.close();
-            microphoneStream = null;
-        }
-        microphoneStream = new MicrophoneStream();
-        return microphoneStream;
     }
 
     private <T> void setOnTaskCompletedListener(Future<T> task, OnTaskCompletedListener<T> listener) {
