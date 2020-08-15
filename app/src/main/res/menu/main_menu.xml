@@ -8,11 +8,6 @@
             android:title="@string/action_mirror_title"
             app:showAsAction="ifRoom" />
         <item
-            android:id="@+id/action_toggle_auto_tts"
-            android:orderInCategory="25"
-            android:title="@string/action_auto_tts_title_on"
-            app:showAsAction="never" />
-        <item
             android:id="@+id/action_presentation"
             android:orderInCategory="40"
             android:title="@string/action_presentation_title"

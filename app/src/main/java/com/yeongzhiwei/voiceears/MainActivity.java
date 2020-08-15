@@ -53,8 +53,6 @@ public class MainActivity extends AppCompatActivity {
     public static int mirrorRequestCode = 30;
     private static final Integer seekBarMinValue = 10;
 
-    private MenuItem autoTTSMenuItem;
-
     private ScrollView messageScrollView;
     private LinearLayout messageLinearLayout;
     private ImageView scrollDownImageView;
@@ -68,7 +66,6 @@ public class MainActivity extends AppCompatActivity {
     private Boolean isAutoScrollDown = true;
     private Integer messageTextSize = 20;
     private Gender gender = Gender.Male;
-    private Boolean isAutoTTS = true;
 
     // Azure Cognitive Services
     private static String cognitiveServicesApiKey;
@@ -129,7 +126,6 @@ public class MainActivity extends AppCompatActivity {
     private void savePreferences() {
         PreferencesHelper.save(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
         PreferencesHelper.save(this, PreferencesHelper.Key.genderKey, gender.name());
-        PreferencesHelper.save(this, PreferencesHelper.Key.autoTTSKey, (isAutoTTS) ? 1 : 0);
     }
 
     private void loadSavedPreferences() {
@@ -137,7 +133,6 @@ public class MainActivity extends AppCompatActivity {
         cognitiveServicesRegion = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesRegionKey);
         messageTextSize = PreferencesHelper.loadInt(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
         gender = Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, gender.name()));
-        isAutoTTS = (PreferencesHelper.loadInt(this, PreferencesHelper.Key.autoTTSKey, 1)) > 0;
     }
 
     //endregion
@@ -249,12 +244,6 @@ public class MainActivity extends AppCompatActivity {
 
     //region STATE
 
-    private void toggleAutoTTS() {
-        isAutoTTS = !isAutoTTS;
-
-        refreshAutoTTSViews();
-    }
-
     private void toggleAutoScrollDown(Boolean isEnabled) {
         isAutoScrollDown = isEnabled;
 
@@ -276,7 +265,6 @@ public class MainActivity extends AppCompatActivity {
         // https://stackoverflow.com/questions/38158953/how-to-create-button-in-action-bar-in-android
         getMenuInflater().inflate(R.menu.main_menu, menu);
 
-        autoTTSMenuItem = menu.findItem(R.id.action_toggle_auto_tts);
         refreshAllViews();
 
         return super.onCreateOptionsMenu(menu);
@@ -290,8 +278,6 @@ public class MainActivity extends AppCompatActivity {
             startSettingsActivity();
         } else if (item.getItemId() == R.id.action_presentation) {
             startPresentationActivity();
-        } else if (item.getItemId() == R.id.action_toggle_auto_tts) {
-            toggleAutoTTS();
         }
 
         return super.onOptionsItemSelected(item);
@@ -349,25 +335,6 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
 
-        synthesizeEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
-                if (isAutoTTS) {
-                    synthesizePhraseAndRefreshSynthesizeTextView();
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
-        });
-
         synthesizeEditText.setOnEditorActionListener((textView, actionId, keyEvent) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 synthesizeAndRefreshSynthesizeTextView();
@@ -395,18 +362,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void clearSynthesizeEditText() {
         synthesizeEditText.setText("");
-    }
-
-    private void synthesizePhraseAndRefreshSynthesizeTextView() {
-        String message = synthesizeEditText.getText().toString().trim();
-        int lastIndex = Math.max(message.lastIndexOf("."), Math.max(message.lastIndexOf("?"), message.lastIndexOf("!")));
-        if (lastIndex == 0) {
-            synthesizeEditText.setText(""); // forbid [.?!] as first character
-        } else if (lastIndex != -1) {
-            lastIndex += 1;
-            synthesizeEditText.setText(message.substring(lastIndex));
-            synthesizeText(message.substring(0, lastIndex).trim());
-        }
     }
 
     private void synthesizeAndRefreshSynthesizeTextView() {
@@ -490,21 +445,10 @@ public class MainActivity extends AppCompatActivity {
     // Refresh views based on state
 
     private void refreshAllViews() {
-        refreshAutoTTSViews();
         refreshMessageTextSize();
         refreshScrollDownImageView();
         refreshTextSizeSeekBar();
         scrollToBottom();
-    }
-
-    private void refreshAutoTTSViews() {
-        if (autoTTSMenuItem != null) {
-            if (isAutoTTS) {
-                autoTTSMenuItem.setTitle(R.string.action_auto_tts_title_on);
-            } else {
-                autoTTSMenuItem.setTitle(R.string.action_auto_tts_title_off);
-            }
-        }
     }
 
     private void refreshMessageTextSize() {

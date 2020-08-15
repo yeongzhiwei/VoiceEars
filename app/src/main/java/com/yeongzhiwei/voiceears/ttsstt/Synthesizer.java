@@ -13,11 +13,10 @@ public class Synthesizer {
     private static final String MALE_VOICE_NAME = "en-US-GuyNeural";
     private static final String FEMALE_VOICE_NAME = "en-US-JessaNeural";
 
-    private SpeechConfig speechConfig;
     private SpeechSynthesizer synthesizer;
 
     public Synthesizer(String cognitiveServicesApiKey, String cognitiveServicesRegion, Gender gender) {
-        speechConfig = SpeechConfig.fromSubscription(cognitiveServicesApiKey, cognitiveServicesRegion);
+        SpeechConfig speechConfig = SpeechConfig.fromSubscription(cognitiveServicesApiKey, cognitiveServicesRegion);
         speechConfig.setSpeechSynthesisVoiceName(getVoiceName(gender));
 
         synthesizer = new SpeechSynthesizer(speechConfig);

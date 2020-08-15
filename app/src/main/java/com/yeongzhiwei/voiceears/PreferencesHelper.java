@@ -23,8 +23,7 @@ public class PreferencesHelper {
         mirroredTextViewSizeKey,
         mirroredMirrorMode,
         presentationMessagesKey,
-        presentationSelectedMessageIndexKey,
-        autoTTSKey
+        presentationSelectedMessageIndexKey
     }
 
     private static SharedPreferences getSharedPreferences(Context context) {
