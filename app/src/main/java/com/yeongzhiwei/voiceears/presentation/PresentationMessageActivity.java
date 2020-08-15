@@ -1,4 +1,4 @@
-package com.yeongzhiwei.voiceears;
+package com.yeongzhiwei.voiceears.presentation;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -8,6 +8,8 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.widget.Button;
 import android.widget.EditText;
+
+import com.yeongzhiwei.voiceears.R;
 
 public class PresentationMessageActivity extends AppCompatActivity {
     private EditText messageEditText;

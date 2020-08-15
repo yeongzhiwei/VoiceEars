@@ -1,4 +1,4 @@
-package com.yeongzhiwei.voiceears;
+package com.yeongzhiwei.voiceears.ttsstt;
 
 import android.util.Log;
 
@@ -7,11 +7,11 @@ import com.microsoft.cognitiveservices.speech.*;
 import java.util.concurrent.ExecutionException;
 
 // https://github.com/Azure-Samples/cognitive-services-speech-sdk/blob/master/samples/java/jre/console/src/com/microsoft/cognitiveservices/speech/samples/console/SpeechSynthesisSamples.java
-class Synthesizer {
-    enum Gender {
+public class Synthesizer {
+    public enum Gender {
         Male, Female;
 
-        Gender toggle() {
+        public Gender toggle() {
             return (this.equals(Male)) ? Female : Male;
         }
     }
@@ -21,14 +21,14 @@ class Synthesizer {
     private SpeechConfig speechConfig;
     private SpeechSynthesizer synthesizer;
 
-    Synthesizer(String cognitiveServicesApiKey, String cognitiveServicesRegion, Gender gender) {
+    public Synthesizer(String cognitiveServicesApiKey, String cognitiveServicesRegion, Gender gender) {
         speechConfig = SpeechConfig.fromSubscription(cognitiveServicesApiKey, cognitiveServicesRegion);
         setVoiceGender(gender);
 
         synthesizer = new SpeechSynthesizer(speechConfig);
     }
 
-    synchronized void speak(String text, Runnable callOnStart, Runnable callOnEnd, Runnable callOnError) {
+    synchronized public void speak(String text, Runnable callOnStart, Runnable callOnEnd, Runnable callOnError) {
         try {
             if (callOnStart != null) {
                 callOnStart.run();
@@ -52,7 +52,7 @@ class Synthesizer {
         }
     }
 
-    void setVoiceGender(Gender gender) {
+    public void setVoiceGender(Gender gender) {
         if (speechConfig == null) {
             return;
         }

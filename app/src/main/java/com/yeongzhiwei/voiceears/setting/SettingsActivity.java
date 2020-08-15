@@ -1,4 +1,4 @@
-package com.yeongzhiwei.voiceears;
+package com.yeongzhiwei.voiceears.setting;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -6,6 +6,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+
+import com.yeongzhiwei.voiceears.PreferencesHelper;
+import com.yeongzhiwei.voiceears.R;
 
 public class SettingsActivity extends AppCompatActivity {
     private String cognitiveServicesApiKey;

@@ -1,4 +1,4 @@
-package com.yeongzhiwei.voiceears;
+package com.yeongzhiwei.voiceears.presentation;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,6 +22,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.yeongzhiwei.voiceears.MainActivity;
+import com.yeongzhiwei.voiceears.PreferencesHelper;
+import com.yeongzhiwei.voiceears.R;
+import com.yeongzhiwei.voiceears.ttsstt.Synthesizer;
 
 import java.util.ArrayList;
 

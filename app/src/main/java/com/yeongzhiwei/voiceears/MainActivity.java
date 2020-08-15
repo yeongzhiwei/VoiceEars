@@ -30,6 +30,13 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.yeongzhiwei.voiceears.mirror.MirrorActivity;
+import com.yeongzhiwei.voiceears.presentation.PresentationActivity;
+import com.yeongzhiwei.voiceears.setting.SettingsActivity;
+import com.yeongzhiwei.voiceears.ttsstt.Authentication;
+import com.yeongzhiwei.voiceears.ttsstt.Recognizer;
+import com.yeongzhiwei.voiceears.ttsstt.Synthesizer;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static android.Manifest.permission.INTERNET;

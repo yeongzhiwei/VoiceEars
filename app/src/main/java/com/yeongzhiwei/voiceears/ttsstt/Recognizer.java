@@ -1,4 +1,4 @@
-package com.yeongzhiwei.voiceears;
+package com.yeongzhiwei.voiceears.ttsstt;
 
 import android.util.Log;
 
@@ -9,8 +9,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-class Recognizer {
-    interface Recognition {
+public class Recognizer {
+    public interface Recognition {
         void recognize(String text, Boolean isFinal);
     }
 
@@ -24,7 +24,7 @@ class Recognizer {
 
     private boolean continuousListeningStarted = false;
 
-    Recognizer(String cognitiveServicesApiKey, String cognitiveServicesRegion, Recognition recognition) {
+    public Recognizer(String cognitiveServicesApiKey, String cognitiveServicesRegion, Recognition recognition) {
         speechConfig = SpeechConfig.fromSubscription(cognitiveServicesApiKey, cognitiveServicesRegion);
 
         this.recognition = recognition;
@@ -32,7 +32,7 @@ class Recognizer {
 
     // Adapted from Sample code for the Microsoft Cognitive Services Speech SDK
     // https://github.com/Azure-Samples/cognitive-services-speech-sdk
-    synchronized void startSpeechToText() {
+    synchronized public void startSpeechToText() {
         if (continuousListeningStarted) {
             return;
         }
@@ -68,7 +68,7 @@ class Recognizer {
         });
     }
 
-    synchronized void stopSpeechToText() {
+    synchronized public void stopSpeechToText() {
         if (speechRecognizer != null) {
             final Future<Void> task = speechRecognizer.stopContinuousRecognitionAsync();
             setOnTaskCompletedListener(task, result -> {
@@ -81,7 +81,7 @@ class Recognizer {
         }
     }
 
-    void stopSpeechToTextAndReleaseMicrophone() {
+    public void stopSpeechToTextAndReleaseMicrophone() {
         stopSpeechToText();
         if (microphoneStream != null) {
             microphoneStream.close();

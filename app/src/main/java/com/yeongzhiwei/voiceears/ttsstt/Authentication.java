@@ -1,4 +1,4 @@
-package com.yeongzhiwei.voiceears;
+package com.yeongzhiwei.voiceears.ttsstt;
 
 import android.util.Log;
 
@@ -10,14 +10,14 @@ import java.net.URL;
 
 import javax.net.ssl.HttpsURLConnection;
 
-class Authentication {
+public class Authentication {
     private static final String LOG_TAG = Authentication.class.getName();
 
     private String cognitiveServicesApiKey;
     private String cognitiveServicesAccessTokenUri;
     private String cognitiveServicesAccessToken;
 
-    static Boolean authenticate(String cognitiveServicesApiKey, String cognitiveServicesRegion) {
+    public static Boolean authenticate(String cognitiveServicesApiKey, String cognitiveServicesRegion) {
         Authentication authentication = new Authentication(cognitiveServicesApiKey, cognitiveServicesRegion);
         return authentication.cognitiveServicesAccessToken != null;
     }

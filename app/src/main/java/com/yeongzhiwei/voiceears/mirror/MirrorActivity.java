@@ -1,4 +1,4 @@
-package com.yeongzhiwei.voiceears;
+package com.yeongzhiwei.voiceears.mirror;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -17,6 +17,9 @@ import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+
+import com.yeongzhiwei.voiceears.PreferencesHelper;
+import com.yeongzhiwei.voiceears.R;
 
 public class MirrorActivity extends AppCompatActivity {
     //region VARIABLES

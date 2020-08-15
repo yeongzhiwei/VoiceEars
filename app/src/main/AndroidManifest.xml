@@ -23,17 +23,17 @@
                 android:resource="@xml/shortcuts" />
         </activity>
         <activity
-            android:name=".MirrorActivity"
+            android:name=".mirror.MirrorActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".PresentationActivity"
+            android:name=".presentation.PresentationActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity
-            android:name=".PresentationMessageActivity"
+            android:name=".presentation.PresentationMessageActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:windowSoftInputMode="adjustResize"  />
-        <activity android:name=".SettingsActivity" />
+        <activity android:name=".setting.SettingsActivity" />
     </application>
 
 </manifest>

@@ -9,11 +9,11 @@ import org.json.JSONException;
 
 import java.util.ArrayList;
 
-class PreferencesHelper {
+public class PreferencesHelper {
     private static final String LOG_TAG = PreferencesHelper.class.getSimpleName();
     private static final String sharedPreferencesName = "AFsvsVY0ja";
 
-    enum Key {
+    public enum Key {
         // WARNING: DO NOT CHANGE THE ORDER. ADD NEW KEY TO THE BOTTOM
         cognitiveServicesApiKeyKey,
         cognitiveServicesRegionKey,
@@ -31,23 +31,23 @@ class PreferencesHelper {
         return context.getSharedPreferences(sharedPreferencesName, Context.MODE_PRIVATE);
     }
 
-    static void save(Context context, Key key, String newValue) {
+    public static void save(Context context, Key key, String newValue) {
         SharedPreferences sharedPreferences = getSharedPreferences(context);
 
         sharedPreferences.edit().putString(key.toString(), newValue).apply();
     }
 
-    static String loadString(Context context, Key key) {
+    public static String loadString(Context context, Key key) {
         return loadString(context, key, null);
     }
 
-    static String loadString(Context context, Key key, String defaultValue) {
+    public static String loadString(Context context, Key key, String defaultValue) {
         SharedPreferences sharedPreferences = getSharedPreferences(context);
 
         return sharedPreferences.getString(key.toString(), defaultValue);
     }
 
-    static void save(Context context, Key key, ArrayList<String> newValues) {
+    public static void save(Context context, Key key, ArrayList<String> newValues) {
         SharedPreferences sharedPreferences = getSharedPreferences(context);
 
         if (!newValues.isEmpty()) {
@@ -61,7 +61,7 @@ class PreferencesHelper {
         }
     }
 
-    static ArrayList<String> loadStringArray(Context context, Key key, ArrayList<String> defaultValues) {
+    public static ArrayList<String> loadStringArray(Context context, Key key, ArrayList<String> defaultValues) {
         SharedPreferences sharedPreferences = getSharedPreferences(context);
 
         String json = sharedPreferences.getString(key.toString(), null);
@@ -84,13 +84,13 @@ class PreferencesHelper {
         return defaultValues;
     }
 
-    static void save(Context context, Key key, Integer newValue) {
+    public static void save(Context context, Key key, Integer newValue) {
         SharedPreferences sharedPreferences = getSharedPreferences(context);
 
         sharedPreferences.edit().putInt(key.toString(), newValue).apply();
     }
 
-    static int loadInt(Context context, Key key, Integer defaultValue) {
+    public static int loadInt(Context context, Key key, Integer defaultValue) {
         SharedPreferences sharedPreferences = getSharedPreferences(context);
 
         return sharedPreferences.getInt(key.toString(), defaultValue);

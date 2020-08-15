@@ -7,6 +7,6 @@
         <intent
             android:action="android.intent.action.VIEW"
             android:targetPackage="com.yeongzhiwei.voiceears"
-            android:targetClass="com.yeongzhiwei.voiceears.MirrorActivity" />\
+            android:targetClass="com.yeongzhiwei.voiceears.mirror.MirrorActivity" />\
     </shortcut>
 </shortcuts>

@@ -1,4 +1,4 @@
-package com.yeongzhiwei.voiceears;
+package com.yeongzhiwei.voiceears.ttsstt;
 
 import android.media.AudioFormat;
 import android.media.AudioRecord;
@@ -12,13 +12,13 @@ import com.microsoft.cognitiveservices.speech.audio.PullAudioInputStreamCallback
  * to be consumed by the Speech SDK.
  * It configures the microphone with 16 kHz sample rate, 16 bit samples, mono (single-channel).
  */
-class MicrophoneStream extends PullAudioInputStreamCallback {
+public class MicrophoneStream extends PullAudioInputStreamCallback {
 
     private final static int SAMPLE_RATE = 16000;
     private final AudioStreamFormat audioStreamFormat;
     private AudioRecord audioRecord;
 
-    MicrophoneStream() {
+    public MicrophoneStream() {
         this.audioStreamFormat = AudioStreamFormat.getWaveFormatPCM(SAMPLE_RATE, (short)16, (short)1);
         this.initMic();
     }
