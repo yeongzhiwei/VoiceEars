@@ -1,0 +1,21 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_mirror"
+        android:orderInCategory="10"
+        android:icon="@drawable/ic_mirror"
+        android:title="@string/action_mirror_title"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_presentation"
+        android:orderInCategory="40"
+        android:title="@string/action_presentation_title"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="100"
+        android:title="@string/action_settings_title"
+        app:showAsAction="never" />
+
+</menu>

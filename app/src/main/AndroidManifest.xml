@@ -27,14 +27,11 @@
         </activity>
         <activity
             android:name=".mirror.MirrorActivity"
-            android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".presentation.PresentationActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+            android:name=".presentation.PresentationActivity" />
         <activity
             android:name=".presentation.PresentationMessageActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
         <activity android:name=".setting.SettingsActivity" />
     </application>

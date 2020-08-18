@@ -3,6 +3,7 @@ package com.yeongzhiwei.voiceears;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -92,8 +93,10 @@ public class MainActivity extends AppCompatActivity {
         clearImageButton = findViewById(R.id.imageButton_clear);
         synthesizeEditText = findViewById(R.id.editText_synthesizeText);
 
-        loadingAnimationDrawable = (AnimationDrawable) loadingImageView.getBackground();
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
+        loadingAnimationDrawable = (AnimationDrawable) loadingImageView.getBackground();
 
         loadSavedPreferences();
         initMessageRecyclerView();
@@ -273,8 +276,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
     }
 
     @Override
