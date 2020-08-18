@@ -24,7 +24,7 @@ public class SnappingLinearLayoutManager extends LinearLayoutManager {
     }
 
     private class TopSnappedSmoothScroller extends LinearSmoothScroller {
-        public TopSnappedSmoothScroller(Context context) {
+        private TopSnappedSmoothScroller(Context context) {
             super(context);
 
         }

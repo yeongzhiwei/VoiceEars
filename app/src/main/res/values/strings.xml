@@ -17,7 +17,6 @@
     /* Main Menu */
     <string name="action_mirror_title">MirrorText</string>
     <string name="action_settings_title">Settings</string>
-    <string name="action_audio_speed_title">Speed</string>
     <string name="action_presentation_title">Presentation Mode</string>
 
     /* SettingsActivity */

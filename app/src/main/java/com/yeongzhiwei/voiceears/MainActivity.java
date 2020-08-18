@@ -12,7 +12,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,7 +21,6 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.yeongzhiwei.voiceears.message.Message;
@@ -394,7 +392,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Update messages list and refresh recyclerview
+    // Update messages list
 
     private synchronized int addMessage(String text, Message.Type type) {
         int index = messages.size();

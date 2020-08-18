@@ -22,12 +22,12 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     @NonNull private List<Message> messages;
     private int messageTextSize;
 
-    public MessageAdapter(List<Message> messages, int messageTextSize) {
+    public MessageAdapter(@NonNull List<Message> messages, int messageTextSize) {
         this.messages = messages;
         this.messageTextSize = messageTextSize;
     }
 
-    public void setMessages(final List<Message> messages) {
+    public void setMessages(@NonNull List<Message> messages) {
         this.messages = messages;
         notifyDataSetChanged();
     }
