@@ -4,29 +4,30 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
-import android.text.Layout;
-import android.view.Gravity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.yeongzhiwei.voiceears.message.Message;
+import com.yeongzhiwei.voiceears.message.MessageAdapter;
+import com.yeongzhiwei.voiceears.message.SnappingLinearLayoutManager;
 import com.yeongzhiwei.voiceears.mirror.MirrorActivity;
 import com.yeongzhiwei.voiceears.presentation.PresentationActivity;
 import com.yeongzhiwei.voiceears.setting.SettingsActivity;
@@ -36,6 +37,8 @@ import com.yeongzhiwei.voiceears.ttsstt.Recognition;
 import com.yeongzhiwei.voiceears.ttsstt.Recognizer;
 import com.yeongzhiwei.voiceears.ttsstt.Synthesizer;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static android.Manifest.permission.INTERNET;
@@ -50,8 +53,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int SETTINGS_REQUEST_CODE = 20;
     private static final int MIRROR_REQUEST_CODE = 30;
 
-    private ScrollView messageScrollView;
-    private LinearLayout messageLinearLayout;
+    private RecyclerView messageRecyclerView;
+    private LinearLayoutManager messageLinearLayoutManager;
     private ImageView scrollDownImageView;
     private ImageView loadingImageView;
     private SeekBar textSizeSeekBar;
@@ -69,9 +72,11 @@ public class MainActivity extends AppCompatActivity {
 
     private Synthesizer synthesizer;
     private Recognizer recognizer;
-    private final AtomicInteger counter = new AtomicInteger();
+    private final AtomicInteger ttsCounter = new AtomicInteger();
 
-    private TextView currentIncomingTextView;
+    private List<Message> messages = new ArrayList<>();
+    private MessageAdapter messageAdapter;
+    private int currentIncomingMessageIndex = -1;
 
     //endregion
 
@@ -82,8 +87,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        messageScrollView = findViewById(R.id.scrollView_message);
-        messageLinearLayout = findViewById(R.id.linearLayout_message);
+        messageRecyclerView = findViewById(R.id.recyclerView_message);
         scrollDownImageView = findViewById(R.id.imageView_scrollDown);
         loadingImageView = findViewById(R.id.imageView_loading);
         textSizeSeekBar = findViewById(R.id.seekBar_textSize);
@@ -92,11 +96,14 @@ public class MainActivity extends AppCompatActivity {
 
         loadingAnimationDrawable = (AnimationDrawable) loadingImageView.getBackground();
 
+
         loadSavedPreferences();
+        initMessageRecyclerView();
         refreshAllViews();
         addEventListeners();
         loadSavedInstanceState(savedInstanceState);
         configureCognitiveServices();
+
     }
 
     @Override
@@ -141,6 +148,16 @@ public class MainActivity extends AppCompatActivity {
 
     //endregion
 
+    private void initMessageRecyclerView() {
+        messageLinearLayoutManager = new SnappingLinearLayoutManager(this);
+        messageRecyclerView.setLayoutManager(messageLinearLayoutManager);
+        messageAdapter = new MessageAdapter(messages, messageTextSize);
+        messageRecyclerView.setAdapter(messageAdapter);
+        if (messageRecyclerView.getItemAnimator() != null) {
+            messageRecyclerView.getItemAnimator().setChangeDuration(0);
+        }
+    }
+
     //region COGNITIVE SERVICES
 
     private void configureCognitiveServices() {
@@ -164,24 +181,8 @@ public class MainActivity extends AppCompatActivity {
         synthesizer = new Synthesizer(cognitiveServicesApiKey, cognitiveServicesRegion, gender);
     }
 
-    private void configureSpeechToText() {
-        // call this only after Microphone permission is granted and only once
-        recognizer = new Recognizer(cognitiveServicesApiKey, cognitiveServicesRegion, new Recognition() {
-            @Override
-            public void recognizing(String text) {
-                appendIncomingMessage(text, false);
-            }
-
-            @Override
-            public void recognized(String text) {
-                appendIncomingMessage(text, true);
-            }
-        });
-        recognizer.startSpeechToText();
-    }
-
-    private void synthesizeText(String message) {
-        if (counter.get() == 0) {
+    private void synthesizeText(String text) {
+        if (ttsCounter.get() == 0) {
             setLoading(true);
 
             if (recognizer != null) {
@@ -189,26 +190,27 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+
         new Thread(() -> {
-            new Thread(() -> {
-                counter.incrementAndGet();
-            }).start();
+            ttsCounter.incrementAndGet();
+        }).start();
 
-            TextView ttsTextView = appendOutgoingMessage(message);
-            scrollDown();
+        int index = addMessage(text, Message.Type.Outgoing);
+        scrollDown();
 
-            synthesizer.speak(message, () -> {
+        new Thread(() -> {
+            synthesizer.speak(text, () -> {
                 MainActivity.this.runOnUiThread(() -> {
+                    updateMessageType(index, Message.Type.OutgoingActive);
                     setLoading(false);
-                    ttsTextView.setBackgroundResource(R.drawable.bg_speech_bubble_outgoing_active);
                 });
             }, () -> {
                 MainActivity.this.runOnUiThread(() -> {
-                    ttsTextView.setBackgroundResource(R.drawable.bg_speech_bubble_outgoing);
+                    updateMessageType(index, Message.Type.Outgoing);
                 });
 
                 new Thread(() -> {
-                    if (counter.decrementAndGet() == 0) {
+                    if (ttsCounter.decrementAndGet() == 0) {
                         if (recognizer != null) {
                             recognizer.startSpeechToText();
                         }
@@ -222,20 +224,49 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
+    private void configureSpeechToText() {
+        // call this only after Microphone permission is granted and only once
+        recognizer = new Recognizer(cognitiveServicesApiKey, cognitiveServicesRegion, new Recognition() {
+            @Override
+            public void recognizing(String text) {
+                recognizeSpeech(text, false);
+            }
+
+            @Override
+            public void recognized(String text) {
+                recognizeSpeech(text, true);
+            }
+        });
+        recognizer.startSpeechToText();
+    }
+
+    private void recognizeSpeech(final String text, final boolean isFinal) {
+        MainActivity.this.runOnUiThread(() -> {
+            if (currentIncomingMessageIndex != -1) {
+                updateMessageText(currentIncomingMessageIndex, text);
+            } else {
+                currentIncomingMessageIndex = addMessage(text, Message.Type.Incoming);
+            }
+
+            if (isFinal) {
+                currentIncomingMessageIndex = -1;
+            }
+        });
+    }
+
     //endregion
 
     //region STATE
 
-    private void toggleAutoScrollDown(Boolean isEnabled) {
+    private void setAutoScrollDown(Boolean isEnabled) {
         isAutoScrollDown = isEnabled;
-
         refreshScrollDownImageView();
     }
 
     private void setMessageTextSize(Integer size) {
         messageTextSize = size;
         refreshMessageTextSize();
-        scrollToBottom();
+        scrollDownIfEnabled();
     }
 
     //endregion
@@ -268,18 +299,21 @@ public class MainActivity extends AppCompatActivity {
     // Event listeners
 
     private void addEventListeners() {
-        messageScrollView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-//            Log.d(LOG_TAG, "scrollView2 getBottom(): " + messageScrollView.getBottom() + ". getHeight(): " + messageScrollView.getHeight() + ". getScrollY(): " + messageScrollView.getScrollY());
-//            Log.d(LOG_TAG, "linearLayout2 getBottom(): " + messageLinearLayout.getBottom() + ". getHeight(): " + messageLinearLayout.getHeight() + ". getScrollY(): " + messageLinearLayout.getScrollY());
-//
-//            Log.d(LOG_TAG, "isAutoScrollDown: " + ((isAutoScrollDown) ? "true" : "false"));
-//            Log.d(LOG_TAG, messageLinearLayout.getHeight() + " > " + messageScrollView.getHeight() + " + " + scrollY + " && " + scrollY + " < " + oldScrollY + " && " + ((isAutoScrollDown) ? "true" : "false"));
-//            Log.d(LOG_TAG, messageLinearLayout.getHeight() + " == " + messageScrollView.getHeight() + " + " + scrollY);
-
-            if (messageLinearLayout.getHeight() > messageScrollView.getHeight() + scrollY && scrollY < oldScrollY && isAutoScrollDown) {
-                toggleAutoScrollDown(false);
-            } else if (messageLinearLayout.getHeight() == messageScrollView.getHeight() + scrollY) {
-                toggleAutoScrollDown(true);
+        messageRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if (dy < 0) {
+                    setAutoScrollDown(false);
+                } else {
+                    int lastMessageIndex = messages.size() - 1;
+                    if (messageLinearLayoutManager != null && messageLinearLayoutManager.findLastVisibleItemPosition() == lastMessageIndex) {
+                        View lastMessageView = messageLinearLayoutManager.findViewByPosition(lastMessageIndex);
+                        if (lastMessageView != null && recyclerView.getHeight() == lastMessageView.getBottom()) {
+                            setAutoScrollDown(true);
+                        }
+                    }
+                }
             }
         });
 
@@ -351,7 +385,6 @@ public class MainActivity extends AppCompatActivity {
     // Update views based on parameters
 
     private void setLoading(boolean load) {
-
         if (load) {
             loadingImageView.setVisibility(View.VISIBLE);
             loadingAnimationDrawable.start();
@@ -361,63 +394,37 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private TextView appendOutgoingMessage(final String message) {
-        return appendMessage(message, SpeechBubble.Outgoing, null);
+    // Update messages list and refresh recyclerview
+
+    private synchronized int addMessage(String text, Message.Type type) {
+        int index = messages.size();
+        messages.add(new Message(text, type));
+        messageAdapter.notifyItemInserted(index);
+        scrollDownIfEnabled();
+        return index;
     }
 
-    private void appendIncomingMessage(final String message, final Boolean isFinal) {
-        final TextView textView = appendMessage(message, SpeechBubble.Incoming, currentIncomingTextView);
-        currentIncomingTextView = (isFinal) ? null : textView;
+    private void updateMessageText(int index, String text) {
+        updateMessage(index, text, null);
     }
 
-    private TextView appendMessage(final String message, final SpeechBubble speechBubble) {
-        return this.appendMessage(message, speechBubble, null);
+    private void updateMessageType(int index, Message.Type type) {
+        updateMessage(index, null, type);
     }
 
-    private TextView appendMessage(final String message, final SpeechBubble speechBubble, final TextView textView) {
-        final TextView messageTextView = (textView == null) ? createAndAppendTextView(speechBubble) : textView;
+    private void updateMessage(int index, String text, Message.Type type) {
+        Message message = messages.get(index);
 
-        MainActivity.this.runOnUiThread(() -> {
-            messageTextView.setText(message);
-            scrollToBottom();
-        });
-
-        return messageTextView;
-    }
-
-    private TextView createAndAppendTextView(final SpeechBubble speechBubble) {
-        TextView textView = new TextView(this);
-        textView.setTextSize(messageTextSize);
-        textView.setTextIsSelectable(true);
-        textView.setBreakStrategy(Layout.BREAK_STRATEGY_SIMPLE); // prevents text "dancing" while speech is being recognized and added
-        textView.setTag(speechBubble.toString());
-        LinearLayout.LayoutParams layoutParams = null;
-
-        if (speechBubble == SpeechBubble.Incoming) {
-            textView.setBackgroundResource(R.drawable.bg_speech_bubble_incoming);
-            textView.setPadding(60, 4, 24, 4);
-            layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            layoutParams.rightMargin = 100;
-            layoutParams.gravity = Gravity.START;
-        } else if (speechBubble == SpeechBubble.Outgoing) {
-            textView.setBackgroundResource(R.drawable.bg_speech_bubble_outgoing);
-            textView.setPadding(24, 4, 60 , 4);
-            layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            layoutParams.leftMargin = 100;
-            layoutParams.gravity = Gravity.END;
-        } else if (speechBubble == SpeechBubble.System) {
-            textView.setBackgroundResource(R.drawable.bg_speech_bubble_system);
-            textView.setPadding(60, 4, 60, 4);
-            layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        if (text != null) {
+            message.setMessage(text);
         }
 
-        textView.setLayoutParams(layoutParams);
+        if (type != null) {
+            message.setType(type);
+        }
 
-        MainActivity.this.runOnUiThread(() -> {
-            messageLinearLayout.addView(textView);
-        });
-
-        return textView;
+        messageAdapter.notifyItemChanged(index);
+        scrollDownIfEnabled();
     }
 
     // Refresh views based on state
@@ -426,17 +433,12 @@ public class MainActivity extends AppCompatActivity {
         refreshMessageTextSize();
         refreshScrollDownImageView();
         refreshTextSizeSeekBar();
-        scrollToBottom();
+        scrollDown();
     }
 
     private void refreshMessageTextSize() {
-        if (messageLinearLayout != null) {
-            int childCount = messageLinearLayout.getChildCount();
-            for (int i = 0; i < childCount; i++) {
-                TextView textView = (TextView) messageLinearLayout.getChildAt(i);
-                textView.setTextSize(messageTextSize);
-            }
-        }
+        messageAdapter.setMessageTextSize(messageTextSize);
+        messageRecyclerView.setAdapter(messageAdapter);
     }
 
     private void refreshScrollDownImageView() {
@@ -455,27 +457,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void scrollToBottom() {
-        // https://stackoverflow.com/questions/28105945/add-view-to-scrollview-and-then-scroll-to-bottom-which-callback-is-needed
-        if (messageScrollView != null) {
-            messageScrollView.postDelayed(() -> {
-                if (isAutoScrollDown) {
-                    scrollDown();
-                }
-            }, 200);
+    private void scrollDownIfEnabled() {
+        if (isAutoScrollDown) {
+            scrollDown();
         }
     }
 
     private void scrollDown() {
-        if (messageScrollView != null && messageLinearLayout != null) {
-            int bottom = messageLinearLayout.getBottom() + messageScrollView.getPaddingBottom();
-            int sy = messageScrollView.getScrollY();
-            int sh = messageScrollView.getHeight();
-            int delta = bottom - (sy + sh);
-
-            messageScrollView.smoothScrollBy(0, delta);
+        if (messageRecyclerView != null && messages.size() != 0) {
+            messageRecyclerView.smoothScrollToPosition(messages.size() - 1);
         }
-        toggleAutoScrollDown(true);
     }
 
     //endregion
@@ -528,16 +519,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadSavedInstanceState(final Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            String[] messages = savedInstanceState.getStringArray("messages");
-            String[] speechBubbles = savedInstanceState.getStringArray("speechBubbles");
-            if (messages != null) {
-                for (int i = 0; i < messages.length; i++) {
-                    appendMessage(messages[i], SpeechBubble.valueOf(speechBubbles[i]));
-                }
-            }
+            messages = savedInstanceState.getParcelableArrayList("messages");
+            messageAdapter.setMessages(messages);
         } else {
-            String welcome = getString(R.string.welcome);
-            appendMessage(welcome, SpeechBubble.System);
+            String welcomeText = getString(R.string.welcome);
+            addMessage(welcomeText, Message.Type.System);
         }
     }
 
@@ -545,21 +531,8 @@ public class MainActivity extends AppCompatActivity {
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        final int childCount = messageLinearLayout.getChildCount();
-        if (childCount == 0) {
-            return;
-        }
-
-        String[] messages = new String[childCount];
-        String[] speechBubbles = new String[childCount];
-        for (int i = 0; i < childCount; i++) {
-            TextView textView = (TextView) messageLinearLayout.getChildAt(i);
-            messages[i] = textView.getText().toString();
-            speechBubbles[i] = (String) textView.getTag();
-        }
-
-        outState.putStringArray("messages", messages);
-        outState.putStringArray("speechBubbles", speechBubbles);
+        ArrayList<Message> messageArrayList = new ArrayList<>(messages);
+        outState.putParcelableArrayList("messages", messageArrayList);
     }
 
     //endregion
@@ -605,9 +578,5 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //endregion
-
-    private enum SpeechBubble {
-        Incoming, Outgoing, System
-    }
 
 }
