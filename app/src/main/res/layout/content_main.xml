@@ -29,16 +29,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_keyboard_arrow_down_24dp" />
 
-    <ImageView
-        android:id="@+id/imageView_loading"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
-        android:contentDescription="@string/main_imageView_loading_contentDescription"
-        android:background="@drawable/ic_loading"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@+id/recyclerView_message"
-        app:layout_constraintStart_toStartOf="parent" />
-
     <SeekBar
         android:id="@+id/seekBar_textSize"
         android:layout_width="0dp"

@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -55,12 +54,10 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView messageRecyclerView;
     private LinearLayoutManager messageLinearLayoutManager;
     private ImageView scrollDownImageView;
-    private ImageView loadingImageView;
     private SeekBar textSizeSeekBar;
     private ImageButton clearImageButton;
     private EditText synthesizeEditText;
 
-    private AnimationDrawable loadingAnimationDrawable;
     private Boolean isAutoScrollDown = true;
     private Integer messageTextSize = 20;
 
@@ -88,15 +85,12 @@ public class MainActivity extends AppCompatActivity {
 
         messageRecyclerView = findViewById(R.id.recyclerView_message);
         scrollDownImageView = findViewById(R.id.imageView_scrollDown);
-        loadingImageView = findViewById(R.id.imageView_loading);
         textSizeSeekBar = findViewById(R.id.seekBar_textSize);
         clearImageButton = findViewById(R.id.imageButton_clear);
         synthesizeEditText = findViewById(R.id.editText_synthesizeText);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        loadingAnimationDrawable = (AnimationDrawable) loadingImageView.getBackground();
 
         loadSavedPreferences();
         initMessageRecyclerView();
@@ -184,8 +178,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void synthesizeText(String text) {
         if (ttsCounter.get() == 0) {
-            setLoading(true);
-
             if (recognizer != null) {
                 recognizer.stopSpeechToText();
             }
@@ -203,7 +195,6 @@ public class MainActivity extends AppCompatActivity {
             synthesizer.speak(text, () -> {
                 MainActivity.this.runOnUiThread(() -> {
                     updateMessageType(index, Message.Type.OutgoingActive);
-                    setLoading(false);
                 });
             }, () -> {
                 MainActivity.this.runOnUiThread(() -> {
@@ -381,18 +372,6 @@ public class MainActivity extends AppCompatActivity {
         String message = synthesizeEditText.getText().toString().trim();
         clearSynthesizeEditText();
         synthesizeText(message);
-    }
-
-    // Update views based on parameters
-
-    private void setLoading(boolean load) {
-        if (load) {
-            loadingImageView.setVisibility(View.VISIBLE);
-            loadingAnimationDrawable.start();
-        } else {
-            loadingImageView.setVisibility(View.GONE);
-            loadingAnimationDrawable.stop();
-        }
     }
 
     // Update messages list

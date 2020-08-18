@@ -7,7 +7,6 @@ import androidx.core.content.ContextCompat;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PaintDrawable;
 import android.os.Bundle;
@@ -16,7 +15,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,11 +39,9 @@ public class PresentationActivity extends AppCompatActivity {
     private FloatingActionButton playFloatingActionButton;
     private FloatingActionButton addFloatingActionButton;
     private LinearLayout messageLinearLayout;
-    private ImageView loadingImageView;
 
     private PaintDrawable paintDrawableSelect = null;
     private PaintDrawable paintDrawablePlay = null;
-    private AnimationDrawable loadingAnimationDrawable = null;
 
     private Integer messageTextSize = 20;
     private Gender gender = Gender.Male;
@@ -107,7 +103,6 @@ public class PresentationActivity extends AppCompatActivity {
         playFloatingActionButton = findViewById(R.id.fab_play);
         addFloatingActionButton = findViewById(R.id.fab_add);
         messageLinearLayout = findViewById(R.id.linearLayout_message);
-        loadingImageView = findViewById(R.id.imageView_loading);
     }
 
     private void initializeVariables() {
@@ -116,8 +111,6 @@ public class PresentationActivity extends AppCompatActivity {
 
         paintDrawablePlay = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimaryDark));
         paintDrawablePlay.setCornerRadius(8);
-
-        loadingAnimationDrawable = (AnimationDrawable) loadingImageView.getBackground();
     }
 
     private void configureTextToSpeech() {
@@ -135,14 +128,12 @@ public class PresentationActivity extends AppCompatActivity {
 
         isPlaying = true;
         refreshButtons();
-        setLoading(true);
 
         String message = messages.get(selectedMessageIndex);
 
         new Thread(() -> {
             synthesizer.speak(message, () -> {
                 PresentationActivity.this.runOnUiThread(() -> {
-                    setLoading(false);
                     refreshTextViewsBackground();
                 });
             }, () -> {
@@ -255,17 +246,6 @@ public class PresentationActivity extends AppCompatActivity {
         }
     }
 
-    private void setLoading(boolean load) {
-
-        if (load) {
-            loadingImageView.setVisibility(View.VISIBLE);
-            loadingAnimationDrawable.start();
-        } else {
-            loadingImageView.setVisibility(View.GONE);
-            loadingAnimationDrawable.stop();
-        }
-    }
-
     private void addTextViewToLinearLayout(String message) {
         TextView newTextView = new TextView(this);
         newTextView.setText(message);
@@ -335,7 +315,7 @@ public class PresentationActivity extends AppCompatActivity {
         refreshTextViews();
 
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.presentation_context_menu, menu);
+        inflater.inflate(R.menu.menu_context_presentation, menu);
     }
 
     @Override
