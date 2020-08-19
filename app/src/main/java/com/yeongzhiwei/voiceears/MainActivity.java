@@ -43,36 +43,34 @@ import static android.Manifest.permission.INTERNET;
 import static android.Manifest.permission.RECORD_AUDIO;
 
 public class MainActivity extends AppCompatActivity {
-    //region VARIABLES
-    private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
-    private static final Integer SEEK_BAR_MIN_VALUE = 10;
+    //region VARIABLES
+
+    private static final int TEXT_SIZE_SEEK_BAR_MIN_VALUE = 10;
     private static final int PERMISSION_REQUEST_CODE = 10;
     private static final int SETTINGS_REQUEST_CODE = 20;
     private static final int MIRROR_REQUEST_CODE = 30;
 
     private RecyclerView messageRecyclerView;
-    private LinearLayoutManager messageLinearLayoutManager;
     private ImageView scrollDownImageView;
     private SeekBar textSizeSeekBar;
     private ImageButton clearImageButton;
     private EditText synthesizeEditText;
 
-    private Boolean isAutoScrollDown = true;
-    private Integer messageTextSize = 20;
+    private LinearLayoutManager messageLinearLayoutManager;
+    private MessageAdapter messageAdapter;
+    private int messageTextSize = 20;
+    @NonNull private List<Message> messages = new ArrayList<>();
+    private int currentIncomingMessageIndex = -1;
 
-    // Azure Cognitive Services
+    private boolean isAutoScrollDown = true;
+
     private String cognitiveServicesApiKey;
     private String cognitiveServicesRegion;
     private Gender gender;
-
     private Synthesizer synthesizer;
     private Recognizer recognizer;
     private final AtomicInteger ttsCounter = new AtomicInteger();
-
-    private List<Message> messages = new ArrayList<>();
-    private MessageAdapter messageAdapter;
-    private int currentIncomingMessageIndex = -1;
 
     //endregion
 
@@ -92,13 +90,19 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        messageLinearLayoutManager = new SnappingLinearLayoutManager(this);
+        messageRecyclerView.setLayoutManager(messageLinearLayoutManager);
+        messageAdapter = new MessageAdapter(messages, messageTextSize);
+        messageRecyclerView.setAdapter(messageAdapter);
+        if (messageRecyclerView.getItemAnimator() != null) {
+            messageRecyclerView.getItemAnimator().setChangeDuration(0); // Prevent flickering when it's constantly refreshed by incoming text
+        }
+
         loadSavedPreferences();
-        initMessageRecyclerView();
         refreshAllViews();
         addEventListeners();
         loadSavedInstanceState(savedInstanceState);
         configureCognitiveServices();
-
     }
 
     @Override
@@ -128,11 +132,30 @@ public class MainActivity extends AppCompatActivity {
 
     //endregion
 
-    //region SHARED PREFERENCES
+    //region ACTIONBAR OPTIONS
 
-    private void savePreferences() {
-        PreferencesHelper.save(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
     }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_mirror) {
+            startMirrorActivity();
+        } else if (item.getItemId() == R.id.action_settings) {
+            startSettingsActivity();
+        } else if (item.getItemId() == R.id.action_presentation) {
+            startPresentationActivity();
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    //endregion
+
+    //region SHARED PREFERENCES
 
     private void loadSavedPreferences() {
         cognitiveServicesApiKey = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesApiKeyKey);
@@ -141,17 +164,11 @@ public class MainActivity extends AppCompatActivity {
         messageTextSize = PreferencesHelper.loadInt(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
     }
 
-    //endregion
-
-    private void initMessageRecyclerView() {
-        messageLinearLayoutManager = new SnappingLinearLayoutManager(this);
-        messageRecyclerView.setLayoutManager(messageLinearLayoutManager);
-        messageAdapter = new MessageAdapter(messages, messageTextSize);
-        messageRecyclerView.setAdapter(messageAdapter);
-        if (messageRecyclerView.getItemAnimator() != null) {
-            messageRecyclerView.getItemAnimator().setChangeDuration(0);
-        }
+    private void savePreferences() {
+        PreferencesHelper.save(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
     }
+
+    //endregion
 
     //region COGNITIVE SERVICES
 
@@ -183,41 +200,36 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        new Thread(ttsCounter::incrementAndGet).start();
 
-        new Thread(() -> {
-            ttsCounter.incrementAndGet();
-        }).start();
-
-        int index = addMessage(text, Message.Type.Outgoing);
+        int outgoingMessageIndex = addMessage(text, Message.Type.Outgoing);
         scrollDown();
 
         new Thread(() -> {
-            synthesizer.speak(text, () -> {
-                MainActivity.this.runOnUiThread(() -> {
-                    updateMessageType(index, Message.Type.OutgoingActive);
-                });
-            }, () -> {
-                MainActivity.this.runOnUiThread(() -> {
-                    updateMessageType(index, Message.Type.Outgoing);
-                });
+            synthesizer.speak(text,
+                () -> {
+                    MainActivity.this.runOnUiThread(() -> updateMessageType(outgoingMessageIndex, Message.Type.OutgoingActive));
+                }, () -> {
+                    MainActivity.this.runOnUiThread(() -> updateMessageType(outgoingMessageIndex, Message.Type.Outgoing));
 
-                new Thread(() -> {
-                    if (ttsCounter.decrementAndGet() == 0) {
-                        if (recognizer != null) {
-                            recognizer.startSpeechToText();
+                    new Thread(() -> {
+                        if (ttsCounter.decrementAndGet() == 0) {
+                            if (recognizer != null) {
+                                recognizer.startSpeechToText();
+                            }
                         }
-                    }
-                }).start();
-            }, () -> {
-                MainActivity.this.runOnUiThread(() -> {
-                    Toast.makeText(getApplicationContext(), getString(R.string.network_error), Toast.LENGTH_SHORT).show();
-                });
-            });
+                    }).start();
+                }, () -> {
+                    MainActivity.this.runOnUiThread(() -> {
+                        Toast.makeText(getApplicationContext(), getString(R.string.network_error), Toast.LENGTH_SHORT).show();
+                    });
+                }
+            );
         }).start();
     }
 
+    // call this only after Microphone permission is granted and only once
     private void configureSpeechToText() {
-        // call this only after Microphone permission is granted and only once
         recognizer = new Recognizer(cognitiveServicesApiKey, cognitiveServicesRegion, new Recognition() {
             @Override
             public void recognizing(String text) {
@@ -239,6 +251,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 currentIncomingMessageIndex = addMessage(text, Message.Type.Incoming);
             }
+            scrollDownIfEnabled();
 
             if (isFinal) {
                 currentIncomingMessageIndex = -1;
@@ -250,38 +263,49 @@ public class MainActivity extends AppCompatActivity {
 
     //region STATE
 
-    private void setAutoScrollDown(Boolean isEnabled) {
+    // Set variables
+
+    private void setAutoScrollDown(boolean isEnabled) {
         isAutoScrollDown = isEnabled;
         refreshScrollDownImageView();
     }
 
-    private void setMessageTextSize(Integer size) {
+    private void setMessageTextSize(int size) {
         messageTextSize = size;
         refreshMessageTextSize();
         scrollDownIfEnabled();
     }
 
-    //endregion
+    // Update messages list
 
-    //region ACTIONBAR OPTIONS
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+    private synchronized int addMessage(String text, Message.Type type) {
+        int index = messages.size();
+        messages.add(new Message(text, type));
+        messageAdapter.notifyItemInserted(index);
+        return index;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_mirror) {
-            startMirrorActivity();
-        } else if (item.getItemId() == R.id.action_settings) {
-            startSettingsActivity();
-        } else if (item.getItemId() == R.id.action_presentation) {
-            startPresentationActivity();
+    private void updateMessageText(int index, String text) {
+        updateMessage(index, text, null);
+    }
+
+    private void updateMessageType(int index, Message.Type type) {
+        updateMessage(index, null, type);
+    }
+
+    private void updateMessage(int index, String text, Message.Type type) {
+        Message message = messages.get(index);
+
+        if (text != null) {
+            message.setMessage(text);
         }
 
-        return super.onOptionsItemSelected(item);
+        if (type != null) {
+            message.setType(type);
+        }
+
+        messageAdapter.notifyItemChanged(index);
+        scrollDownIfEnabled();
     }
 
     //endregion
@@ -316,7 +340,7 @@ public class MainActivity extends AppCompatActivity {
         textSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                setMessageTextSize(i + SEEK_BAR_MIN_VALUE);
+                setMessageTextSize(i + TEXT_SIZE_SEEK_BAR_MIN_VALUE);
             }
 
             @Override
@@ -350,13 +374,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void removeLastWordFromSynthesizeEditText() {
         String originalText = synthesizeEditText.getText().toString().replaceFirst(" +$", "");
-        int lastIndexOfSpace = originalText.lastIndexOf(" ");
+        int lastSpaceIndex = originalText.lastIndexOf(" ");
 
-        if (lastIndexOfSpace != -1) {
-            if (lastIndexOfSpace + 1 != originalText.length()) {
-                lastIndexOfSpace += 1;
+        if (lastSpaceIndex != -1) {
+            if (lastSpaceIndex + 1 != originalText.length()) {
+                lastSpaceIndex += 1;
             }
-            synthesizeEditText.setText(originalText.substring(0, lastIndexOfSpace));
+            synthesizeEditText.setText(originalText.substring(0, lastSpaceIndex));
         } else {
             synthesizeEditText.setText("");
         }
@@ -374,39 +398,6 @@ public class MainActivity extends AppCompatActivity {
         synthesizeText(message);
     }
 
-    // Update messages list
-
-    private synchronized int addMessage(String text, Message.Type type) {
-        int index = messages.size();
-        messages.add(new Message(text, type));
-        messageAdapter.notifyItemInserted(index);
-        scrollDownIfEnabled();
-        return index;
-    }
-
-    private void updateMessageText(int index, String text) {
-        updateMessage(index, text, null);
-    }
-
-    private void updateMessageType(int index, Message.Type type) {
-        updateMessage(index, null, type);
-    }
-
-    private void updateMessage(int index, String text, Message.Type type) {
-        Message message = messages.get(index);
-
-        if (text != null) {
-            message.setMessage(text);
-        }
-
-        if (type != null) {
-            message.setType(type);
-        }
-
-        messageAdapter.notifyItemChanged(index);
-        scrollDownIfEnabled();
-    }
-
     // Refresh views based on state
 
     private void refreshAllViews() {
@@ -417,8 +408,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void refreshMessageTextSize() {
-        messageAdapter.setMessageTextSize(messageTextSize);
-        messageRecyclerView.setAdapter(messageAdapter);
+        if (messageAdapter != null && messageRecyclerView != null) {
+            messageAdapter.setMessageTextSize(messageTextSize);
+            messageRecyclerView.setAdapter(messageAdapter); // Recreate all view items
+        }
     }
 
     private void refreshScrollDownImageView() {
@@ -433,7 +426,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void refreshTextSizeSeekBar() {
         if (textSizeSeekBar != null) {
-            textSizeSeekBar.setProgress(messageTextSize - SEEK_BAR_MIN_VALUE);
+            textSizeSeekBar.setProgress(messageTextSize - TEXT_SIZE_SEEK_BAR_MIN_VALUE);
         }
     }
 
@@ -483,27 +476,29 @@ public class MainActivity extends AppCompatActivity {
             } else if (resultCode == RESULT_OK) {
                 configureCognitiveServices();
             }
-        } else if (requestCode == MIRROR_REQUEST_CODE) {
-            // Do nothing
         }
 
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        if (imm != null) {
-            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+        InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (inputMethodManager != null) {
+            inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
         }
     }
 
     //endregion
 
-    //region LAYOUT PERSISTENCE ON ROTATION
+    //region INSTANCE STATE
 
     private void loadSavedInstanceState(final Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            messages = savedInstanceState.getParcelableArrayList("messages");
+            List<Message> savedMessages = savedInstanceState.getParcelableArrayList("messages");
+            if (savedMessages != null) {
+                messages = savedMessages;
+            }
             messageAdapter.setMessages(messages);
         } else {
             String welcomeText = getString(R.string.welcome);
             addMessage(welcomeText, Message.Type.System);
+            scrollDown();
         }
     }
 
