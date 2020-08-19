@@ -25,6 +25,7 @@
         android:layout_height="40dp"
         android:contentDescription="@string/main_imageView_scrollDown_contentDescription"
         android:visibility="gone"
+        android:tint="@color/colorPrimary"
         app:layout_constraintBottom_toBottomOf="@+id/recyclerView_message"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_keyboard_arrow_down_24dp" />
