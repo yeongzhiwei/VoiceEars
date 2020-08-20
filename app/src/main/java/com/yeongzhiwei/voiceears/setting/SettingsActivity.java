@@ -1,14 +1,19 @@
 package com.yeongzhiwei.voiceears.setting;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.ArrayAdapter;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.EditText;
-import android.widget.Spinner;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 
+import com.google.android.material.radiobutton.MaterialRadioButton;
 import com.yeongzhiwei.voiceears.PreferencesHelper;
 import com.yeongzhiwei.voiceears.R;
 import com.yeongzhiwei.voiceears.ttsstt.Gender;
@@ -17,7 +22,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private EditText apikeyEditText;
     private EditText regionEditText;
-    private Spinner genderSpinner;
+    private RadioGroup genderRadioGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,29 +31,57 @@ public class SettingsActivity extends AppCompatActivity {
 
         apikeyEditText = findViewById(R.id.editText_key);
         regionEditText = findViewById(R.id.editText_region);
-        genderSpinner = findViewById(R.id.spinner_gender);
+        genderRadioGroup = findViewById(R.id.radioGroup_gender);
 
-        initGenderSpinner();
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        ActionBar actionbar = getSupportActionBar();
+        if (actionbar != null) {
+            actionbar.setDisplayHomeAsUpEnabled(true);
+        }
+
+        for (Gender gender : Gender.values()) {
+            RadioButton radioButton = new MaterialRadioButton(genderRadioGroup.getContext());
+            radioButton.setText(gender.name());
+            radioButton.setId(gender.ordinal());
+            genderRadioGroup.addView(radioButton);
+        }
+
         refreshUI();
     }
 
-    private void initGenderSpinner() {
-        ArrayAdapter<Gender> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, Gender.values());
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        genderSpinner.setAdapter(adapter);
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_settings, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                cancel();
+                return true;
+            case R.id.action_save:
+                save();
+                return true;
+            default:
+                // Do nothing
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     private void refreshUI() {
-        String cognitiveServicesApiKey = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesApiKeyKey);
-        if (cognitiveServicesApiKey != null) {
-            apikeyEditText.setHint("***" + cognitiveServicesApiKey.substring(Math.max(0, cognitiveServicesApiKey.length() - 5)));
-        }
+        String cognitiveServicesApiKey = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesApiKeyKey, "");
+        apikeyEditText.setText(cognitiveServicesApiKey);
 
         String cognitiveServicesRegion = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesRegionKey, "");
-        regionEditText.setHint(cognitiveServicesRegion);
+        regionEditText.setText(cognitiveServicesRegion);
 
         String gender = PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, Gender.Male.name());
-        genderSpinner.setSelection(Gender.valueOf(gender).ordinal());
+        RadioButton radioButton = genderRadioGroup.findViewById(Gender.valueOf(gender).ordinal());
+        radioButton.setChecked(true);
     }
 
     private void saveSettings() {
@@ -62,11 +95,13 @@ public class SettingsActivity extends AppCompatActivity {
             PreferencesHelper.save(this, PreferencesHelper.Key.cognitiveServicesRegionKey, cognitiveServicesRegion);
         }
 
-        String gender = genderSpinner.getSelectedItem().toString();
+        int genderRadioButtonId = genderRadioGroup.getCheckedRadioButtonId();
+        RadioButton radioButton = genderRadioGroup.findViewById(genderRadioButtonId);
+        String gender = radioButton.getText().toString();
         PreferencesHelper.save(this, PreferencesHelper.Key.genderKey, gender);
     }
 
-    public void onSave(View view) {
+    public void save() {
         saveSettings();
 
         Intent returnIntent = new Intent();
@@ -74,7 +109,7 @@ public class SettingsActivity extends AppCompatActivity {
         finish();
     }
 
-    public void onCancel(View view) {
+    public void cancel() {
         Intent returnIntent = new Intent();
         setResult(RESULT_CANCELED, returnIntent);
         finish();

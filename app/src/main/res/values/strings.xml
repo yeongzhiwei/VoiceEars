@@ -18,13 +18,14 @@
     <string name="action_presentation_title">Presentation Mode</string>
 
     /* SettingsActivity */
-    <string name="settings_textView_title">Azure Cognitive Services</string>
-    <string name="settings_textView_key_text">API Key:</string>
-    <string name="settings_editText_key_hint">api key</string>
-    <string name="settings_textView_region_text">Region:</string>
-    <string name="settings_editText_region_hint">region</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_layout_key_hint">Api key</string>
+    <string name="settings_layout_region_hint">Region</string>
+    <string name="settings_textView_gender">Gender</string>
     <string name="settings_textView_message"><![CDATA[Create a Cognitive Services service in Azure Portal and go to Resource Management > Keys to get your subscription key.]]></string>
-    <string name="settings_button_save">SAVE</string>
+
+    /* Settings Menu */
+    <string name="action_save">Save</string>
 
     /* MirrorActivity */
     <string name="mirror_imageButton_mode_contentDescription">Toggle mode</string>
@@ -52,5 +53,5 @@
     /* common */
     <string name="network_error">Error: Check your network connection or settings and try again.</string>
     <string name="presentation_context_menu_delete_all">Delete All</string>
-    <string name="gender12333">Gender:</string>
+
 </resources>
