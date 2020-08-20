@@ -2,11 +2,9 @@
     <string name="app_name">VoiceEars</string>
 
     /* MainActivity */
-    <string name="main_button_synthesize_text">Speak</string>
+    <string name="main_button_synthesize_contentDescription">Speak</string>
     <string name="main_editText_synthesize_hint">Type a message</string>
     <string name="main_imageView_scrollDown_contentDescription">scroll down</string>
-    <string name="main_imageView_loading_contentDescription">loading</string>
-    <string name="main_imageButton_synthesize_contentDescription">Speak</string>
 
     <string name="welcome">Welcome to VoiceEars. Start speaking or typing to use this app.</string>
     <string name="toast_blank_key_or_region">Enter the subscription key and region to start using this app.</string>

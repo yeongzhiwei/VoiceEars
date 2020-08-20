@@ -15,10 +15,9 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Toast;
@@ -54,8 +53,8 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView messageRecyclerView;
     private ImageView scrollDownImageView;
     private SeekBar textSizeSeekBar;
-    private ImageButton clearImageButton;
     private EditText synthesizeEditText;
+    private Button sendButton;
 
     private LinearLayoutManager messageLinearLayoutManager;
     private MessageAdapter messageAdapter;
@@ -84,8 +83,8 @@ public class MainActivity extends AppCompatActivity {
         messageRecyclerView = findViewById(R.id.recyclerView_message);
         scrollDownImageView = findViewById(R.id.imageView_scrollDown);
         textSizeSeekBar = findViewById(R.id.seekBar_textSize);
-        clearImageButton = findViewById(R.id.imageButton_clear);
         synthesizeEditText = findViewById(R.id.editText_synthesizeText);
+        sendButton = findViewById(R.id.button_send);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -354,48 +353,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        clearImageButton.setOnClickListener(view -> {
-            removeLastWordFromSynthesizeEditText();
-        });
-
-        clearImageButton.setOnLongClickListener(view -> {
-            clearSynthesizeEditText();
-            return true;
-        });
-
-        synthesizeEditText.setOnEditorActionListener((textView, actionId, keyEvent) -> {
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                synthesizeAndRefreshSynthesizeTextView();
-                return true;
-            }
-            return false;
-        });
-    }
-
-    private void removeLastWordFromSynthesizeEditText() {
-        String originalText = synthesizeEditText.getText().toString().replaceFirst(" +$", "");
-        int lastSpaceIndex = originalText.lastIndexOf(" ");
-
-        if (lastSpaceIndex != -1) {
-            if (lastSpaceIndex + 1 != originalText.length()) {
-                lastSpaceIndex += 1;
-            }
-            synthesizeEditText.setText(originalText.substring(0, lastSpaceIndex));
-        } else {
+        sendButton.setOnClickListener(view -> {
+            String message = synthesizeEditText.getText().toString().trim();
             synthesizeEditText.setText("");
-        }
-
-        synthesizeEditText.setSelection(synthesizeEditText.getText().length());
-    }
-
-    private void clearSynthesizeEditText() {
-        synthesizeEditText.setText("");
-    }
-
-    private void synthesizeAndRefreshSynthesizeTextView() {
-        String message = synthesizeEditText.getText().toString().trim();
-        clearSynthesizeEditText();
-        synthesizeText(message);
+            synthesizeText(message);
+        });
     }
 
     // Refresh views based on state
