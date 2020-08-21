@@ -1,19 +1,13 @@
 package com.yeongzhiwei.voiceears.mirror;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintSet;
 
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.TypedValue;
 import android.view.View;
-import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -23,23 +17,18 @@ import com.yeongzhiwei.voiceears.R;
 
 public class MirrorActivity extends AppCompatActivity {
     //region VARIABLES
-    private static final Integer seekBarMinValue = 10;
+    private static final int TEXT_SIZE_SEEK_BAR_MIN_VALUE = 10;
 
-    private ConstraintLayout parentConstraintLayout;
+    private EditText largeEditText;
     private ScrollView mirroredScrollView;
     private TextView mirroredTextView;
-    private RelativeLayout settingRelativeLayout;
+    private Button toggleModeButton;
     private SeekBar textSizeSeekBar;
-    private ImageButton modeImageButton;
-    private ImageButton clearImageButton;
     private EditText originalEditText;
 
     private Boolean isMirrorMode = true;
     private String mirroredText;
     private Integer mirroredTextSize = 20;
-
-    private Float defaultEditTextSize;
-    private Drawable defaultEditTextDrawable;
 
     //endregion
 
@@ -49,15 +38,21 @@ public class MirrorActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mirror);
 
+        largeEditText = findViewById(R.id.editText_large);
+        mirroredScrollView = findViewById(R.id.scrollView_mirrored);
+        mirroredTextView = findViewById(R.id.textView_mirrored);
+        toggleModeButton = findViewById(R.id.button_toggleMode);
+        textSizeSeekBar = findViewById(R.id.seekBar_mirroredTextSize);
+        originalEditText = findViewById(R.id.editText_original);
+
         loadSavedPreferences();
-        initializeViews();
         refreshAllViews();
         addEventListeners();
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onPause() {
+        super.onPause();
 
         savePreferences();
     }
@@ -66,33 +61,19 @@ public class MirrorActivity extends AppCompatActivity {
 
     //region SHARED PREFERENCES
 
-    private void savePreferences() {
-        PreferencesHelper.save(this, PreferencesHelper.Key.mirroredMirrorMode, isMirrorMode ? 1 : 0);
-        PreferencesHelper.save(this, PreferencesHelper.Key.mirroredTextKey, originalEditText.getText().toString());
-        PreferencesHelper.save(this, PreferencesHelper.Key.mirroredTextViewSizeKey, mirroredTextSize);
-    }
-
     private void loadSavedPreferences() {
         isMirrorMode = PreferencesHelper.loadInt(this, PreferencesHelper.Key.mirroredMirrorMode, 1) != 0;
         mirroredText = PreferencesHelper.loadString(this, PreferencesHelper.Key.mirroredTextKey, "");
         mirroredTextSize = PreferencesHelper.loadInt(this, PreferencesHelper.Key.mirroredTextViewSizeKey, mirroredTextSize);
     }
 
-    //endregion
-
-    private void initializeViews() {
-        parentConstraintLayout = findViewById(R.id.constraintLayout_parent);
-        mirroredScrollView = findViewById(R.id.scrollView_mirrored);
-        mirroredTextView = findViewById(R.id.textView_mirrored);
-        settingRelativeLayout = findViewById(R.id.relativeLayout_setting);
-        textSizeSeekBar = findViewById(R.id.seekBar_mirroredTextSize);
-        modeImageButton = findViewById(R.id.imageButton_mode);
-        clearImageButton = findViewById(R.id.imageButton_clear);
-        originalEditText = findViewById(R.id.editText_original);
-
-        defaultEditTextSize = originalEditText.getTextSize();
-        defaultEditTextDrawable = originalEditText.getBackground();
+    private void savePreferences() {
+        PreferencesHelper.save(this, PreferencesHelper.Key.mirroredMirrorMode, isMirrorMode ? 1 : 0);
+        PreferencesHelper.save(this, PreferencesHelper.Key.mirroredTextKey, originalEditText.getText().toString());
+        PreferencesHelper.save(this, PreferencesHelper.Key.mirroredTextViewSizeKey, mirroredTextSize);
     }
+
+    //endregion
 
     //region STATE
 
@@ -115,10 +96,14 @@ public class MirrorActivity extends AppCompatActivity {
     // Event listeners
 
     private void addEventListeners() {
+        toggleModeButton.setOnClickListener(v -> {
+            toggleMirrorMode();
+        });
+
         textSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                setMessageTextSize(i + seekBarMinValue);
+                setMessageTextSize(i + TEXT_SIZE_SEEK_BAR_MIN_VALUE);
             }
 
             @Override
@@ -132,28 +117,33 @@ public class MirrorActivity extends AppCompatActivity {
             }
         });
 
-        modeImageButton.setOnClickListener(view -> {
-            toggleMirrorMode();
-        });
-
-        clearImageButton.setOnClickListener(view -> {
-            removeLastWordFromOriginalEditText();
-        });
-
-        clearImageButton.setOnLongClickListener(view -> {
-            clearOriginalEditText();
-            return true;
-        });
-
-        originalEditText.addTextChangedListener(new TextWatcher() {
+        largeEditText.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
 
             }
 
             @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                setMirroredTextViewText(charSequence);
+            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
+                mirroredText = charSequence.toString();
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+
+        originalEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
+                mirroredText = charSequence.toString();
+                mirroredTextView.setText(charSequence);
             }
 
             @Override
@@ -163,109 +153,41 @@ public class MirrorActivity extends AppCompatActivity {
         });
     }
 
-    private void removeLastWordFromOriginalEditText() {
-        String originalText = originalEditText.getText().toString().replaceFirst(" +$", "");
-        int lastIndexOfSpace = originalText.lastIndexOf(" ");
-        int lastIndexOfNewline = originalText.lastIndexOf("\n");
-
-        if (lastIndexOfSpace != -1 || lastIndexOfNewline != -1) {
-            int endIndex = Math.max(lastIndexOfSpace, lastIndexOfNewline);
-            if (endIndex + 1 != originalText.length()) {
-                endIndex += 1;
-            }
-            originalEditText.setText(originalText.substring(0, endIndex));
-        } else {
-            originalEditText.setText("");
-        }
-
-        originalEditText.setSelection(originalEditText.getText().length());
-    }
-
-    private void clearOriginalEditText() {
-        originalEditText.setText("");
-    }
-
-    private void setMirroredTextViewText(CharSequence text) {
-        mirroredTextView.setText(text);
-    }
-
     // Refresh views based on state
 
     private void refreshAllViews() {
-        refreshMirrorModeViews();
-        refreshMirroredTextViews();
         refreshMirroredTextSize();
+        refreshMirrorModeViews();
         refreshTextSizeSeekBar();
     }
 
     private void refreshMirrorModeViews() {
-        if (mirroredScrollView == null) {
-            // Assume that all other views are null if mirroredScrollView is null
-            return;
-        }
-
         if (isMirrorMode) {
-            // Toggle to Mirror Mode
+            largeEditText.setVisibility(View.GONE);
             mirroredScrollView.setVisibility(View.VISIBLE);
+            originalEditText.setVisibility(View.VISIBLE);
 
-            ConstraintSet constraintSet = new ConstraintSet();
-            constraintSet.clone(parentConstraintLayout);
-            constraintSet.connect(originalEditText.getId(), ConstraintSet.BOTTOM, parentConstraintLayout.getId(), ConstraintSet.BOTTOM,0);
-            constraintSet.connect(originalEditText.getId(), ConstraintSet.TOP, settingRelativeLayout.getId(), ConstraintSet.BOTTOM,0);
-            constraintSet.connect(settingRelativeLayout.getId(), ConstraintSet.BOTTOM, originalEditText.getId(), ConstraintSet.TOP,0);
-            constraintSet.connect(settingRelativeLayout.getId(), ConstraintSet.TOP, mirroredScrollView.getId(), ConstraintSet.BOTTOM,0);
-            constraintSet.applyTo(parentConstraintLayout);
-
-            originalEditText.getLayoutParams().height = ViewGroup.LayoutParams.WRAP_CONTENT;
-            originalEditText.requestLayout();
-            originalEditText.setMaxLines(3);
-            originalEditText.setBackground(defaultEditTextDrawable); // add the underbar
-            originalEditText.setTextSize(TypedValue.COMPLEX_UNIT_PX, defaultEditTextSize);
-
-            modeImageButton.setImageResource(R.drawable.ic_text_borderless);
-        } else {
-            // Toggle to Text Mode
-            mirroredScrollView.setVisibility(View.GONE);
-
-            ConstraintSet constraintSet = new ConstraintSet();
-            constraintSet.clone(parentConstraintLayout);
-            constraintSet.connect(originalEditText.getId(), ConstraintSet.BOTTOM, settingRelativeLayout.getId(), ConstraintSet.TOP,0);
-            constraintSet.connect(originalEditText.getId(), ConstraintSet.TOP, parentConstraintLayout.getId(), ConstraintSet.TOP,0);
-            constraintSet.connect(settingRelativeLayout.getId(), ConstraintSet.BOTTOM, parentConstraintLayout.getId(), ConstraintSet.BOTTOM,0);
-            constraintSet.connect(settingRelativeLayout.getId(), ConstraintSet.TOP, originalEditText.getId(), ConstraintSet.BOTTOM,0);
-            constraintSet.applyTo(parentConstraintLayout);
-
-            originalEditText.getLayoutParams().height = 0;
-            originalEditText.requestLayout();
-            originalEditText.setMaxLines(Integer.MAX_VALUE);
-            originalEditText.setBackground(null); // remove the underbar
-            originalEditText.setTextSize(mirroredTextSize);
-
-            modeImageButton.setImageResource(R.drawable.ic_mirror_borderless);
-        }
-    }
-
-    private void refreshMirroredTextViews() {
-        if (mirroredTextView != null && originalEditText != null) {
-            mirroredTextView.setText(mirroredText);
             originalEditText.setText(mirroredText);
+            originalEditText.requestFocus();
+            originalEditText.setSelection(largeEditText.getSelectionEnd());
+        } else {
+            largeEditText.setVisibility(View.VISIBLE);
+            mirroredScrollView.setVisibility(View.GONE);
+            originalEditText.setVisibility(View.GONE);
+
+            largeEditText.setText(mirroredText);
+            largeEditText.requestFocus();
+            largeEditText.setSelection(originalEditText.getSelectionEnd());
         }
     }
 
     private void refreshMirroredTextSize() {
-        if (mirroredTextView != null && originalEditText != null) {
-            mirroredTextView.setTextSize(mirroredTextSize);
-
-            if (!isMirrorMode) {
-                originalEditText.setTextSize(mirroredTextSize);
-            }
-        }
+        largeEditText.setTextSize(mirroredTextSize);
+        mirroredTextView.setTextSize(mirroredTextSize);
     }
 
     private void refreshTextSizeSeekBar() {
-        if (textSizeSeekBar != null) {
-            textSizeSeekBar.setProgress(mirroredTextSize - seekBarMinValue);
-        }
+        textSizeSeekBar.setProgress(mirroredTextSize - TEXT_SIZE_SEEK_BAR_MIN_VALUE);
     }
 
     //endregion

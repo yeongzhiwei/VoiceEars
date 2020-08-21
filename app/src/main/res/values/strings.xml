@@ -28,9 +28,8 @@
     <string name="action_save">Save</string>
 
     /* MirrorActivity */
-    <string name="mirror_imageButton_mode_contentDescription">Toggle mode</string>
-    <string name="mirror_imageButton_clear_contentDescription">Clear the text</string>
-    <string name="mirror_editText_original_hint">Type something</string>
+    <string name="mirror_button_mode_contentDescription">Toggle mode</string>
+    <string name="mirror_editText_hint">Type something</string>
 
     /* PresentationActivity */
     <string name="presentation_imageButton_delete_contentDescription">Delete</string>
