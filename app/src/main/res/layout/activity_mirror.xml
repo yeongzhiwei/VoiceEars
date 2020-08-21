@@ -52,7 +52,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:barrierDirection="bottom"
-        app:constraint_referenced_ids="editText_large,scrollView_mirrored,button_toggleMode,seekBar_mirroredTextSize" />
+        app:constraint_referenced_ids="editText_large,scrollView_mirrored" />
 
     <Button
         android:id="@+id/button_toggleMode"
@@ -62,7 +62,7 @@
         app:cornerRadius="20dp"
         app:icon="@drawable/ic_flip_24dp"
         app:layout_constraintTop_toBottomOf="@id/barrier"
-        app:layout_constraintBottom_toTopOf="@id/editText_original"
+        app:layout_constraintBottom_toTopOf="@id/barrier2"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/seekBar_mirroredTextSize"
         style="@style/AppWidget.Button.IconOnly" />
@@ -73,9 +73,18 @@
         android:layout_height="wrap_content"
         android:max="100"
         app:layout_constraintTop_toBottomOf="@id/barrier"
-        app:layout_constraintBottom_toTopOf="@id/editText_original"
+        app:layout_constraintBottom_toTopOf="@id/barrier2"
         app:layout_constraintStart_toEndOf="@id/button_toggleMode"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="top"
+        app:constraint_referenced_ids="editText_original"
+        app:layout_constraintTop_toBottomOf="@id/button_toggleMode"
+        app:layout_constraintBottom_toTopOf="@id/editText_original"/>
 
     <EditText
         android:id="@+id/editText_original"
@@ -85,7 +94,7 @@
         android:maxLines="3"
         android:hint="@string/mirror_editText_hint"
         android:inputType="textMultiLine"
-        app:layout_constraintTop_toBottomOf="@id/seekBar_mirroredTextSize"
+        app:layout_constraintTop_toBottomOf="@id/barrier2"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
