@@ -33,8 +33,8 @@ public class PresentationActivity extends AppCompatActivity {
 
     public static final String EXTRA_MESSAGE = "com.yeongzhiwei.voiceears.MESSAGE";
     public static final String EXTRA_REQUEST_CODE = "com.yeongzhiwei.voiceears.REQUESTCODE";
-    public static final int addRequestCode = 100;
-    public static final int editRequestCode = 200;
+    public static final int ADD_REQUEST_CODE = 100;
+    public static final int EDIT_REQUEST_CODE = 200;
 
     private FloatingActionButton playFloatingActionButton;
     private FloatingActionButton addFloatingActionButton;
@@ -342,14 +342,14 @@ public class PresentationActivity extends AppCompatActivity {
     private void startPresentationMessageActivityEditMessage() {
         Intent intent = new Intent(this, PresentationMessageActivity.class);
         intent.putExtra(EXTRA_MESSAGE, messages.get(selectedMessageIndex));
-        intent.putExtra(EXTRA_REQUEST_CODE, editRequestCode);
-        startActivityForResult(intent, editRequestCode);
+        intent.putExtra(EXTRA_REQUEST_CODE, EDIT_REQUEST_CODE);
+        startActivityForResult(intent, EDIT_REQUEST_CODE);
     }
 
     private void startPresentationMessageActivityAddMessage() {
         Intent intent = new Intent(this, PresentationMessageActivity.class);
-        intent.putExtra(EXTRA_REQUEST_CODE, addRequestCode);
-        startActivityForResult(intent, addRequestCode);
+        intent.putExtra(EXTRA_REQUEST_CODE, ADD_REQUEST_CODE);
+        startActivityForResult(intent, ADD_REQUEST_CODE);
     }
 
     public void onActivityResult(int requestCode, int resultCode,  Intent data) {
@@ -360,9 +360,9 @@ public class PresentationActivity extends AppCompatActivity {
             if (message == null) {
                 message = "";
             }
-            if (requestCode == editRequestCode) {
+            if (requestCode == EDIT_REQUEST_CODE) {
                 editCurrentMessage(message);
-            } else if (requestCode == addRequestCode) {
+            } else if (requestCode == ADD_REQUEST_CODE) {
                 addMessage(message);
             }
         } else {

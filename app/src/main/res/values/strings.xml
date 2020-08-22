@@ -24,33 +24,29 @@
     <string name="settings_textView_gender">Gender</string>
     <string name="settings_textView_message"><![CDATA[Create a Cognitive Services service in Azure Portal and go to Resource Management > Keys to get your subscription key.]]></string>
 
-    /* Settings Menu */
-    <string name="action_save">Save</string>
-
     /* MirrorActivity */
     <string name="mirror_button_mode_contentDescription">Toggle mode</string>
     <string name="mirror_editText_hint">Type something</string>
 
     /* PresentationActivity */
-    <string name="presentation_imageButton_delete_contentDescription">Delete</string>
-    <string name="presentation_imageButton_edit_contentDescription">Edit the text</string>
-    <string name="presentation_imageButton_add_contentDescription">Add new text</string>
-    <string name="presentation_button_play_text">PLAY AUDIO</string>
-    <string name="presentation_context_menu_edit">Edit</string>
-    <string name="presentation_context_menu_delete">Delete</string>
+    <string name="presentation_fab_play_contentDescription">PLAY AUDIO</string>
 
     /* PresentationMessageActivity */
-    <string name="presentation_message_editText_hint">Presentation message</string>
-    <string name="presentation_message_editText_hint_new">New message</string>
-    <string name="presentation_message_button_save">Save</string>
-    <string name="presentation_message_button_create">Create</string>
-    <string name="presentation_message_button_cancel">Cancel</string>
+    <string name="presentation_message_title_create">Create message</string>
+    <string name="presentation_message_title_edit">Edit message</string>
+    <string name="presentation_message_layout_message_hint">Presentation message</string>
 
     /* shortcuts */
     <string name="mirror_shortcut_short_label">MirrorText</string>
 
     /* common */
     <string name="network_error">Error: Check your network connection or settings and try again.</string>
-    <string name="presentation_context_menu_delete_all">Delete All</string>
+
+    /* actions */
+    <string name="action_save">Save</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_delete_all">Delete All</string>
+
 
 </resources>

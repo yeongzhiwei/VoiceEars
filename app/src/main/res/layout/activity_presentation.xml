@@ -13,6 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_margin="16dp"
+        android:contentDescription="@string/presentation_fab_play_contentDescription"
         app:fabCustomSize="200dp"
         app:maxImageSize="180dp"
         app:srcCompat="@drawable/ic_play" />

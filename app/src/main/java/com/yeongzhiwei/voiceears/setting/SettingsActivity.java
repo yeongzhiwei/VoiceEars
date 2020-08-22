@@ -60,7 +60,7 @@ public class SettingsActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                cancel();
+                onBackPressed();
                 return true;
             case R.id.action_save:
                 save();
@@ -106,12 +106,6 @@ public class SettingsActivity extends AppCompatActivity {
 
         Intent returnIntent = new Intent();
         setResult(RESULT_OK, returnIntent);
-        finish();
-    }
-
-    public void cancel() {
-        Intent returnIntent = new Intent();
-        setResult(RESULT_CANCELED, returnIntent);
         finish();
     }
 
