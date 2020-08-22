@@ -61,13 +61,15 @@ public class PresentationMessageActivity extends AppCompatActivity {
         Intent intent = getIntent();
         int requestCode = intent.getIntExtra(PresentationActivity.EXTRA_REQUEST_CODE, -1);
 
-        if (requestCode == PresentationActivity.ADD_REQUEST_CODE) {
+        if (requestCode == PresentationActivity.CREATE_REQUEST_CODE) {
             toolbar.setTitle(R.string.presentation_message_title_create);
         } else if (requestCode == PresentationActivity.EDIT_REQUEST_CODE) {
             toolbar.setTitle(R.string.presentation_message_title_edit);
             String message = intent.getStringExtra(PresentationActivity.EXTRA_MESSAGE);
             messageEditText.setText(message);
         }
+        messageEditText.requestFocus();
+        messageEditText.setSelection(messageEditText.getText().length());
     }
 
     public void save() {

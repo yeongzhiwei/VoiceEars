@@ -12,11 +12,6 @@
     <string name="alert_permission_microphone_request_message">Allow this app to record your audio to enable Speech-to-text.</string>
     <string name="toast_permission_microphone_denied">WARNING: Speech-to-text is disabled. To enable it, go to Settings and allow this app to access your microphone and restart the app.</string>
 
-    /* Main Menu */
-    <string name="action_mirror_title">MirrorText</string>
-    <string name="action_settings_title">Settings</string>
-    <string name="action_presentation_title">Presentation Mode</string>
-
     /* SettingsActivity */
     <string name="settings_title">Settings</string>
     <string name="settings_layout_key_hint">Api key</string>
@@ -29,24 +24,32 @@
     <string name="mirror_editText_hint">Type something</string>
 
     /* PresentationActivity */
+    <string name="presentation_title">Presentation</string>
     <string name="presentation_fab_play_contentDescription">PLAY AUDIO</string>
 
     /* PresentationMessageActivity */
     <string name="presentation_message_title_create">Create message</string>
     <string name="presentation_message_title_edit">Edit message</string>
     <string name="presentation_message_layout_message_hint">Presentation message</string>
+    <string name="presentation_message_toast_create">Created</string>
+    <string name="presentation_message_toast_edit">Edited</string>
+    <string name="presentation_message_toast_cancel">Cancelled</string>
+    <string name="presentation_message_toast_delete">Deleted</string>
+    <string name="presentation_message_toast_delete_all">Deleted all</string>
+
+    /* actions */
+    <string name="action_mirror_title">MirrorText</string>
+    <string name="action_settings_title">Settings</string>
+    <string name="action_presentation_title">Presentation Mode</string>
+    <string name="action_save">Save</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_delete_all">Delete All</string>
 
     /* shortcuts */
     <string name="mirror_shortcut_short_label">MirrorText</string>
 
     /* common */
     <string name="network_error">Error: Check your network connection or settings and try again.</string>
-
-    /* actions */
-    <string name="action_save">Save</string>
-    <string name="action_edit">Edit</string>
-    <string name="action_delete">Delete</string>
-    <string name="action_delete_all">Delete All</string>
-
 
 </resources>

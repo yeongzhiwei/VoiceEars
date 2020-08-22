@@ -1,26 +1,20 @@
 package com.yeongzhiwei.voiceears.presentation;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.PaintDrawable;
 import android.os.Bundle;
-import android.view.ContextMenu;
-import android.view.MenuInflater;
+import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.yeongzhiwei.voiceears.MainActivity;
 import com.yeongzhiwei.voiceears.PreferencesHelper;
 import com.yeongzhiwei.voiceears.R;
 import com.yeongzhiwei.voiceears.ttsstt.Gender;
@@ -29,30 +23,27 @@ import com.yeongzhiwei.voiceears.ttsstt.Synthesizer;
 import java.util.ArrayList;
 
 public class PresentationActivity extends AppCompatActivity {
-    private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     public static final String EXTRA_MESSAGE = "com.yeongzhiwei.voiceears.MESSAGE";
     public static final String EXTRA_REQUEST_CODE = "com.yeongzhiwei.voiceears.REQUESTCODE";
-    public static final int ADD_REQUEST_CODE = 100;
+    public static final int CREATE_REQUEST_CODE = 100;
     public static final int EDIT_REQUEST_CODE = 200;
 
     private FloatingActionButton playFloatingActionButton;
     private FloatingActionButton addFloatingActionButton;
-    private LinearLayout messageLinearLayout;
 
-    private PaintDrawable paintDrawableSelect = null;
-    private PaintDrawable paintDrawablePlay = null;
+    private PresentationAdapter presentationAdapter;
+    @NonNull private ArrayList<String> messages = new ArrayList<>();
+    private int playingMessageIndex = -1;
+    private int selectedMessageIndex = -1;
 
-    private Integer messageTextSize = 20;
-    private Gender gender = Gender.Male;
-    private Boolean isPlaying = false;
-    private ArrayList<String> messages = new ArrayList<>();
-    private int selectedMessageIndex;
+    private MenuItem editMenuItem;
+    private MenuItem deleteMenuItem;
 
-    // Azure Cognitive Services
     private String cognitiveServicesApiKey;
     private String cognitiveServicesRegion;
-    private Synthesizer synthesizer = null;
+    private Gender gender;
+    private Synthesizer synthesizer;
 
     //region ACTIVITY LIFECYCLE
 
@@ -61,10 +52,30 @@ public class PresentationActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_presentation);
 
+        playFloatingActionButton = findViewById(R.id.fab_play);
+        addFloatingActionButton = findViewById(R.id.fab_add);
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        ActionBar actionbar = getSupportActionBar();
+        if (actionbar != null) {
+            actionbar.setDisplayHomeAsUpEnabled(true);
+        }
+
         loadSavedPreferences();
-        initializeViews();
-        initializeVariables();
-        refreshAllViews();
+
+        RecyclerView messageRecyclerView = findViewById(R.id.recyclerView_message);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        messageRecyclerView.setLayoutManager(linearLayoutManager);
+        presentationAdapter = new PresentationAdapter(messages, playingMessageIndex, selectedMessageIndex, new PresentationAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(int index) {
+                setSelectedMessageIndex(index);
+            }
+        });
+        messageRecyclerView.setAdapter(presentationAdapter);
+
+        refreshPlayButton();
         addEventListeners();
         configureTextToSpeech();
     }
@@ -78,74 +89,89 @@ public class PresentationActivity extends AppCompatActivity {
 
     //endregion
 
-    //region SHARED PREFERENCES
+    //region ACTIONBAR OPTIONS
 
-    private void savePreferences() {
-        PreferencesHelper.save(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
-        PreferencesHelper.save(this, PreferencesHelper.Key.presentationMessagesKey, messages);
-        PreferencesHelper.save(this, PreferencesHelper.Key.presentationSelectedMessageIndexKey, selectedMessageIndex);
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_presentation, menu);
+        editMenuItem = menu.findItem(R.id.action_edit);
+        deleteMenuItem = menu.findItem(R.id.action_delete);
+        refreshMenuItems();
+        return true;
     }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+            case R.id.action_edit:
+                startPresentationMessageActivityEditMessage();
+                return true;
+            case R.id.action_delete:
+                deleteSelectedMessage();
+                return true;
+            case R.id.action_delete_all:
+                deleteAllMessages();
+                return true;
+            default:
+                // Do nothing
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    //endregion
+
+    //region SHARED PREFERENCES
 
     private void loadSavedPreferences() {
         cognitiveServicesApiKey = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesApiKeyKey, "");
         cognitiveServicesRegion = PreferencesHelper.loadString(this, PreferencesHelper.Key.cognitiveServicesRegionKey, "");
-        messageTextSize = PreferencesHelper.loadInt(this, PreferencesHelper.Key.textViewSizeKey, messageTextSize);
-        gender = Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey, gender.name()));
+        gender = Gender.valueOf(PreferencesHelper.loadString(this, PreferencesHelper.Key.genderKey));
         messages = PreferencesHelper.loadStringArray(this, PreferencesHelper.Key.presentationMessagesKey, new ArrayList<>());
         selectedMessageIndex = PreferencesHelper.loadInt(this, PreferencesHelper.Key.presentationSelectedMessageIndexKey, -1);
     }
 
+    private void savePreferences() {
+        PreferencesHelper.save(this, PreferencesHelper.Key.presentationMessagesKey, messages);
+        PreferencesHelper.save(this, PreferencesHelper.Key.presentationSelectedMessageIndexKey, selectedMessageIndex);
+    }
+
     //endregion
-
-    //region INITIALIZATION
-
-    private void initializeViews() {
-        playFloatingActionButton = findViewById(R.id.fab_play);
-        addFloatingActionButton = findViewById(R.id.fab_add);
-        messageLinearLayout = findViewById(R.id.linearLayout_message);
-    }
-
-    private void initializeVariables() {
-        paintDrawableSelect = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimary));
-        paintDrawableSelect.setCornerRadius(8);
-
-        paintDrawablePlay = new PaintDrawable(ContextCompat.getColor(this, R.color.colorPrimaryDark));
-        paintDrawablePlay.setCornerRadius(8);
-    }
-
-    private void configureTextToSpeech() {
-        synthesizer = new Synthesizer(cognitiveServicesApiKey, cognitiveServicesRegion, gender);
-    }
 
     //endregion
 
     //region COGNITIVE SERVICES
+
+    private void configureTextToSpeech() {
+        synthesizer = new Synthesizer(cognitiveServicesApiKey, cognitiveServicesRegion, gender);
+    }
 
     private void synthesizeText() {
         if (selectedMessageIndex < 0 || selectedMessageIndex >= messages.size()) {
             return;
         }
 
-        isPlaying = true;
-        refreshButtons();
-
-        String message = messages.get(selectedMessageIndex);
+        String text = messages.get(selectedMessageIndex);
 
         new Thread(() -> {
-            synthesizer.speak(message, () -> {
-                PresentationActivity.this.runOnUiThread(() -> {
-                    refreshTextViewsBackground();
-                });
-            }, () -> {
-                PresentationActivity.this.runOnUiThread(() -> {
-                    isPlaying = false;
-                    selectedMessageIndex += 1;
-                    refreshTextViewsBackground();
-                    refreshButtons();
-                });
-            }, () -> {
-                PresentationActivity.this.runOnUiThread(() -> {
-                    Toast.makeText(getApplicationContext(), getString(R.string.network_error), Toast.LENGTH_SHORT).show();
+            synthesizer.speak(text,
+                () -> {
+                    PresentationActivity.this.runOnUiThread(() -> {
+                        setPlayingMessageIndex(selectedMessageIndex);
+                        refreshPlayButton();
+                    });
+                }, () -> {
+                    PresentationActivity.this.runOnUiThread(() -> {
+                        setPlayingMessageIndex(-1);
+                        setSelectedMessageIndex(selectedMessageIndex + 1);
+                        refreshPlayButton();
+                    });
+                }, () -> {
+                    PresentationActivity.this.runOnUiThread(() -> {
+                        Toast.makeText(getApplicationContext(), getString(R.string.network_error), Toast.LENGTH_SHORT).show();
                 });
             });
         }).start();
@@ -155,46 +181,59 @@ public class PresentationActivity extends AppCompatActivity {
 
     //region STATE
 
-    private void addMessage(String message) {
+    public void setPlayingMessageIndex(int playingMessageIndex) {
+        this.playingMessageIndex = playingMessageIndex;
+        if (presentationAdapter != null) {
+            presentationAdapter.setPlayingMessageIndex(playingMessageIndex);
+        }
+    }
+
+    public void setSelectedMessageIndex(int selectedMessageIndex) {
+        this.selectedMessageIndex = selectedMessageIndex;
+        if (presentationAdapter != null) {
+            presentationAdapter.setSelectedMessageIndex(selectedMessageIndex);
+        }
+        refreshMenuItems();
+        refreshPlayButton();
+    }
+
+    private void createMessage(String message) {
         String[] newMessages = message.replaceAll("\n", "").split("[.!?]");
         for (String newMessage : newMessages) {
-            addSingleMessage(newMessage.trim());
+            createSingleMessage(newMessage.trim());
         }
-        Toast.makeText(getApplicationContext(), "Added a message.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), getString(R.string.presentation_message_toast_create), Toast.LENGTH_SHORT).show();
 
-        refreshTextViews();
     }
-
-    private void addSingleMessage(String message) {
-        if (selectedMessageIndex >= 0 && selectedMessageIndex < messages.size()) {
-            selectedMessageIndex += 1;
-        } else {
-            selectedMessageIndex = messages.size();
+    private void createSingleMessage(String message) {
+        int insertIndex = selectedMessageIndex + 1;
+        if (selectedMessageIndex < 0 || selectedMessageIndex >= messages.size()) {
+            insertIndex = messages.size();
         }
-        messages.add(selectedMessageIndex, message);
+        messages.add(insertIndex, message);
+        presentationAdapter.notifyItemInserted(selectedMessageIndex);
+        setSelectedMessageIndex(insertIndex);
     }
 
-    private void editCurrentMessage(String newMessage) {
-        messages.set(selectedMessageIndex, newMessage);
-        Toast.makeText(getApplicationContext(), "Edited a message.", Toast.LENGTH_SHORT).show();
+    private void editSelectedMessage(String message) {
+        messages.set(selectedMessageIndex, message);
+        Toast.makeText(getApplicationContext(), getString(R.string.presentation_message_toast_edit), Toast.LENGTH_SHORT).show();
 
-        refreshTextViews();
+        presentationAdapter.notifyItemChanged(selectedMessageIndex);
     }
 
-    private void deleteCurrentMessage() {
-        String message = messages.get(selectedMessageIndex);
-        String alertMessage = message.length() < 20 ? message : message.substring(0, 20) + "...";
+    private void deleteSelectedMessage() {
+        String text = messages.get(selectedMessageIndex);
+        String alertText = text.length() < 20 ? text : text.substring(0, 20) + "...";
 
         new AlertDialog.Builder(PresentationActivity.this)
-                .setMessage("Do you want to delete this message?\n\n" + alertMessage)
+                .setMessage("Do you want to delete this message?\n\n" + alertText)
                 .setPositiveButton("Yes", (dialog, which) -> {
                     messages.remove(selectedMessageIndex);
-                    refreshTextViews();
-                    Toast.makeText(getApplicationContext(), "Deleted a message.", Toast.LENGTH_SHORT).show();
+                    presentationAdapter.notifyItemRemoved(selectedMessageIndex);
+                    Toast.makeText(getApplicationContext(), getString(R.string.presentation_message_toast_delete), Toast.LENGTH_SHORT).show();
                 })
-                .setNegativeButton("No", (dialog, which) -> {
-
-                })
+                .setNegativeButton("No", null)
                 .create()
                 .show();
     }
@@ -204,13 +243,11 @@ public class PresentationActivity extends AppCompatActivity {
                 .setMessage("Do you want to delete all messages?")
                 .setPositiveButton("Yes", (dialog, which) -> {
                     messages.clear();
-                    selectedMessageIndex = 0;
-                    refreshTextViews();
-                    Toast.makeText(getApplicationContext(), "Deleted all messages.", Toast.LENGTH_SHORT).show();
+                    presentationAdapter.notifyDataSetChanged();
+                    setSelectedMessageIndex(-1);
+                    Toast.makeText(getApplicationContext(), getString(R.string.presentation_message_toast_delete_all), Toast.LENGTH_SHORT).show();
                 })
-                .setNegativeButton("No", (dialog, which) -> {
-
-                })
+                .setNegativeButton("No", null)
                 .create()
                 .show();
     }
@@ -225,114 +262,23 @@ public class PresentationActivity extends AppCompatActivity {
         });
 
         addFloatingActionButton.setOnClickListener(view -> {
-            startPresentationMessageActivityAddMessage();
+            startPresentationMessageActivityCreateMessage();
         });
     }
 
-    private void refreshAllViews() {
-        refreshTextViews();
-        refreshButtons();
-    }
-
-    private void refreshTextViews() {
-        if (messageLinearLayout != null) {
-            messageLinearLayout.removeAllViews();
-            for (int i = 0; i < messages.size(); i++) {
-                addTextViewToLinearLayout(messages.get(i));
-            }
-
-            refreshTextViewsBackground();
-            refreshButtons();
+    private void refreshMenuItems() {
+        if (editMenuItem == null || deleteMenuItem == null) {
+            return;
         }
+
+        boolean visible = selectedMessageIndex >= 0 && selectedMessageIndex < messages.size();
+        editMenuItem.setVisible(visible);
+        deleteMenuItem.setVisible(visible);
     }
 
-    private void addTextViewToLinearLayout(String message) {
-        TextView newTextView = new TextView(this);
-        newTextView.setText(message);
-        newTextView.setTextSize(messageTextSize);
-        newTextView.setTextIsSelectable(false);
-        newTextView.setBackground(null);
-        newTextView.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT));
-        newTextView.setOnClickListener(view -> {
-            selectedMessageIndex = messageLinearLayout.indexOfChild(view);
-            refreshTextViews();
-        });
-        registerForContextMenu(newTextView);
-
-        PresentationActivity.this.runOnUiThread(() -> {
-            messageLinearLayout.addView(newTextView);
-        });
-    }
-
-    private void refreshTextViewsBackground() {
-        if (messageLinearLayout != null) {
-            for (int i = 0; i < messageLinearLayout.getChildCount(); i++) {
-                messageLinearLayout.getChildAt(i).setBackground(null);
-            }
-
-            if (selectedMessageIndex < 0 || selectedMessageIndex >= messages.size()) {
-                return;
-            }
-
-            if (isPlaying) {
-                messageLinearLayout.getChildAt(selectedMessageIndex).setBackground(paintDrawablePlay);
-            } else {
-                messageLinearLayout.getChildAt(selectedMessageIndex).setBackground(paintDrawableSelect);
-            }
-        }
-    }
-
-    private void refreshButtons() {
-        boolean isEnabled = !isPlaying && selectedMessageIndex >= 0 && selectedMessageIndex < messageLinearLayout.getChildCount();
-        setFABEnabled(isEnabled, playFloatingActionButton, getDrawable(R.drawable.ic_play));
-        setFABEnabled(!isPlaying, addFloatingActionButton, getDrawable(R.drawable.ic_add));
-    }
-
-    private void setFABEnabled(boolean enabled, FloatingActionButton fab, Drawable originalIcon) {
-        // https://stackoverflow.com/questions/7228985/android-imagebutton-with-disabled-ui-feel
-        fab.setEnabled(enabled);
-
-        Drawable res = originalIcon.mutate();
-        if (enabled) {
-            res.setColorFilter(null);
-        } else {
-            res.setColorFilter(Color.GRAY, PorterDuff.Mode.SRC_IN);
-        }
-        fab.setImageDrawable(res);
-    }
-
-    //endregion
-
-    //region CONTEXT MENU
-
-    @Override
-    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
-        super.onCreateContextMenu(menu, view, menuInfo);
-
-        selectedMessageIndex = messageLinearLayout.indexOfChild(view);
-        refreshTextViews();
-
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_context_presentation, menu);
-    }
-
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.context_edit:
-                startPresentationMessageActivityEditMessage();
-                return true;
-            case R.id.context_delete:
-                deleteCurrentMessage();
-                return true;
-            case R.id.context_delete_all:
-                deleteAllMessages();
-                return true;
-            default:
-                return super.onContextItemSelected(item);
-        }
+    private void refreshPlayButton() {
+        boolean enabled = playingMessageIndex == -1 && selectedMessageIndex >= 0 && selectedMessageIndex < messages.size();
+        playFloatingActionButton.setEnabled(enabled);
     }
 
     //endregion
@@ -346,10 +292,10 @@ public class PresentationActivity extends AppCompatActivity {
         startActivityForResult(intent, EDIT_REQUEST_CODE);
     }
 
-    private void startPresentationMessageActivityAddMessage() {
+    private void startPresentationMessageActivityCreateMessage() {
         Intent intent = new Intent(this, PresentationMessageActivity.class);
-        intent.putExtra(EXTRA_REQUEST_CODE, ADD_REQUEST_CODE);
-        startActivityForResult(intent, ADD_REQUEST_CODE);
+        intent.putExtra(EXTRA_REQUEST_CODE, CREATE_REQUEST_CODE);
+        startActivityForResult(intent, CREATE_REQUEST_CODE);
     }
 
     public void onActivityResult(int requestCode, int resultCode,  Intent data) {
@@ -361,12 +307,12 @@ public class PresentationActivity extends AppCompatActivity {
                 message = "";
             }
             if (requestCode == EDIT_REQUEST_CODE) {
-                editCurrentMessage(message);
-            } else if (requestCode == ADD_REQUEST_CODE) {
-                addMessage(message);
+                editSelectedMessage(message);
+            } else if (requestCode == CREATE_REQUEST_CODE) {
+                createMessage(message);
             }
         } else {
-            Toast.makeText(getApplicationContext(), "Cancelled.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), getString(R.string.presentation_message_toast_cancel), Toast.LENGTH_SHORT).show();
         }
     }
 
