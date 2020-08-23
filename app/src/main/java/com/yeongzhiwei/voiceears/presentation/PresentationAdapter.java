@@ -36,11 +36,6 @@ public class PresentationAdapter extends RecyclerView.Adapter<PresentationAdapte
         this.listener = listener;
     }
 
-    void setMessages(@NonNull List<String> messages) {
-        this.messages = messages;
-        notifyDataSetChanged();
-    }
-
     void setPlayingMessageIndex(int playingMessageIndex) {
         int oldPlayingMessageIndex = this.playingMessageIndex;
         this.playingMessageIndex = playingMessageIndex;
@@ -97,7 +92,7 @@ public class PresentationAdapter extends RecyclerView.Adapter<PresentationAdapte
     }
 
     class MessageViewHolder extends RecyclerView.ViewHolder {
-        
+
         private final TextView messageTextView;
 
         MessageViewHolder(@NonNull View itemView, OnItemClickListener listener) {

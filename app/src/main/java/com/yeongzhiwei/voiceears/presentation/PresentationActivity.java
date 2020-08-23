@@ -161,13 +161,13 @@ public class PresentationActivity extends AppCompatActivity {
                 () -> {
                     PresentationActivity.this.runOnUiThread(() -> {
                         setPlayingMessageIndex(selectedMessageIndex);
-                        refreshPlayButton();
                     });
                 }, () -> {
                     PresentationActivity.this.runOnUiThread(() -> {
+                        if (selectedMessageIndex == playingMessageIndex) {
+                            setSelectedMessageIndex(selectedMessageIndex + 1);
+                        }
                         setPlayingMessageIndex(-1);
-                        setSelectedMessageIndex(selectedMessageIndex + 1);
-                        refreshPlayButton();
                     });
                 }, () -> {
                     PresentationActivity.this.runOnUiThread(() -> {
@@ -186,6 +186,7 @@ public class PresentationActivity extends AppCompatActivity {
         if (presentationAdapter != null) {
             presentationAdapter.setPlayingMessageIndex(playingMessageIndex);
         }
+        refreshPlayButton();
     }
 
     public void setSelectedMessageIndex(int selectedMessageIndex) {
@@ -199,20 +200,19 @@ public class PresentationActivity extends AppCompatActivity {
 
     private void createMessage(String message) {
         String[] newMessages = message.replaceAll("\n", "").split("[.!?]");
-        for (String newMessage : newMessages) {
-            createSingleMessage(newMessage.trim());
+        int insertIndex = selectedMessageIndex;
+        if (insertIndex < 0 || insertIndex >= messages.size()) {
+            insertIndex = messages.size() - 1;
         }
+        for (String newMessage : newMessages) {
+            insertIndex += 1;
+            messages.add(insertIndex, newMessage.trim());
+            presentationAdapter.notifyItemInserted(insertIndex);
+        }
+        presentationAdapter.notifyItemRangeChanged(insertIndex + 1, messages.size() - insertIndex);
+        setSelectedMessageIndex(insertIndex);
         Toast.makeText(getApplicationContext(), getString(R.string.presentation_message_toast_create), Toast.LENGTH_SHORT).show();
 
-    }
-    private void createSingleMessage(String message) {
-        int insertIndex = selectedMessageIndex + 1;
-        if (selectedMessageIndex < 0 || selectedMessageIndex >= messages.size()) {
-            insertIndex = messages.size();
-        }
-        messages.add(insertIndex, message);
-        presentationAdapter.notifyItemInserted(selectedMessageIndex);
-        setSelectedMessageIndex(insertIndex);
     }
 
     private void editSelectedMessage(String message) {
@@ -223,14 +223,19 @@ public class PresentationActivity extends AppCompatActivity {
     }
 
     private void deleteSelectedMessage() {
-        String text = messages.get(selectedMessageIndex);
+        int toDeleteMessageIndex = selectedMessageIndex;
+        String text = messages.get(toDeleteMessageIndex);
         String alertText = text.length() < 20 ? text : text.substring(0, 20) + "...";
 
         new AlertDialog.Builder(PresentationActivity.this)
                 .setMessage("Do you want to delete this message?\n\n" + alertText)
                 .setPositiveButton("Yes", (dialog, which) -> {
-                    messages.remove(selectedMessageIndex);
-                    presentationAdapter.notifyItemRemoved(selectedMessageIndex);
+                    messages.remove(toDeleteMessageIndex);
+                    if (playingMessageIndex == toDeleteMessageIndex) {
+                        setPlayingMessageIndex(-2);
+                        setSelectedMessageIndex(-1);
+                    }
+                    presentationAdapter.notifyDataSetChanged();
                     Toast.makeText(getApplicationContext(), getString(R.string.presentation_message_toast_delete), Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("No", null)
@@ -245,6 +250,7 @@ public class PresentationActivity extends AppCompatActivity {
                     messages.clear();
                     presentationAdapter.notifyDataSetChanged();
                     setSelectedMessageIndex(-1);
+                    setPlayingMessageIndex(-2);
                     Toast.makeText(getApplicationContext(), getString(R.string.presentation_message_toast_delete_all), Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("No", null)
