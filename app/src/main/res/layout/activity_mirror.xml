@@ -14,7 +14,7 @@
         android:layout_height="0dp"
         android:gravity="top"
         android:hint="@string/mirror_editText_hint"
-        android:inputType="textMultiLine|textNoSuggestions"
+        android:inputType="textMultiLine"
         android:visibility="gone"
         android:backgroundTint="@android:color/transparent"
         app:layout_constraintTop_toTopOf="parent"
