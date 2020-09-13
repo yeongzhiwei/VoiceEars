@@ -23,6 +23,7 @@ public class MirrorActivity extends AppCompatActivity {
     private ScrollView mirroredScrollView;
     private TextView mirroredTextView;
     private Button toggleModeButton;
+    private Button clearButton;
     private SeekBar textSizeSeekBar;
     private EditText originalEditText;
 
@@ -42,6 +43,7 @@ public class MirrorActivity extends AppCompatActivity {
         mirroredScrollView = findViewById(R.id.scrollView_mirrored);
         mirroredTextView = findViewById(R.id.textView_mirrored);
         toggleModeButton = findViewById(R.id.button_toggleMode);
+        clearButton = findViewById(R.id.button_clear);
         textSizeSeekBar = findViewById(R.id.seekBar_mirroredTextSize);
         originalEditText = findViewById(R.id.editText_original);
 
@@ -98,6 +100,12 @@ public class MirrorActivity extends AppCompatActivity {
     private void addEventListeners() {
         toggleModeButton.setOnClickListener(v -> {
             toggleMirrorMode();
+        });
+
+        clearButton.setOnClickListener(v -> {
+            largeEditText.setText("");
+            originalEditText.setText("");
+            mirroredText = "";
         });
 
         textSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {

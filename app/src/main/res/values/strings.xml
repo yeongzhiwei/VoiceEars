@@ -21,6 +21,7 @@
 
     /* MirrorActivity */
     <string name="mirror_button_mode_contentDescription">Toggle mode</string>
+    <string name="mirror_button_clear_contentDescription">Clear text</string>
     <string name="mirror_editText_hint">Type something</string>
 
     /* PresentationActivity */
