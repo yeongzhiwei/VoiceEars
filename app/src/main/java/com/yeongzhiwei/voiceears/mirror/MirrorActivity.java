@@ -69,7 +69,7 @@ public class MirrorActivity extends AppCompatActivity {
 
     private void savePreferences() {
         PreferencesHelper.save(this, PreferencesHelper.Key.mirroredMirrorMode, isMirrorMode ? 1 : 0);
-        PreferencesHelper.save(this, PreferencesHelper.Key.mirroredTextKey, originalEditText.getText().toString());
+        PreferencesHelper.save(this, PreferencesHelper.Key.mirroredTextKey, mirroredText);
         PreferencesHelper.save(this, PreferencesHelper.Key.mirroredTextViewSizeKey, mirroredTextSize);
     }
 
